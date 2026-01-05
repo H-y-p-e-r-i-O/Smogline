@@ -1,0 +1,14 @@
+{
+  "mappings": {
+    "com/hbm_m/mixin/ChunkMapAccessor": {
+      "getChunks": "m_140416_()Ljava/lang/Iterable;"
+    }
+  },
+  "data": {
+    "searge": {
+      "com/hbm_m/mixin/ChunkMapAccessor": {
+        "getChunks": "m_140416_()Ljava/lang/Iterable;"
+      }
+    }
+  }
+}

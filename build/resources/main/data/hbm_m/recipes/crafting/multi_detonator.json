@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:advanced_circuit"
+    },
+    "@": {
+      "item": "hbm_m:detonator"
+    }
+  },
+  "pattern": [
+    "@# ",
+    "   ",
+    "   "
+  ],
+  "result": {
+    "item": "hbm_m:multi_detonator"
+  },
+  "show_notification": true
+}

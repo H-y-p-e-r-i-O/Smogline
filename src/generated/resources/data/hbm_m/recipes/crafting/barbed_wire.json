@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "$": {
+      "item": "hbm_m:wire_fine"
+    },
+    "@": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "pattern": [
+    "$@$",
+    "@ @",
+    "$@$"
+  ],
+  "result": {
+    "count": 16,
+    "item": "hbm_m:barbed_wire"
+  },
+  "show_notification": true
+}

@@ -1,10 +1,12 @@
 package com.hbm_m.menu;
 
 import com.hbm_m.api.energy.ILongEnergyMenu;
+import com.hbm_m.block.entity.custom.machines.MachineWoodBurnerBlockEntity;
 import com.hbm_m.block.ModBlocks;
 import com.hbm_m.network.ModPacketHandler;
-import com.hbm_m.block.entity.custom.machines.MachineWoodBurnerBlockEntity;
+import com.hbm_m.network.packet.PacketSyncEnergy;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
@@ -14,9 +16,9 @@ import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.network.PacketDistributor;
 
 public class MachineWoodBurnerMenu extends AbstractContainerMenu implements ILongEnergyMenu {
-    
     public final MachineWoodBurnerBlockEntity blockEntity;
     private final ContainerData data;
     private final Player player;
@@ -47,7 +49,6 @@ public class MachineWoodBurnerMenu extends AbstractContainerMenu implements ILon
         this.data = data;
         this.player = inv.player; // Сохраняем игрока
 
-        // Используем inventory из базового класса через capability
         this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(h -> {
             this.addSlot(new SlotItemHandler(h, 0, 26, 18) { // Fuel slot
                 @Override public boolean mayPlace(ItemStack stack) { return ForgeHooks.getBurnTime(stack, null) > 0; }
@@ -58,8 +59,7 @@ public class MachineWoodBurnerMenu extends AbstractContainerMenu implements ILon
 
             this.addSlot(new SlotItemHandler(h, 2, 143, 54) { // Charge slot
                 @Override public boolean mayPlace(ItemStack stack) {
-                    return stack.getCapability(ForgeCapabilities.ENERGY).map(IEnergyStorage::canReceive).orElse(false) ||
-                           stack.getCapability(com.hbm_m.capability.ModCapabilities.HBM_ENERGY_RECEIVER).isPresent();
+                    return stack.getCapability(ForgeCapabilities.ENERGY).map(IEnergyStorage::canReceive).orElse(false);
                 }
             });
         });
@@ -79,34 +79,31 @@ public class MachineWoodBurnerMenu extends AbstractContainerMenu implements ILon
 
     @Override
     public long getEnergyStatic() {
-        if (blockEntity != null && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+        return blockEntity.getEnergyStored();
+    }
+
+    @Override
+    public long getMaxEnergyStatic() {
+        return blockEntity.getMaxEnergyStored();
+    }
+
+    public long getEnergyLong() {
+        if (blockEntity != null && !blockEntity.getLevel().isClientSide) {
             return blockEntity.getEnergyStored();
         }
         return clientEnergy;
     }
 
-    @Override
-    public long getMaxEnergyStatic() {
-        if (blockEntity != null && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+    public long getMaxEnergyLong() {
+        if (blockEntity != null && !blockEntity.getLevel().isClientSide) {
             return blockEntity.getMaxEnergyStored();
         }
         return clientMaxEnergy;
     }
 
-    public long getEnergyLong() {
-        return getEnergyStatic();
-    }
-
-    public long getMaxEnergyLong() {
-        return getMaxEnergyStatic();
-    }
-
     @Override
     public long getEnergyDeltaStatic() {
-        if (blockEntity != null && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
-            return blockEntity.getEnergyDelta();
-        }
-        return 0;
+        return 0; // Возвращаем 0, так как дельта не используется
     }
 
     // --- Геттеры для данных (индексы смещены) ---
@@ -133,7 +130,7 @@ public class MachineWoodBurnerMenu extends AbstractContainerMenu implements ILon
                             this.containerId,
                             blockEntity.getEnergyStored(),
                             blockEntity.getMaxEnergyStored(),
-                            blockEntity.getEnergyDelta()
+                            0L // <--- Передаем 0 как дельту
                     )
             );
         }

@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_geiger_counter": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "hbm_m:geiger_counter"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "hbm_m:crafting/geiger1"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_geiger_counter",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "hbm_m:crafting/geiger1"
+    ]
+  },
+  "sends_telemetry_event": false
+}

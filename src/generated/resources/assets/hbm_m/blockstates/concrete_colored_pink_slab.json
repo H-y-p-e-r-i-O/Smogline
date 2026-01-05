@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "hbm_m:block/concrete_colored_pink_slab"
+    },
+    "type=double": {
+      "model": "hbm_m:block/concrete_colored_pink"
+    },
+    "type=top": {
+      "model": "hbm_m:block/concrete_colored_pink_slab_top"
+    }
+  }
+}

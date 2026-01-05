@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "hbm_m:lanthanium_powder"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "item": "hbm_m:lanthanium_powder_tiny"
+  }
+}

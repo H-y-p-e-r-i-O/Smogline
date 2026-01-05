@@ -1,0 +1,26 @@
+{
+  "type": "hbm_m:assembler",
+  "duration": 80,
+  "ingredients": [
+    {
+      "count": 2,
+      "item": "hbm_m:capacitor"
+    },
+    {
+      "count": 3,
+      "item": "hbm_m:vacuum_tube"
+    },
+    {
+      "count": 4,
+      "item": "hbm_m:wire_carbon"
+    },
+    {
+      "count": 4,
+      "item": "hbm_m:pcb"
+    }
+  ],
+  "output": {
+    "item": "hbm_m:analog_circuit"
+  },
+  "power": 150
+}

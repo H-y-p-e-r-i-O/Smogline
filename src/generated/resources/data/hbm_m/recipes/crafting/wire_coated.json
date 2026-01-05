@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "$": {
+      "item": "hbm_m:insulator"
+    },
+    "@": {
+      "item": "hbm_m:wire_red_copper"
+    }
+  },
+  "pattern": [
+    " $ ",
+    "@@@",
+    " $ "
+  ],
+  "result": {
+    "count": 16,
+    "item": "hbm_m:wire_coated"
+  },
+  "show_notification": true
+}

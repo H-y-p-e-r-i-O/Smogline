@@ -1,0 +1,17 @@
+{
+  "type": "hbm_m:anvil",
+  "input_a": {
+    "item": "hbm_m:anvil_iron"
+  },
+  "input_b": {
+    "count": 10,
+    "item": "hbm_m:ferrouranium_ingot"
+  },
+  "outputs": [
+    {
+      "item": "hbm_m:anvil_ferrouranium"
+    }
+  ],
+  "overlay": "smithing",
+  "tier": "iron"
+}

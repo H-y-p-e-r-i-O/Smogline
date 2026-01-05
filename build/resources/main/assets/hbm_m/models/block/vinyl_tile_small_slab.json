@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "hbm_m:block/vinyl_tile_small",
+    "side": "hbm_m:block/vinyl_tile_small",
+    "top": "hbm_m:block/vinyl_tile_small"
+  }
+}

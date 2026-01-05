@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "hbm_m:block/depth_nether_tiles",
+    "side": "hbm_m:block/depth_nether_tiles",
+    "top": "hbm_m:block/depth_nether_tiles"
+  }
+}

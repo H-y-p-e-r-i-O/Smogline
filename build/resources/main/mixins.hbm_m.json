@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.hbm_m.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "hbm_m.refmap.json",
+  "mixins": [
+    "SlotMixin"
+  ],
+  "client": [
+    "ShadowIntegrationMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

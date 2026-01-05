@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:plate_steel"
+    },
+    "$": {
+      "item": "hbm_m:bolt_steel"
+    }
+  },
+  "pattern": [
+    " # ",
+    "$ $",
+    "$ $"
+  ],
+  "result": {
+    "item": "hbm_m:defuser"
+  },
+  "show_notification": true
+}

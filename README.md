@@ -6,7 +6,7 @@
 
 **Status:** Pre-Alpha \
 **Minecraft Version:** 1.20.1 \
-**Mod ID:** `hbm_m`
+**Mod ID:** `smogline`
 
 ***
 
@@ -178,7 +178,7 @@ Realistic irradiation mechanics affecting gameplay and the surrounding world.
 
 ### Commands
 
-`/hbm_m rad` — manage player radiation level (add/remove/clear)
+`/smogline rad` — manage player radiation level (add/remove/clear)
 
 
 ### Settings

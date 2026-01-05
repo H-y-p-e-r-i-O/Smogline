@@ -1,0 +1,18 @@
+{
+  "type": "hbm_m:assembler",
+  "duration": 160,
+  "ingredients": [
+    {
+      "count": 16,
+      "item": "hbm_m:billet_plutonium"
+    },
+    {
+      "count": 4,
+      "item": "hbm_m:beryllium_ingot"
+    }
+  ],
+  "output": {
+    "item": "hbm_m:man_core"
+  },
+  "power": 250
+}

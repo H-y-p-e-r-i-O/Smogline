@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:aluminum_powder"
+    },
+    "$": {
+      "item": "hbm_m:plate_steel"
+    },
+    "%": {
+      "item": "hbm_m:vacuum_tube"
+    },
+    "@": {
+      "item": "minecraft:glass_pane"
+    }
+  },
+  "pattern": [
+    " # ",
+    "$@$",
+    " % "
+  ],
+  "result": {
+    "count": 4,
+    "item": "hbm_m:crt_display"
+  },
+  "show_notification": true
+}

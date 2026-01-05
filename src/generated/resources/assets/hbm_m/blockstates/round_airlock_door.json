@@ -1,0 +1,154 @@
+{
+  "variants": {
+    "facing=east,open=false,part_role=default": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=false,part_role=energy_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=false,part_role=fluid_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=false,part_role=item_input": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=false,part_role=item_output": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=true,part_role=default": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=true,part_role=energy_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=true,part_role=fluid_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=true,part_role=item_input": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=east,open=true,part_role=item_output": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 90
+    },
+    "facing=north,open=false,part_role=default": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=false,part_role=energy_connector": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=false,part_role=fluid_connector": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=false,part_role=item_input": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=false,part_role=item_output": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=true,part_role=default": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=true,part_role=energy_connector": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=true,part_role=fluid_connector": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=true,part_role=item_input": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=north,open=true,part_role=item_output": {
+      "model": "hbm_m:block/round_airlock_door"
+    },
+    "facing=south,open=false,part_role=default": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=false,part_role=energy_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=false,part_role=fluid_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=false,part_role=item_input": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=false,part_role=item_output": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=true,part_role=default": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=true,part_role=energy_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=true,part_role=fluid_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=true,part_role=item_input": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=south,open=true,part_role=item_output": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 180
+    },
+    "facing=west,open=false,part_role=default": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=false,part_role=energy_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=false,part_role=fluid_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=false,part_role=item_input": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=false,part_role=item_output": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=true,part_role=default": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=true,part_role=energy_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=true,part_role=fluid_connector": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=true,part_role=item_input": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    },
+    "facing=west,open=true,part_role=item_output": {
+      "model": "hbm_m:block/round_airlock_door",
+      "y": 270
+    }
+  }
+}

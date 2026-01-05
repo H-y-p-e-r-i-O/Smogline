@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:mine_ap"
+    },
+    "$": {
+      "item": "hbm_m:tungsten_ingot"
+    },
+    "@": {
+      "item": "hbm_m:billet_plutonium"
+    }
+  },
+  "pattern": [
+    "@  ",
+    "#  ",
+    "$  "
+  ],
+  "result": {
+    "item": "hbm_m:mine_fat"
+  },
+  "show_notification": true
+}

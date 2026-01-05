@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "hbm_m:block/machine_battery_schrabidium",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "hbm_m:block/machine_battery_schrabidium"
+    },
+    "facing=south": {
+      "model": "hbm_m:block/machine_battery_schrabidium",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "hbm_m:block/machine_battery_schrabidium",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "values": [
+    "hbm_m:stamp_stone_wire",
+    "hbm_m:stamp_iron_wire",
+    "hbm_m:stamp_steel_wire",
+    "hbm_m:stamp_titanium_wire",
+    "hbm_m:stamp_obsidian_wire",
+    "hbm_m:stamp_desh_wire"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "type": "hbm_m:anvil",
+  "outputs": [
+    {
+      "count": 4,
+      "item": "hbm_m:plate_steel"
+    },
+    {
+      "item": "hbm_m:plate_lead"
+    },
+    {
+      "chance": 0.5,
+      "item": "hbm_m:wire_red_copper"
+    },
+    {
+      "chance": 0.5,
+      "item": "hbm_m:vacuum_tube"
+    },
+    {
+      "chance": 0.1,
+      "item": "hbm_m:microchip"
+    }
+  ],
+  "overlay": "recycling",
+  "required_items": [
+    {
+      "item": "hbm_m:tape_recorder"
+    }
+  ],
+  "tier": "steel"
+}

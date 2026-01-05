@@ -41,13 +41,6 @@ public class ModFluids {
                     .sound(SoundActions.BUCKET_EMPTY, SoundEvents.BUCKET_EMPTY)
                     .density(900)
                     .viscosity(2000)
-
-
-
-
-
-
-
     ) {
         // ВОТ ЗДЕСЬ МАГИЯ: Мы сразу указываем клиентские свойства (текстуры)
         @Override

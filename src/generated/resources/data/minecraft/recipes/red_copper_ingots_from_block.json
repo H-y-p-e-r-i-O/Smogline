@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "hbm_m:block_red_copper"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "item": "hbm_m:red_copper_ingot"
+  }
+}

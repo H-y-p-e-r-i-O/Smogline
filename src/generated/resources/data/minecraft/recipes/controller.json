@@ -1,0 +1,34 @@
+{
+  "type": "hbm_m:assembler",
+  "duration": 120,
+  "ingredients": [
+    {
+      "count": 16,
+      "item": "hbm_m:wire_carbon"
+    },
+    {
+      "count": 64,
+      "item": "hbm_m:capacitor"
+    },
+    {
+      "count": 32,
+      "item": "hbm_m:microchip"
+    },
+    {
+      "count": 1,
+      "item": "hbm_m:controller_chassis"
+    },
+    {
+      "count": 1,
+      "item": "hbm_m:advanced_circuit"
+    },
+    {
+      "count": 16,
+      "item": "hbm_m:pcb"
+    }
+  ],
+  "output": {
+    "item": "hbm_m:controller"
+  },
+  "power": 250
+}

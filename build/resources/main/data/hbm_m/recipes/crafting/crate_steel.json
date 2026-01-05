@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "hbm_m:plate_steel"
+    },
+    "B": {
+      "item": "hbm_m:steel_ingot"
+    }
+  },
+  "pattern": [
+    "AAA",
+    "B B",
+    "BBB"
+  ],
+  "result": {
+    "item": "hbm_m:crate_steel"
+  },
+  "show_notification": true
+}

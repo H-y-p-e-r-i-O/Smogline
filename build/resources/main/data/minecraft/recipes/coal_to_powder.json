@@ -1,0 +1,9 @@
+{
+  "type": "hbm_m:shredding",
+  "ingredient": {
+    "item": "minecraft:coal"
+  },
+  "result": {
+    "item": "hbm_m:powder_coal"
+  }
+}

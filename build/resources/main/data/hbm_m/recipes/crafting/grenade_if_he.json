@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "#": {
+      "item": "hbm_m:plate_steel"
+    },
+    "$": {
+      "item": "hbm_m:ball_tnt"
+    },
+    "%": {
+      "item": "hbm_m:grenade_if"
+    }
+  },
+  "pattern": [
+    " # ",
+    "$%$",
+    " # "
+  ],
+  "result": {
+    "count": 2,
+    "item": "hbm_m:grenade_if_he"
+  },
+  "show_notification": true
+}

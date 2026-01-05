@@ -19,6 +19,7 @@ import com.hbm_m.item.custom.crates.IronCrateItem;
 import com.hbm_m.item.custom.crates.SteelCrateItem;
 import com.hbm_m.item.custom.industrial.*;
 import com.hbm_m.item.custom.liquids.InfiniteWaterItem;
+import com.hbm_m.item.custom.liquids.ItemFluidIdentifier;
 import com.hbm_m.item.custom.radiation_meter.ItemDosimeter;
 import com.hbm_m.item.custom.radiation_meter.ItemGeigerCounter;
 import com.hbm_m.item.custom.food.ItemConserve;
@@ -1333,7 +1334,13 @@ public class ModItems {
                             .craftRemainder(Items.BUCKET) // Возвращает пустое ведро при крафте
                             .stacksTo(1))); // Ведра не стакаются
 
-    
+
+    public static final RegistryObject<Item> FLUID_IDENTIFIER = ITEMS.register("fluid_identifier",
+            () -> new ItemFluidIdentifier(new Item.Properties()));
+
+
+
+
 
 
     // Метод для регистрации всех предметов, вызывается в основном классе мода.

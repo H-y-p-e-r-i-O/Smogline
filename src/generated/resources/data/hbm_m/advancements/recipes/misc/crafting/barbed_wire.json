@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "hbm_m:crafting/barbed_wire"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_wire_fine": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "hbm_m:wire_fine"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_wire_fine",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "hbm_m:crafting/barbed_wire"
+    ]
+  },
+  "sends_telemetry_event": false
+}

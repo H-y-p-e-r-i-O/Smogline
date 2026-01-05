@@ -2,6 +2,7 @@ package com.hbm_m.client;
 
 // Основной класс клиентской настройки мода. Здесь регистрируются все клиентские обработчики событий,
 // GUI, рендереры, модели и т.д.
+import com.hbm_m.client.model.FluidTankModelWrapper;
 import com.hbm_m.client.overlay.*;
 import com.hbm_m.client.loader.*;
 import com.hbm_m.client.overlay.crates.GUIDeshCrate;
@@ -33,6 +34,7 @@ import com.hbm_m.block.entity.ModBlockEntities;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
@@ -174,6 +176,23 @@ public class ClientSetup {
         } else {
             if (ModClothConfig.get().enableDebugLogging) {
                 MainRegistry.LOGGER.warn("Could not find model for waste_leaves to wrap.");
+            }
+        }
+
+        for (BlockState state : ModBlocks.FLUID_TANK.get().getStateDefinition().getPossibleStates()) {
+
+            // Получаем ResourceLocation модели для этого стейта
+            ResourceLocation modelLoc = BlockModelShaper.stateToModelLocation(state);
+
+            // Если модель существует в реестре загруженных
+            if (event.getModels().containsKey(modelLoc)) {
+                BakedModel existingModel = event.getModels().get(modelLoc);
+
+                // Оборачиваем её
+                FluidTankModelWrapper wrapper = new FluidTankModelWrapper(existingModel);
+
+                // Кладем обратно в реестр
+                event.getModels().put(modelLoc, wrapper);
             }
         }
     }

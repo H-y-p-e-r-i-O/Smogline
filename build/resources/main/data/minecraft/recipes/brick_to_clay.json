@@ -1,0 +1,9 @@
+{
+  "type": "hbm_m:shredding",
+  "ingredient": {
+    "item": "minecraft:brick"
+  },
+  "result": {
+    "item": "minecraft:clay_ball"
+  }
+}

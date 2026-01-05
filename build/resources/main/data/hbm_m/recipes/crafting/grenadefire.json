@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "#": {
+      "item": "hbm_m:plate_steel"
+    },
+    "$": {
+      "item": "hbm_m:phosphorus_ingot"
+    },
+    "%": {
+      "item": "hbm_m:grenade"
+    }
+  },
+  "pattern": [
+    " # ",
+    "$%$",
+    " # "
+  ],
+  "result": {
+    "count": 4,
+    "item": "hbm_m:grenadefire"
+  },
+  "show_notification": true
+}

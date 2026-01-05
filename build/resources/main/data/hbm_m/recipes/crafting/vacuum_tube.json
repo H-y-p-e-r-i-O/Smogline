@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:wire_tungsten"
+    },
+    "$": {
+      "item": "minecraft:glass_pane"
+    },
+    "@": {
+      "item": "hbm_m:insulator"
+    }
+  },
+  "pattern": [
+    "$  ",
+    "#  ",
+    "@  "
+  ],
+  "result": {
+    "item": "hbm_m:vacuum_tube"
+  },
+  "show_notification": true
+}

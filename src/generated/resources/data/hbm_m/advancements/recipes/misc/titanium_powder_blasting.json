@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "hbm_m:titanium_powder_blasting"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_titanium_powder": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "hbm_m:titanium_powder"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_titanium_powder",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "hbm_m:titanium_powder_blasting"
+    ]
+  },
+  "sends_telemetry_event": false
+}

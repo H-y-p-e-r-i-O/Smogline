@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "hbm_m:block/concrete_asbestos_slab"
+    },
+    "type=double": {
+      "model": "hbm_m:block/concrete_asbestos"
+    },
+    "type=top": {
+      "model": "hbm_m:block/concrete_asbestos_slab_top"
+    }
+  }
+}

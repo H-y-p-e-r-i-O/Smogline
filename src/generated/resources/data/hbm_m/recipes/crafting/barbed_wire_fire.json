@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "#": {
+      "item": "hbm_m:barbed_wire"
+    },
+    "@": {
+      "item": "minecraft:blaze_powder"
+    }
+  },
+  "pattern": [
+    "###",
+    "#@#",
+    "###"
+  ],
+  "result": {
+    "count": 8,
+    "item": "hbm_m:barbed_wire_fire"
+  },
+  "show_notification": true
+}

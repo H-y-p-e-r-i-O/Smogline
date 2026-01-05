@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:wire_gold"
+    },
+    "$": {
+      "item": "hbm_m:analog_circuit"
+    },
+    "&": {
+      "item": "hbm_m:plate_steel"
+    },
+    "@": {
+      "item": "minecraft:copper_ingot"
+    }
+  },
+  "pattern": [
+    "# @",
+    "#$@",
+    "&&&"
+  ],
+  "result": {
+    "item": "hbm_m:oil_detector"
+  },
+  "show_notification": true
+}

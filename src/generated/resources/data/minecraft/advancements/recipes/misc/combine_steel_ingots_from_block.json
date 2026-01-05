@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_combine_steel_block": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "hbm_m:block_combine_steel"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "minecraft:combine_steel_ingots_from_block"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_combine_steel_block",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "minecraft:combine_steel_ingots_from_block"
+    ]
+  },
+  "sends_telemetry_event": false
+}

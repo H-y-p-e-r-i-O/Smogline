@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "$": {
+      "item": "minecraft:brick"
+    }
+  },
+  "pattern": [
+    "$  ",
+    "$  ",
+    "   "
+  ],
+  "result": {
+    "count": 4,
+    "item": "hbm_m:insulator"
+  },
+  "show_notification": true
+}

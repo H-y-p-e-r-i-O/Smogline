@@ -1,0 +1,14 @@
+{
+  "type": "hbm_m:press",
+  "ingredients": [
+    {
+      "tag": "hbm_m:stamps/plate"
+    },
+    {
+      "item": "hbm_m:saturnite_ingot"
+    }
+  ],
+  "output": {
+    "item": "hbm_m:plate_saturnite"
+  }
+}

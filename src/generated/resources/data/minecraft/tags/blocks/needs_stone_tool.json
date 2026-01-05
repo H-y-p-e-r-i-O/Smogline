@@ -1,0 +1,11 @@
+{
+  "values": [
+    "hbm_m:resource_bauxite",
+    "hbm_m:resource_limestone",
+    "hbm_m:resource_malachite",
+    "hbm_m:resource_sulfur",
+    "hbm_m:lignite_ore",
+    "hbm_m:aluminum_ore",
+    "hbm_m:aluminum_ore_deepslate"
+  ]
+}

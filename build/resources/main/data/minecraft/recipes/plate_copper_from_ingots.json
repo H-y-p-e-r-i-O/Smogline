@@ -1,0 +1,16 @@
+{
+  "type": "hbm_m:assembler",
+  "blueprint_pool": "plates",
+  "duration": 60,
+  "ingredients": [
+    {
+      "count": 3,
+      "item": "minecraft:copper_ingot"
+    }
+  ],
+  "output": {
+    "count": 2,
+    "item": "hbm_m:plate_copper"
+  },
+  "power": 100
+}

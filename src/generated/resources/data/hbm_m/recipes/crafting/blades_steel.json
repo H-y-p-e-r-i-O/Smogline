@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:steel_ingot"
+    },
+    "$": {
+      "item": "hbm_m:plate_steel"
+    }
+  },
+  "pattern": [
+    " $ ",
+    "$#$",
+    " $ "
+  ],
+  "result": {
+    "item": "hbm_m:blade_steel"
+  },
+  "show_notification": true
+}

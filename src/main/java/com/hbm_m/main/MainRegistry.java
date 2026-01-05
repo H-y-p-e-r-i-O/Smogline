@@ -38,6 +38,7 @@ import com.hbm_m.config.ModClothConfig;
 import com.hbm_m.effect.ModEffects;
 import com.hbm_m.hazard.ModHazards;
 import com.hbm_m.worldgen.ModWorldGen;
+import com.hbm_m.item.custom.liquids.ItemFluidIdentifier;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -55,6 +56,8 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+
+import software.bernie.geckolib.GeckoLib;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,6 +90,7 @@ public class MainRegistry {
         IEventBus modEventBus = context.getModEventBus();
         // ПРЯМАЯ РЕГИСТРАЦИЯ DEFERRED REGISTERS
         // Добавь эту:
+        GeckoLib.initialize();
 
         MinecraftForge.EVENT_BUS.register(new CrateBreaker());
         MinecraftForge.EVENT_BUS.register(new BombDefuser());
@@ -1086,6 +1090,20 @@ public class MainRegistry {
             event.accept(ModItems.STAMP_DESH_357);
 
             event.accept(ModItems.TEMPLATE_FOLDER);
+
+            event.accept(ModItems.FLUID_IDENTIFIER.get());
+
+            // 2. Добавляем идентификаторы для ВСЕХ жидкостей в игре
+            // Цикл проходит по реестру жидкостей Forge
+            for (net.minecraft.world.level.material.Fluid fluid : net.minecraftforge.registries.ForgeRegistries.FLUIDS) {
+                // Проверяем: жидкость не пустая И это "источник" (не течение)
+                if (fluid != net.minecraft.world.level.material.Fluids.EMPTY && fluid.isSource(fluid.defaultFluidState())) {
+
+                    // Используем статический метод, который мы создали в ItemFluidIdentifier
+                    // Убедись, что импортировал класс ItemFluidIdentifier
+                    event.accept(com.hbm_m.item.custom.liquids.ItemFluidIdentifier.createStackFor(fluid));
+                }
+            }
 
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                 ClientSetup.addTemplatesClient(event);

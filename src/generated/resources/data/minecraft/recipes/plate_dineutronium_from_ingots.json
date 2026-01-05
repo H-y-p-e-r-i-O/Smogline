@@ -1,0 +1,15 @@
+{
+  "type": "hbm_m:assembler",
+  "blueprint_pool": "plates",
+  "duration": 200,
+  "ingredients": [
+    {
+      "count": 2,
+      "item": "hbm_m:dineutronium_ingot"
+    }
+  ],
+  "output": {
+    "item": "hbm_m:plate_dineutronium"
+  },
+  "power": 500
+}

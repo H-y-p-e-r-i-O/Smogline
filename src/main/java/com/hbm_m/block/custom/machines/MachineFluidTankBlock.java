@@ -4,17 +4,20 @@ import com.google.common.collect.ImmutableMap;
 import com.hbm_m.block.ModBlocks;
 import com.hbm_m.block.entity.ModBlockEntities;
 import com.hbm_m.block.entity.custom.machines.MachineFluidTankBlockEntity;
+import com.hbm_m.item.custom.liquids.ItemFluidIdentifier;
 import com.hbm_m.multiblock.IMultiblockController;
 import com.hbm_m.multiblock.MultiblockStructureHelper;
 import com.hbm_m.multiblock.PartRole;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -25,8 +28,11 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.Lazy;
@@ -150,6 +156,30 @@ public class MachineFluidTankBlock extends BaseEntityBlock implements IMultibloc
 
     @Override
     public InteractionResult use(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos, @Nonnull Player player, @Nonnull InteractionHand hand, @Nonnull BlockHitResult hit) {
+
+        ItemStack heldItem = player.getItemInHand(hand);
+
+        if (heldItem.getItem() instanceof ItemFluidIdentifier) {
+            if (!level.isClientSide) {
+                BlockEntity entity = level.getBlockEntity(pos);
+                if (entity instanceof MachineFluidTankBlockEntity tank) {
+
+                    Fluid fluid = ItemFluidIdentifier.getFluid(heldItem);
+
+                    if (fluid != Fluids.EMPTY) {
+                        // Ставим фильтр и текстуру
+                        tank.setLockedFluid(fluid);
+                        player.sendSystemMessage(Component.literal("Tank Locked: " + fluid.getFluidType().getDescription().getString()));
+                    } else {
+                        // Сброс (если идентификатор пустой)
+                        tank.setLockedFluid(null);
+                        player.sendSystemMessage(Component.literal("Tank Unlocked"));
+                    }
+                }
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+
         if (!level.isClientSide) {
             BlockEntity entity = level.getBlockEntity(pos);
             if (entity instanceof MachineFluidTankBlockEntity tank) {

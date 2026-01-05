@@ -1,12 +1,15 @@
 package com.hbm_m.block.entity.custom.machines;
 
-import com.hbm_m.menu.MachineFluidTankMenu; 
-import com.hbm_m.block.entity.ModBlockEntities;
+import com.hbm_m.menu.MachineFluidTankMenu; // Позже переименуешь в FluidTankMenu
+import com.hbm_m.block.entity.ModBlockEntities; // Твой регистр тайлов
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -16,6 +19,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraftforge.client.model.data.ModelData;
+import net.minecraftforge.client.model.data.ModelProperty;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -34,19 +41,44 @@ public class MachineFluidTankBlockEntity extends BlockEntity implements MenuProv
     public static final int SLOT_INPUT_L = 0;  // Слева верх (ведро с жижей -> вылить в танк)
     public static final int SLOT_OUTPUT_L = 1; // Слева низ (пустое ведро)
     public static final int SLOT_INPUT_R = 2;  // Справа верх (пустое ведро -> наполнить из танка)
-    public static final int SLOT_OUTPUT_R = 3; // Справа низ (полное ведро)
+    public static final int SLOT_OUTPUT_R = 3;
+
+    public static final ModelProperty<Fluid> FLUID_RENDER_PROP = new ModelProperty<>();
+
+    // Поле хранения
+    private Fluid lockedFluid = null;// Справа низ (полное ведро)
 
     // === ВМЕСТИМОСТЬ 256 ВЕДЕР (256,000 mB) ===
     private final FluidTank fluidTank = new FluidTank(256000) {
         @Override
+        public boolean isFluidValid(FluidStack stack) {
+            // Если танк залочен, принимаем только эту жидкость
+            if (lockedFluid != null && lockedFluid != Fluids.EMPTY) {
+                return stack.getFluid() == lockedFluid;
+            }
+            return true;
+        }
+
+        @Override
         protected void onContentsChanged() {
             setChanged();
-            // Если нужно обновление блока для рендера модели в мире:
             if(level != null && !level.isClientSide) {
                 level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
             }
         }
     };
+
+    public void setLockedFluid(Fluid fluid) {
+        this.lockedFluid = fluid;
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    public Fluid getLockedFluid() {
+        return lockedFluid;
+    }
 
     // Инвентарь на 4 слота
     private final ItemStackHandler itemHandler = new ItemStackHandler(4) {
@@ -215,6 +247,41 @@ public class MachineFluidTankBlockEntity extends BlockEntity implements MenuProv
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("Inventory"));
         fluidTank.readFromNBT(tag.getCompound("Fluid"));
+        if (tag.contains("LockedFluid")) {
+            lockedFluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(tag.getString("LockedFluid")));
+        } else {
+            lockedFluid = null;
+        }
+    }
+
+    @Override
+    public CompoundTag getUpdateTag() {
+        CompoundTag tag = super.getUpdateTag();
+        saveAdditional(tag);
+        return tag;
+    }
+
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        load(pkt.getTag()); // Читаем LockedFluid
+
+        // !!! САМОЕ ВАЖНОЕ: Сообщаем рендеру, что данные изменились !!!
+        requestModelDataUpdate();
+
+        // Обновляем блок в мире для перерисовки
+        if (level != null && level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    @Override
+    public @NotNull ModelData getModelData() {
+        if (lockedFluid != null && lockedFluid != Fluids.EMPTY) {
+            return ModelData.builder()
+                    .with(FLUID_RENDER_PROP, lockedFluid)
+                    .build();
+        }
+        return ModelData.builder().build();
     }
 
     @Override
@@ -222,6 +289,9 @@ public class MachineFluidTankBlockEntity extends BlockEntity implements MenuProv
         super.saveAdditional(tag);
         tag.put("Inventory", itemHandler.serializeNBT());
         tag.put("Fluid", fluidTank.writeToNBT(new CompoundTag()));
+        if (lockedFluid != null) {
+            tag.putString("LockedFluid", ForgeRegistries.FLUIDS.getKey(lockedFluid).toString());
+        }
     }
 
     // --- CAPABILITIES ---

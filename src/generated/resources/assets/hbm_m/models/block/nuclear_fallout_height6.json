@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/snow_height6",
+  "textures": {
+    "particle": "hbm_m:block/nuclear_fallout",
+    "texture": "hbm_m:block/nuclear_fallout"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "hbm_m:assembler",
+  "duration": 80,
+  "ingredients": [
+    {
+      "count": 12,
+      "item": "hbm_m:plate_steel"
+    },
+    {
+      "count": 12,
+      "item": "hbm_m:sulfur"
+    },
+    {
+      "count": 12,
+      "item": "hbm_m:lead_powder"
+    }
+  ],
+  "output": {
+    "item": "hbm_m:machine_battery"
+  },
+  "power": 150
+}

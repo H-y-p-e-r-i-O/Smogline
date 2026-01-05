@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "hbm_m:block/concrete_super_m1_slab"
+    },
+    "type=double": {
+      "model": "hbm_m:block/concrete_super_m1"
+    },
+    "type=top": {
+      "model": "hbm_m:block/concrete_super_m1_slab_top"
+    }
+  }
+}

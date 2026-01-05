@@ -1,0 +1,22 @@
+{
+  "type": "hbm_m:assembler",
+  "duration": 80,
+  "ingredients": [
+    {
+      "count": 3,
+      "item": "hbm_m:capacitor"
+    },
+    {
+      "count": 3,
+      "item": "hbm_m:wire_carbon"
+    },
+    {
+      "count": 1,
+      "item": "hbm_m:pcb"
+    }
+  ],
+  "output": {
+    "item": "hbm_m:capacitor_board"
+  },
+  "power": 150
+}

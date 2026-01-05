@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "!": {
+      "item": "minecraft:iron_ingot"
+    },
+    "%": {
+      "item": "minecraft:glass_pane"
+    },
+    "@": {
+      "item": "hbm_m:wire_tungsten"
+    }
+  },
+  "pattern": [
+    " % ",
+    " @ ",
+    " ! "
+  ],
+  "result": {
+    "count": 4,
+    "item": "hbm_m:cage_lamp"
+  },
+  "show_notification": true
+}
