@@ -1,4 +1,4 @@
-// 1.20.1	2026-01-04T23:15:14.9656957	Block States: hbm_m
+// 1.20.1	2026-01-06T12:14:34.8771127	Block States: hbm_m
 d900f15bc2b833f1bfc46c4bf03f41d46d5fc5af assets/hbm_m/blockstates/anvil_arsenic_bronze.json
 285375f6a116c49e3af8cd642d1a52835656a885 assets/hbm_m/blockstates/anvil_bismuth_bronze.json
 86e26d8d98945308472da6726bf012b73caefe98 assets/hbm_m/blockstates/anvil_desh.json
@@ -326,6 +326,7 @@ b7fdca5e0884548c3cd39a34e59a9faa503a8402 assets/hbm_m/blockstates/silo_hatch.jso
 9b4cb6a1d9eefe9b04d322fe750c230b1984cea9 assets/hbm_m/blockstates/sliding_seal_door.json
 d9e1417ed214dc9060f76177a25c09a54e4c0d07 assets/hbm_m/blockstates/strawberry_bush.json
 d2c2f032a91f11ed3816aba3b90682484190daff assets/hbm_m/blockstates/transition_seal.json
+18dec56637a34a43e6bdf5af1ca861c912d67651 assets/hbm_m/blockstates/turret_light.json
 82e19c53c49a720844f671d9bab80677a954592d assets/hbm_m/blockstates/universal_machine_part.json
 181026b4ffceb34f4fbf2c5b5f5c99147ab386c1 assets/hbm_m/blockstates/uranium_ore.json
 13eb34fd0c7561606150975a56680ea60e8176d1 assets/hbm_m/blockstates/vinyl_tile.json
@@ -850,6 +851,7 @@ b5a8e3ae95d0d5f7462d1d9e41bd4f827d688f65 assets/hbm_m/models/block/sellafield_sl
 d34ee487aba9f21cf62a3300d378376c61e18b39 assets/hbm_m/models/block/sellafield_slaked3.json
 578c20646dd61722420131f87d9d824752f2858f assets/hbm_m/models/block/sequestrum_ore.json
 3f1c9e36f75a11b0829a4449499ea59136066b0d assets/hbm_m/models/block/strawberry_bush.json
+041c36d166e2412a47dd94dbc73b869c0f6ee784 assets/hbm_m/models/block/turret_light.json
 bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f assets/hbm_m/models/block/universal_machine_part.json
 ce7591984040959923ef83bd224f19fe851d8692 assets/hbm_m/models/block/uranium_ore.json
 9c21b9de604193e95d9a20cf40cf07f0e769777c assets/hbm_m/models/block/vinyl_tile.json
@@ -1167,6 +1169,7 @@ f3a390ecacb0e60d775603c10ce72a1526df92a6 assets/hbm_m/models/item/sellafield_sla
 003f87d6f5e0cd30e71d7fe186ec495ec82a947c assets/hbm_m/models/item/sequestrum_ore.json
 7132429028416e1a6f492f45f19cb7abec4e8041 assets/hbm_m/models/item/shredder.json
 6c0abc3fd7caae6aa873817bdaa257de64bf83f2 assets/hbm_m/models/item/strawberry_bush.json
+9116df13ea56fc9d6fcb24db9fef5ece860c021e assets/hbm_m/models/item/turret_light.json
 c48a8f739caf820707ef140e943159d4c0b69bdf assets/hbm_m/models/item/uranium_ore.json
 878779e2769773df430f7eb4793eac8a5b57908e assets/hbm_m/models/item/vinyl_tile.json
 27b062cbd72dd77f43d79398e0e880416fea5a6c assets/hbm_m/models/item/vinyl_tile_slab.json

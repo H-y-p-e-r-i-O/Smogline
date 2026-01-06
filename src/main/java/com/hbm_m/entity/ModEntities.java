@@ -17,6 +17,10 @@ public class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
         DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MainRegistry.MOD_ID);
 
+    public static final RegistryObject<EntityType<TurretLightEntity>> TURRET_LIGHT = ENTITY_TYPES.register("turret_light",
+            () -> EntityType.Builder.of(TurretLightEntity::new, MobCategory.MONSTER)
+                    .sized(0.8f, 1.5f) // Размер хитбокса
+                    .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light").toString()));
 
 
     public static final RegistryObject<EntityType<GrenadeProjectileEntity>> GRENADE_PROJECTILE =

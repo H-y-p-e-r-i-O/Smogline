@@ -2,6 +2,7 @@ package com.hbm_m.client;
 
 // Основной класс клиентской настройки мода. Здесь регистрируются все клиентские обработчики событий,
 // GUI, рендереры, модели и т.д.
+import com.hbm_m.block.entity.client.TurretBlockRenderer;
 import com.hbm_m.client.model.FluidTankModelWrapper;
 import com.hbm_m.client.overlay.*;
 import com.hbm_m.client.loader.*;
@@ -13,6 +14,7 @@ import com.hbm_m.client.render.shader.*;
 import com.hbm_m.config.*;
 import com.hbm_m.client.tooltip.*;
 import com.hbm_m.entity.ModEntities;
+import com.hbm_m.entity.client.TurretLightRenderer;
 import com.hbm_m.item.custom.industrial.ItemAssemblyTemplate;
 import com.hbm_m.item.custom.industrial.ItemBlueprintFolder;
 import com.hbm_m.item.ModItems;
@@ -139,7 +141,7 @@ public class ClientSetup {
             BlockEntityRenderers.register(ModBlockEntities.ADVANCED_ASSEMBLY_MACHINE_BE.get(), MachineAdvancedAssemblerRenderer::new);
             BlockEntityRenderers.register(ModBlockEntities.DOOR_ENTITY.get(), DoorRenderer::new);
             BlockEntityRenderers.register(ModBlockEntities.PRESS_BE.get(), MachinePressRenderer::new);
-
+            BlockEntityRenderers.register(ModBlockEntities.TURRET_BLOCK_ENTITY.get(), TurretBlockRenderer::new);
             OcclusionCullingHelper.setTransparentBlocksTag(ModTags.Blocks.NON_OCCLUDING);
             try {
                 RenderPathManager.updateRenderPath();
@@ -218,6 +220,7 @@ public class ClientSetup {
     }
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntities.TURRET_LIGHT.get(), TurretLightRenderer::new);
         event.registerEntityRenderer(ModEntities.AIRNUKEBOMB_PROJECTILE.get(),
                 AirNukeBombProjectileEntityRenderer::new);
         event.registerEntityRenderer(ModEntities.AIRBOMB_PROJECTILE.get(),

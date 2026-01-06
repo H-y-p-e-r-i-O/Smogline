@@ -122,7 +122,8 @@ public class MainRegistry {
         MinecraftForge.EVENT_BUS.register(ChunkRadiationManager.INSTANCE);
         MinecraftForge.EVENT_BUS.register(new PlayerHandler());
 
-
+        // >>> ДОБАВИТЬ ЭТУ СТРОКУ: <<<
+        modEventBus.addListener(this::entityAttributeEvent);
         // Регистрация остальных систем resources
         // ModPacketHandler.register(); // Регистрация пакетов
 
@@ -223,6 +224,9 @@ public class MainRegistry {
             event.accept(ModBlocks.DUD_FUGAS_TONG);
             event.accept(ModBlocks.DUD_NUKE);
             event.accept(ModBlocks.DUD_SALTED);
+
+            event.accept(ModItems.TURRET_REMOVER);
+            event.accept(ModBlocks.TURRET_LIGHT);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added Alloy Sword to NTM Weapons tab");
@@ -1110,5 +1114,11 @@ public class MainRegistry {
             });
         }
     }
+    // Метод регистрации атрибутов (здоровье, урон и т.д.)
+    private void entityAttributeEvent(net.minecraftforge.event.entity.EntityAttributeCreationEvent event) {
+        event.put(ModEntities.TURRET_LIGHT.get(), com.hbm_m.entity.TurretLightEntity.createAttributes().build());
+    }
+
+
 }
 

@@ -4,6 +4,7 @@ import com.hbm_m.api.energy.ConverterBlockEntity;
 import com.hbm_m.api.energy.SwitchBlockEntity;
 import com.hbm_m.api.energy.WireBlockEntity;
 import com.hbm_m.block.ModBlocks;
+import com.hbm_m.block.entity.custom.TurretBlockEntity;
 import com.hbm_m.block.entity.custom.crates.*;
 import com.hbm_m.block.entity.custom.doors.DoorBlockEntity;
 import com.hbm_m.block.entity.custom.machines.*;
@@ -16,6 +17,8 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import static com.hbm_m.block.ModBlocks.TURRET_BLOCK;
 
 
 public class ModBlockEntities {
@@ -31,7 +34,9 @@ public class ModBlockEntities {
 		BLOCK_ENTITIES.register("machine_assembler_be", () ->
 			BlockEntityType.Builder.<MachineAssemblerBlockEntity>of(MachineAssemblerBlockEntity::new, ModBlocks.MACHINE_ASSEMBLER.get())
 				.build(null));
-
+    public static final RegistryObject<BlockEntityType<TurretBlockEntity>> TURRET_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("turret_block_entity",
+                    () -> BlockEntityType.Builder.of(TurretBlockEntity::new, TURRET_BLOCK.get()).build(null));
     public static final RegistryObject<BlockEntityType<MachineAdvancedAssemblerBlockEntity>> ADVANCED_ASSEMBLY_MACHINE_BE =
 		BLOCK_ENTITIES.register("advanced_assembly_machine_be", () ->
 			BlockEntityType.Builder.<MachineAdvancedAssemblerBlockEntity>of(MachineAdvancedAssemblerBlockEntity::new, ModBlocks.ADVANCED_ASSEMBLY_MACHINE.get())

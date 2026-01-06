@@ -127,6 +127,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.BILLET_PLUTONIUM);
         simpleItem(ModItems.BALL_TNT);
         simpleItem(ModItems.DEFUSER);
+        simpleItem(ModItems.TURRET_REMOVER);
         simpleItem(ModItems.AIRSTRIKE_AGENT);
         simpleItem(ModItems.SCREWDRIVER);
         simpleItem(ModItems.CROWBAR);

@@ -13,11 +13,13 @@ import java.util.Set;
 
 import com.hbm_m.api.fluids.ModFluids;
 
+import com.hbm_m.item.custom.industrial.TurretRemoverItem;
 import com.hbm_m.item.custom.fekal_electric.ItemCreativeBattery;
 import com.hbm_m.item.custom.fekal_electric.ModBatteryItem;
 import com.hbm_m.item.custom.crates.IronCrateItem;
 import com.hbm_m.item.custom.crates.SteelCrateItem;
 import com.hbm_m.item.custom.industrial.*;
+import com.hbm_m.item.custom.industrial.TurretRemoverItem;
 import com.hbm_m.item.custom.liquids.InfiniteWaterItem;
 import com.hbm_m.item.custom.liquids.ItemFluidIdentifier;
 import com.hbm_m.item.custom.radiation_meter.ItemDosimeter;
@@ -656,6 +658,10 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> DUST_TINY = ITEMS.register("dust_tiny",
             () -> new Item(new Item.Properties()));
+
+    public static final RegistryObject<Item> TURRET_REMOVER = ITEMS.register("turret_remover",
+            () -> new TurretRemoverItem(new Item.Properties()));
+
 
     public static final RegistryObject<Item> NUGGET_SILICON = ITEMS.register("nugget_silicon",
             () -> new Item(new Item.Properties()));

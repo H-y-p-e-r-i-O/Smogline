@@ -1,4 +1,4 @@
-// 1.20.1	2026-01-04T23:15:14.9591813	Item Models: hbm_m
+// 1.20.1	2026-01-06T19:37:15.3096525	Item Models: hbm_m
 0edf93465897319e838e8a2dbf3170a8fc825d55 assets/hbm_m/models/item/actinium_ingot.json
 36f411ebae28dbd5666a4aec7b5dd411e43050f4 assets/hbm_m/models/item/actinium_powder.json
 6a0942144f82b039abeb5ad26eaa741312784586 assets/hbm_m/models/item/actinium_powder_tiny.json
@@ -923,6 +923,7 @@ a686ce1a41b65ac1ec60a14079c7d07d009491cd assets/hbm_m/models/item/titanium_powde
 4ebb5eee59e71c074dba0bf61aac98cb5e3d09b1 assets/hbm_m/models/item/transition_seal.json
 85350967962d7734188ecf9bb764122730f335a7 assets/hbm_m/models/item/tungsten_ingot.json
 6ba442af2d714b046729f772a4cd49f8d939b7ae assets/hbm_m/models/item/tungsten_powder.json
+49c7d992742acc7e64163bf1d58945b7bfe5b463 assets/hbm_m/models/item/turret_remover.json
 d5d01340901686d099dcc6d11ca4736692d872f6 assets/hbm_m/models/item/u233_ingot.json
 089adc402e3da10981e147368c549f4b87c18750 assets/hbm_m/models/item/u235_ingot.json
 6dfe32e7909b6d45a411fa84dd3612e1c721fd52 assets/hbm_m/models/item/u238m2_ingot.json

@@ -270,6 +270,13 @@ public class ModBlocks {
 
 
     //---------------------------<БЛОКИ>-------------------------------------
+
+    public static final RegistryObject<Block> TURRET_BLOCK = registerBlock("turret_block",
+            () -> new TurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops().noOcclusion()));
+
+    public static final RegistryObject<Block> TURRET_LIGHT = registerBlock("turret_light",
+            () -> new TurretLightBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
+
     public static final RegistryObject<Block> REINFORCED_STONE = registerBlock("reinforced_stone",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
 
