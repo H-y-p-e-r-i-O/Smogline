@@ -14,6 +14,7 @@ import com.hbm_m.client.render.shader.*;
 import com.hbm_m.config.*;
 import com.hbm_m.client.tooltip.*;
 import com.hbm_m.entity.ModEntities;
+import com.hbm_m.entity.client.TurretBulletRenderer;
 import com.hbm_m.entity.client.TurretLightRenderer;
 import com.hbm_m.item.custom.industrial.ItemAssemblyTemplate;
 import com.hbm_m.item.custom.industrial.ItemBlueprintFolder;
@@ -226,6 +227,7 @@ public class ClientSetup {
         event.registerEntityRenderer(ModEntities.AIRBOMB_PROJECTILE.get(),
                 AirBombProjectileEntityRenderer::new);
         event.registerEntityRenderer(ModEntities.AIRSTRIKE_NUKE_ENTITY.get(), AirstrikeNukeEntityRenderer::new);
+        EntityRenderers.register(ModEntities.TURRET_BULLET.get(), TurretBulletRenderer::new);
 
         event.registerEntityRenderer(ModEntities.AIRSTRIKE_ENTITY.get(), AirstrikeEntityRenderer::new);
     }

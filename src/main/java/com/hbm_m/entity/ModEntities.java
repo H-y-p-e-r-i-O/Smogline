@@ -22,6 +22,15 @@ public class ModEntities {
                     .sized(0.8f, 1.5f) // Размер хитбокса
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light").toString()));
 
+    public static final RegistryObject<EntityType<TurretBulletEntity>> TURRET_BULLET =
+            ENTITY_TYPES.register("turret_bullet",
+                    () -> EntityType.Builder.<TurretBulletEntity>of(TurretBulletEntity::new, MobCategory.MISC)
+                            .sized(0.2f, 0.2f) // Маленький хитбокс
+                            .clientTrackingRange(4) // Дальность прорисовки (в чанках)
+                            .updateInterval(10)     // Частота обновлений пакетов (можно 2 или 1 для супер-плавности, но 10 ок)
+                            .setShouldReceiveVelocityUpdates(true) // Обязательно true для снарядов!
+                            .build("turret_bullet"));
+
 
     public static final RegistryObject<EntityType<GrenadeProjectileEntity>> GRENADE_PROJECTILE =
         ENTITY_TYPES.register("grenade_projectile",

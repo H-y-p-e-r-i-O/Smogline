@@ -1,5 +1,6 @@
 package com.hbm_m.entity;
 
+import com.hbm_m.main.MainRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -17,7 +18,6 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -41,11 +41,15 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     private static final EntityDataAccessor<Integer> DEPLOY_TIMER = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.INT);
 
-    // Длительность анимации деплоя в тиках
+    // Длительность деплоя (в тиках)
     private static final int DEPLOY_DURATION = 80;
-    private int shootAnimTimer = 0;
 
-    // УБРАНО: поле hasTriggeredDeploy больше не нужно
+    // Длительность анимации выстрела (0.6667 сек ≈ 14 тиков)
+    // Используем это число и для таймера анимации, и для кулдауна стрельбы
+    private static final int SHOT_ANIMATION_LENGTH = 14;
+
+    private int shootAnimTimer = 0;
+    private int shotCooldown = 0; // Серверный кулдаун, синхронизированный с анимацией
 
     public TurretLightEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -83,15 +87,12 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     public void tick() {
         super.tick();
 
-        // Фиксируем корпус
+        // Фиксируем корпус (чтобы не вращался сам по себе)
         this.yBodyRot = this.getYRot();
         this.yBodyRotO = this.getYRot();
 
-        // УБРАНО: клиентский триггер анимации
-
-        // Серверная логика
         if (!this.level().isClientSide) {
-            // Логика таймера деплоя
+            // Логика развертывания (Deploy)
             int currentTimer = this.entityData.get(DEPLOY_TIMER);
             if (currentTimer > 0) {
                 this.entityData.set(DEPLOY_TIMER, currentTimer - 1);
@@ -100,10 +101,16 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 }
             }
 
-            // Логика стрельбы
+            // Логика кулдауна выстрела
+            if (this.shotCooldown > 0) {
+                this.shotCooldown--;
+            }
+
+            // Логика сброса флага анимации стрельбы
             if (this.isShooting()) {
                 shootAnimTimer++;
-                if (shootAnimTimer > 15) {
+                // Сбрасываем флаг чуть раньше конца анимации, чтобы она успела доиграть корректно
+                if (shootAnimTimer >= SHOT_ANIMATION_LENGTH) {
                     this.setShooting(false);
                     shootAnimTimer = 0;
                 }
@@ -113,18 +120,15 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        // ✅ ИСПРАВЛЕННЫЙ КОНТРОЛЛЕР ДЕПЛОЯ
-        // Теперь анимация зависит от состояния !isDeployed(), а не от одноразового триггера
+        // Контроллер деплоя (зависит от состояния isDeployed)
         controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> {
             if (!this.isDeployed()) {
-                // Если турель не развернута (новая), играем анимацию деплоя
                 return event.setAndContinue(RawAnimation.begin().thenPlay("deploy"));
             }
-            // Если развернута (старая или таймер вышел), останавливаем анимацию
             return PlayState.STOP;
         }));
 
-        // Контроллер стрельбы (без изменений)
+        // Контроллер стрельбы
         controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
             if (this.isShooting()) {
                 if (event.getController().getAnimationState() == AnimationController.State.STOPPED) {
@@ -136,18 +140,12 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         }));
     }
 
-    // --- Остальные методы без изменений ---
-
     public void setOwner(Player player) {
         this.entityData.set(OWNER_UUID, Optional.of(player.getUUID()));
     }
 
     public UUID getOwnerUUID() {
         return this.entityData.get(OWNER_UUID).orElse(null);
-    }
-
-    public int getDeployTimer() {
-        return this.entityData.get(DEPLOY_TIMER);
     }
 
     @Override
@@ -182,7 +180,8 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.0D, 10, 20.0F) {
+        // Интервал атаки = длине анимации (SHOT_ANIMATION_LENGTH), чтобы AI не спамил
+        this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.0D, SHOT_ANIMATION_LENGTH, 20.0F) {
             @Override
             public boolean canUse() {
                 return TurretLightEntity.this.isDeployed() && super.canUse();
@@ -193,15 +192,18 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 return TurretLightEntity.this.isDeployed() && super.canContinueToUse();
             }
         });
+
         this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F) {
             @Override
             public boolean canUse() {
                 return TurretLightEntity.this.isDeployed() && super.canUse();
             }
         });
+
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, (entity) -> {
             return TurretLightEntity.this.isDeployed() && !TurretLightEntity.this.isAlliedTo(entity);
         }));
+
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false, (entity) -> {
             return TurretLightEntity.this.isDeployed() && !TurretLightEntity.this.isAlliedTo(entity);
         }));
@@ -209,20 +211,66 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
+        // 1. Проверки: деплой, безопасность стрельбы, кулдаун анимации
         if (!this.isDeployed()) return;
+        if (this.shotCooldown > 0) return; // Ждем окончания предыдущей анимации
         if (!canShootSafe(target)) return;
 
-        Arrow arrow = new Arrow(this.level(), this);
-        double d0 = target.getX() - this.getX();
-        double d1 = target.getY(0.3333333333333333D) - arrow.getY();
-        double d2 = target.getZ() - this.getZ();
-        double d3 = Math.sqrt(d0 * d0 + d2 * d2);
-        arrow.shoot(d0, d1 + d3 * 0.2D, d2, 1.6F, 1.0F);
-
-        this.playSound(SoundEvents.GENERIC_EXPLODE, 0.5F, 2.0F);
-        this.level().addFreshEntity(arrow);
+        // 2. Активируем анимацию и кулдаун
+        this.shotCooldown = SHOT_ANIMATION_LENGTH;
         this.setShooting(true);
         this.shootAnimTimer = 0;
+
+        // 3. Создаем пулю (а не стрелу!)
+        TurretBulletEntity bullet = new TurretBulletEntity(this.level(), this);
+
+        // --- Расчет позиции дула ---
+        // Y = 10.49 px
+        // Z = 11.86 + 3.0 = 14.86 px (смещение вперед)
+        double offsetY = 10.49 / 16.0;
+        double offsetZ = 14.86 / 16.0;
+
+        // Перевод углов в радианы
+        // Используем поворот головы (куда смотрит турель)
+        float yRotRad = this.yHeadRot * ((float)Math.PI / 180F);
+        // Инвертируем pitch для корректной математики (в MC вверх - это минус)
+        float xRotRad = -this.getXRot() * ((float)Math.PI / 180F);
+
+        // Смещение дула с учетом наклона пушки (вверх-вниз)
+        double yShift = Math.sin(xRotRad) * offsetZ;
+        double forwardShift = Math.cos(xRotRad) * offsetZ;
+
+        // Финальные координаты спавна пули с учетом поворота турели
+        double spawnX = this.getX() - Math.sin(yRotRad) * forwardShift;
+        double spawnY = this.getY() + offsetY + yShift;
+        double spawnZ = this.getZ() + Math.cos(yRotRad) * forwardShift;
+
+        bullet.setPos(spawnX, spawnY, spawnZ);
+
+        // ✅ СИНХРОНИЗАЦИЯ ПОВОРОТА
+        // Копируем поворот головы турели в пулю ПЕРЕД выстрелом
+        // Важно: yHeadRot - это "куда смотрит голова" (Yaw)
+        // getXRot() - это "наклон пушки" (Pitch)
+        bullet.setYRot(this.yHeadRot);
+        bullet.setXRot(this.getXRot());
+        // Для надежности обновляем "предыдущие" значения, чтобы не было дерганья при интерполяции
+        bullet.yRotO = this.yHeadRot;
+        bullet.xRotO = this.getXRot();
+
+
+        // --- Расчет вектора полета ---
+        double d0 = target.getX() - spawnX;
+        double d1 = target.getY(0.3333333333333333D) - spawnY;
+        double d2 = target.getZ() - spawnZ;
+        double d3 = Math.sqrt(d0 * d0 + d2 * d2);
+
+        // shoot(x, y, z, velocity, inaccuracy)
+        // velocity = 3.0F (быстрая пуля)
+        // inaccuracy = 0.5F (небольшой разброс)
+        bullet.shoot(d0, d1 + d3 * 0.05D, d2, 3.0F, 0.5F);
+
+        this.playSound(SoundEvents.GENERIC_EXPLODE, 0.5F, 2.0F);
+        this.level().addFreshEntity(bullet);
     }
 
     @Override
