@@ -119,7 +119,6 @@
 			}
 		},
 		"deploy": {
-			"loop": "hold_on_last_frame",
 			"animation_length": 1.7544,
 			"start_delay": 2,
 			"bones": {

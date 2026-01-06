@@ -41,11 +41,11 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     private static final EntityDataAccessor<Integer> DEPLOY_TIMER = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.INT);
 
-    // Длительность деплоя (в тиках)
+    // Длительность анимации деплоя в тиках
     private static final int DEPLOY_DURATION = 80;
-
-    // Таймер выстрела (быстрый)
     private int shootAnimTimer = 0;
+
+    // УБРАНО: поле hasTriggeredDeploy больше не нужно
 
     public TurretLightEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -70,18 +70,28 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     }
 
     @Override
-    public int getMaxHeadYRot() { return 360; } // Голова на 360
+    public int getMaxHeadYRot() {
+        return 360;
+    }
+
     @Override
-    public int getMaxHeadXRot() { return 90; }  // Вверх/вниз полностью
+    public int getMaxHeadXRot() {
+        return 90;
+    }
 
     @Override
     public void tick() {
         super.tick();
-        // Фиксируем корпус на месте
+
+        // Фиксируем корпус
         this.yBodyRot = this.getYRot();
         this.yBodyRotO = this.getYRot();
 
+        // УБРАНО: клиентский триггер анимации
+
+        // Серверная логика
         if (!this.level().isClientSide) {
+            // Логика таймера деплоя
             int currentTimer = this.entityData.get(DEPLOY_TIMER);
             if (currentTimer > 0) {
                 this.entityData.set(DEPLOY_TIMER, currentTimer - 1);
@@ -90,9 +100,9 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 }
             }
 
+            // Логика стрельбы
             if (this.isShooting()) {
                 shootAnimTimer++;
-                // Быстрая анимация (15 тиков = 0.75 сек)
                 if (shootAnimTimer > 15) {
                     this.setShooting(false);
                     shootAnimTimer = 0;
@@ -101,9 +111,44 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         }
     }
 
-    public void setOwner(Player player) { this.entityData.set(OWNER_UUID, Optional.of(player.getUUID())); }
-    public UUID getOwnerUUID() { return this.entityData.get(OWNER_UUID).orElse(null); }
-    public int getDeployTimer() { return this.entityData.get(DEPLOY_TIMER); }
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // ✅ ИСПРАВЛЕННЫЙ КОНТРОЛЛЕР ДЕПЛОЯ
+        // Теперь анимация зависит от состояния !isDeployed(), а не от одноразового триггера
+        controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> {
+            if (!this.isDeployed()) {
+                // Если турель не развернута (новая), играем анимацию деплоя
+                return event.setAndContinue(RawAnimation.begin().thenPlay("deploy"));
+            }
+            // Если развернута (старая или таймер вышел), останавливаем анимацию
+            return PlayState.STOP;
+        }));
+
+        // Контроллер стрельбы (без изменений)
+        controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
+            if (this.isShooting()) {
+                if (event.getController().getAnimationState() == AnimationController.State.STOPPED) {
+                    event.getController().forceAnimationReset();
+                }
+                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
+            }
+            return PlayState.STOP;
+        }));
+    }
+
+    // --- Остальные методы без изменений ---
+
+    public void setOwner(Player player) {
+        this.entityData.set(OWNER_UUID, Optional.of(player.getUUID()));
+    }
+
+    public UUID getOwnerUUID() {
+        return this.entityData.get(OWNER_UUID).orElse(null);
+    }
+
+    public int getDeployTimer() {
+        return this.entityData.get(DEPLOY_TIMER);
+    }
 
     @Override
     public boolean isAlliedTo(Entity entity) {
@@ -119,11 +164,13 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         Vec3 start = this.getEyePosition();
         Vec3 end = target.getEyePosition();
         Vec3 viewVector = end.subtract(start);
+
         EntityHitResult hitResult = ProjectileUtil.getEntityHitResult(
                 this.level(), this, start, end,
                 this.getBoundingBox().expandTowards(viewVector).inflate(1.0D),
                 (entity) -> !entity.isSpectator() && entity.isPickable() && entity != target
         );
+
         if (hitResult != null) {
             Entity hitEntity = hitResult.getEntity();
             if (start.distanceToSqr(hitEntity.position()) < start.distanceToSqr(target.position())) {
@@ -135,19 +182,23 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
     @Override
     protected void registerGoals() {
-        // СКОРОСТРЕЛЬНОСТЬ: 10 тиков (было 30)
         this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.0D, 10, 20.0F) {
             @Override
-            public boolean canUse() { return TurretLightEntity.this.isDeployed() && super.canUse(); }
-            @Override
-            public boolean canContinueToUse() { return TurretLightEntity.this.isDeployed() && super.canContinueToUse(); }
-        });
+            public boolean canUse() {
+                return TurretLightEntity.this.isDeployed() && super.canUse();
+            }
 
+            @Override
+            public boolean canContinueToUse() {
+                return TurretLightEntity.this.isDeployed() && super.canContinueToUse();
+            }
+        });
         this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F) {
             @Override
-            public boolean canUse() { return TurretLightEntity.this.isDeployed() && super.canUse(); }
+            public boolean canUse() {
+                return TurretLightEntity.this.isDeployed() && super.canUse();
+            }
         });
-
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, (entity) -> {
             return TurretLightEntity.this.isDeployed() && !TurretLightEntity.this.isAlliedTo(entity);
         }));
@@ -166,47 +217,13 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         double d1 = target.getY(0.3333333333333333D) - arrow.getY();
         double d2 = target.getZ() - this.getZ();
         double d3 = Math.sqrt(d0 * d0 + d2 * d2);
-
         arrow.shoot(d0, d1 + d3 * 0.2D, d2, 1.6F, 1.0F);
+
         this.playSound(SoundEvents.GENERIC_EXPLODE, 0.5F, 2.0F);
         this.level().addFreshEntity(arrow);
-
         this.setShooting(true);
         this.shootAnimTimer = 0;
     }
-
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        // Контроллер Раскладки
-        controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> {
-
-            // ✅ ГЛАВНОЕ ИСПРАВЛЕНИЕ:
-            // Если турель УЖЕ разложена (DEPLOYED = true), мы принудительно СТОПАЕМ анимацию.
-            // Теперь установка новой турели не будет влиять на старые.
-            if (this.isDeployed()) {
-                return PlayState.STOP;
-            }
-
-            // Иначе (если ещё не разложена) - играем анимацию
-            if (this.getDeployTimer() > 0) {
-                return event.setAndContinue(RawAnimation.begin().thenPlay("deploy"));
-            }
-
-            return PlayState.STOP;
-        }));
-
-        // Контроллер Стрельбы (без изменений)
-        controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
-            if (this.isShooting()) {
-                if (event.getController().getAnimationState() == AnimationController.State.STOPPED) {
-                    event.getController().forceAnimationReset();
-                }
-                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
-            }
-            return PlayState.STOP;
-        }));
-    }
-
 
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
@@ -225,12 +242,28 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     }
 
     @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() { return this.cache; }
-    public void setShooting(boolean shooting) { this.entityData.set(SHOOTING, shooting); }
-    public boolean isShooting() { return this.entityData.get(SHOOTING); }
-    public boolean isDeployed() { return this.entityData.get(DEPLOYED); }
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
+    }
+
+    public void setShooting(boolean shooting) {
+        this.entityData.set(SHOOTING, shooting);
+    }
+
+    public boolean isShooting() {
+        return this.entityData.get(SHOOTING);
+    }
+
+    public boolean isDeployed() {
+        return this.entityData.get(DEPLOYED);
+    }
+
     @Override
-    public boolean isPushable() { return false; }
+    public boolean isPushable() {
+        return false;
+    }
+
     @Override
-    protected void playStepSound(BlockPos pos, BlockState blockIn) {}
+    protected void playStepSound(BlockPos pos, BlockState blockIn) {
+    }
 }

@@ -28,15 +28,24 @@ public class TurretLightModel extends GeoModel<TurretLightEntity> {
     }
 
     @Override
-    public void setCustomAnimations(TurretLightEntity animatable, long instanceId, AnimationState animationState) {
+    public void setCustomAnimations(TurretLightEntity animatable, long instanceId, AnimationState<TurretLightEntity> animationState) {
         super.setCustomAnimations(animatable, instanceId, animationState);
-        EntityModelData entityData = (EntityModelData) animationState.getData(DataTickets.ENTITY_MODEL_DATA);
 
+        // ✅ ВАЖНО: Если турель еще не разложена, не вращаем голову!
+        // Это дает анимации "deploy" полностью контролировать кости.
+        if (!animatable.isDeployed()) {
+            return;
+        }
+
+        EntityModelData entityData = animationState.getData(DataTickets.ENTITY_MODEL_DATA);
+
+        // Получаем кость основания башни (поворот влево-вправо)
         CoreGeoBone topBase = getAnimationProcessor().getBone("top_base");
         if (topBase != null) {
             topBase.setRotY(entityData.netHeadYaw() * Mth.DEG_TO_RAD);
         }
 
+        // Получаем кость пушки (поворот вверх-вниз)
         CoreGeoBone cannon = getAnimationProcessor().getBone("cannon");
         if (cannon != null) {
             cannon.setRotX(entityData.headPitch() * Mth.DEG_TO_RAD);
