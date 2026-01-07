@@ -1,8 +1,6 @@
 package com.hbm_m.entity;
 
-import com.hbm_m.main.MainRegistry;
 import com.hbm_m.sound.ModSounds;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.sounds.SoundEvent;
@@ -25,6 +23,10 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private float damage = 4.0f;
 
+    // ПАРАМЕТРЫ НАКЛОНА (как в AirBomb)
+    private static final float ROTATION_SPEED = 5.0F; // Градусов в секунду
+    private float currentPitchOffset = 0.0F;
+
     public TurretBulletEntity(EntityType<? extends ThrowableProjectile> type, Level level) {
         super(type, level);
     }
@@ -37,31 +39,49 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
     public void tick() {
         super.tick();
 
-        // --- ВАЖНО: Обновление поворота по физике ---
-        // Это НЕ нагружает сервер. Это стандартная математика Minecraft.
-        // Без этого пуля будет лететь "блинчиком" или боком.
+        // --- УЛУЧШЕННАЯ ФИЗИКА ВРАЩЕНИЯ (как в авиаударе) ---
         if (!this.level().isClientSide) {
             Vec3 motion = this.getDeltaMovement();
-            if (motion.lengthSqr() > 0.01D) {
-                double horizontalDist = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
 
-                // Рассчитываем углы на основе вектора полета
+            // Если пуля движется (а она движется)
+            if (motion.lengthSqr() > 0.001D) {
+                // 1. Поворот по горизонтали (YAW) - всегда по вектору движения
                 float targetYaw = (float)(Mth.atan2(motion.x, motion.z) * (double)(180F / (float)Math.PI));
-                float targetPitch = (float)(Mth.atan2(motion.y, horizontalDist) * (double)(180F / (float)Math.PI));
-
                 this.setYRot(targetYaw);
-                this.setXRot(targetPitch);
+
+                // 2. Поворот по вертикали (PITCH) - ПЛАВНЫЙ НАКЛОН ВНИЗ
+                // Вместо того чтобы пуля смотрела строго по вектору (который быстро падает вниз),
+                // мы делаем плавный наклон носа, как у реального снаряда.
+
+                // Увеличиваем наклон каждый тик (20 тиков = 1 сек)
+                // За 1 секунду (20 тиков) наклон увеличится на ROTATION_SPEED (5 градусов)
+                currentPitchOffset += (ROTATION_SPEED / 20.0F);
+
+                // Базовый угол от вектора скорости (чтобы старт был правильным)
+                double horizontalDist = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+                float vectorPitch = (float)(Mth.atan2(motion.y, horizontalDist) * (double)(180F / (float)Math.PI));
+
+                // Применяем наш плавный наклон
+                this.setXRot(vectorPitch + currentPitchOffset);
             }
         }
+
+        // Синхронизация для рендера
+        this.yRotO = this.getYRot();
+        this.xRotO = this.getXRot();
 
         if (this.tickCount > 200) {
             this.discard();
         }
     }
 
-    // ... boilerplate ...
-    @Override protected void defineSynchedData() {}
-    @Override protected float getGravity() { return 0.01F; }
+    @Override
+    protected void defineSynchedData() {}
+
+    @Override
+    protected float getGravity() {
+        return 0.01F;
+    }
 
     @Override
     protected void onHitEntity(EntityHitResult result) {
@@ -76,6 +96,7 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
             } else {
                 if (ModSounds.BULLET_HIT2.isPresent()) hitSound = ModSounds.BULLET_HIT2.get();
             }
+
             if (hitSound != null) {
                 float pitch = 0.9F + this.random.nextFloat() * 0.2F;
                 this.playSound(hitSound, 0.5F, pitch);
@@ -94,6 +115,9 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
-    @Override public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
-    @Override public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
 }
