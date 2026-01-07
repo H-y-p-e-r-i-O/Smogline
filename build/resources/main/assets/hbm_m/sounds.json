@@ -48,6 +48,34 @@
       "hbm_m:techbleep"
     ]
   },
+  "turret_fire": {
+    "category": "player",
+    "subtitle": "sounds.hbm_m.turret_fire",
+    "sounds": [
+      "hbm_m:turret_fire"
+    ]
+  },
+  "turret_lock": {
+    "category": "player",
+    "subtitle": "sounds.hbm_m.turret_lock",
+    "sounds": [
+      "hbm_m:turret_lock"
+    ]
+  },
+  "bullet_hit1": {
+    "category": "player",
+    "subtitle": "sounds.hbm_m.bullet_hit1",
+    "sounds": [
+      "hbm_m:bullet_hit1"
+    ]
+  },
+  "bullet_hit2": {
+    "category": "player",
+    "subtitle": "sounds.hbm_m.bullet_hit2",
+    "sounds": [
+      "hbm_m:bullet_hit2"
+    ]
+  },
   "bombdet1": {
     "category": "player",
     "subtitle": "sounds.hbm_m.bombdet1",

@@ -37,6 +37,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.CRATE_METAL);
         blockWithItem(ModBlocks.CRATE);
         blockWithItem(ModBlocks.TURRET_LIGHT);
+        blockWithItem(ModBlocks.TURRET_LIGHT_PLACER);
         blockWithItem(ModBlocks.CRATE_LEAD);
         blockWithItem(ModBlocks.ASPHALT);
         blockWithItem(ModBlocks.BARRICADE);

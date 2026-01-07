@@ -1,6 +1,7 @@
 package com.hbm_m.entity;
 
 import com.hbm_m.main.MainRegistry;
+import com.hbm_m.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -12,16 +13,17 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -41,15 +43,14 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     private static final EntityDataAccessor<Integer> DEPLOY_TIMER = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.INT);
 
-    // Длительность деплоя (в тиках)
     private static final int DEPLOY_DURATION = 80;
-
-    // Длительность анимации выстрела (0.6667 сек ≈ 14 тиков)
-    // Используем это число и для таймера анимации, и для кулдауна стрельбы
     private static final int SHOT_ANIMATION_LENGTH = 14;
 
     private int shootAnimTimer = 0;
-    private int shotCooldown = 0; // Серверный кулдаун, синхронизированный с анимацией
+    private int shotCooldown = 0;
+    private int lockSoundCooldown = 0;
+
+    private LivingEntity currentTargetCache = null;
 
     public TurretLightEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -74,203 +75,258 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     }
 
     @Override
-    public int getMaxHeadYRot() {
-        return 360;
-    }
-
+    public int getMaxHeadYRot() { return 360; }
     @Override
-    public int getMaxHeadXRot() {
-        return 90;
-    }
+    public int getMaxHeadXRot() { return 90; }
 
     @Override
     public void tick() {
         super.tick();
 
-        // Фиксируем корпус (чтобы не вращался сам по себе)
         this.yBodyRot = this.getYRot();
         this.yBodyRotO = this.getYRot();
 
         if (!this.level().isClientSide) {
-            // Логика развертывания (Deploy)
+            // Logic
             int currentTimer = this.entityData.get(DEPLOY_TIMER);
             if (currentTimer > 0) {
                 this.entityData.set(DEPLOY_TIMER, currentTimer - 1);
-                if (currentTimer - 1 == 0) {
-                    this.entityData.set(DEPLOYED, true);
-                }
+                if (currentTimer - 1 == 0) this.entityData.set(DEPLOYED, true);
             }
+            if (this.shotCooldown > 0) this.shotCooldown--;
+            if (this.lockSoundCooldown > 0) this.lockSoundCooldown--;
 
-            // Логика кулдауна выстрела
-            if (this.shotCooldown > 0) {
-                this.shotCooldown--;
-            }
-
-            // Логика сброса флага анимации стрельбы
             if (this.isShooting()) {
                 shootAnimTimer++;
-                // Сбрасываем флаг чуть раньше конца анимации, чтобы она успела доиграть корректно
                 if (shootAnimTimer >= SHOT_ANIMATION_LENGTH) {
                     this.setShooting(false);
                     shootAnimTimer = 0;
                 }
             }
-        }
-    }
 
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        // Контроллер деплоя (зависит от состояния isDeployed)
-        controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> {
-            if (!this.isDeployed()) {
-                return event.setAndContinue(RawAnimation.begin().thenPlay("deploy"));
-            }
-            return PlayState.STOP;
-        }));
+            LivingEntity target = this.getTarget();
 
-        // Контроллер стрельбы
-        controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
-            if (this.isShooting()) {
-                if (event.getController().getAnimationState() == AnimationController.State.STOPPED) {
-                    event.getController().forceAnimationReset();
+            // --- ЗВУК ЗАХВАТА ---
+            // Теперь проверяем this.isDeployed()
+            if (target != null && target != currentTargetCache && this.isDeployed()) {
+                if (this.lockSoundCooldown == 0) {
+                    if (ModSounds.TURRET_LOCK.isPresent()) {
+                        this.playSound(ModSounds.TURRET_LOCK.get(), 1.0F, 1.0F);
+                    }
+                    this.lockSoundCooldown = 40;
                 }
-                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
+                currentTargetCache = target;
+            } else if (target == null) {
+                currentTargetCache = null;
             }
-            return PlayState.STOP;
-        }));
-    }
 
-    public void setOwner(Player player) {
-        this.entityData.set(OWNER_UUID, Optional.of(player.getUUID()));
-    }
+            // --- БАЛЛИСТИЧЕСКИЙ ВЫЧИСЛИТЕЛЬ ---
+            if (target != null && this.isDeployed()) {
+                Vec3 aimPos = getViableTargetPos(target);
 
-    public UUID getOwnerUUID() {
-        return this.entityData.get(OWNER_UUID).orElse(null);
-    }
+                if (aimPos != null) {
+                    double bulletSpeed = 3.0D;
+                    double gravity = 0.03D;
 
-    @Override
-    public boolean isAlliedTo(Entity entity) {
-        if (entity == this) return true;
-        if (this.getOwnerUUID() != null) {
-            if (entity instanceof Player player && this.getOwnerUUID().equals(player.getUUID())) return true;
-            if (entity instanceof TurretLightEntity turret && this.getOwnerUUID().equals(turret.getOwnerUUID())) return true;
+                    double distance = Math.sqrt(this.distanceToSqr(aimPos));
+                    double timeToImpact = distance / bulletSpeed;
+
+                    Vec3 targetVelocity = target.getDeltaMovement();
+
+                    double predictedX = aimPos.x + (targetVelocity.x * timeToImpact * 15.0);
+                    double predictedZ = aimPos.z + (targetVelocity.z * timeToImpact * 15.0);
+                    double predictedY = aimPos.y + (targetVelocity.y * timeToImpact);
+
+                    double drop = 0.5 * gravity * (timeToImpact * timeToImpact);
+                    predictedY += drop;
+
+                    if (predictedY < target.getY()) predictedY = target.getY() + 0.5;
+
+                    this.getLookControl().setLookAt(predictedX, predictedY, predictedZ, 30.0F, 30.0F);
+                } else {
+                    this.getLookControl().setLookAt(target, 30.0F, 30.0F);
+                }
+            }
         }
-        return super.isAlliedTo(entity);
+        // --- ПРОВЕРКА ПРИОРИТЕТОВ (Force Target Switch) ---
+        if (!this.level().isClientSide && this.tickCount % 10 == 0) { // Каждые полсекунды
+            UUID ownerUUID = this.getOwnerUUID();
+            if (ownerUUID != null) {
+                Player owner = this.level().getPlayerByUUID(ownerUUID);
+                if (owner != null) {
+                    LivingEntity ownerAttacker = owner.getLastHurtByMob();
+                    // Если владельца кто-то бьет, и это НЕ наша текущая цель -> ПЕРЕКЛЮЧАЕМСЯ!
+                    if (ownerAttacker != null && ownerAttacker != this.getTarget() && ownerAttacker.isAlive() && !isAlliedTo(ownerAttacker)) {
+                        this.setTarget(ownerAttacker);
+                    }
+                }
+            }
+        }
+
+    }
+
+    // --- УЛУЧШЕННЫЙ ВЫБОР ТОЧКИ ---
+    private Vec3 getViableTargetPos(LivingEntity target) {
+        Vec3 start = this.getEyePosition();
+        float height = target.getBbHeight();
+        float width = target.getBbWidth();
+
+        // 1. Для ПАУКОВ (широкие и низкие)
+        // Целимся ВЫШЕ центра (в спину/голову), чтобы не стрелять в землю
+        if (width > height) {
+            Vec3 highCenter = target.position().add(0, height * 0.75, 0);
+            return canSeePoint(start, highCenter) ? highCenter : null;
+        }
+
+        // 2. Для МЕЛОЧИ (слаймы)
+        if (height < 0.8F) {
+            Vec3 center = target.position().add(0, height / 2, 0);
+            return canSeePoint(start, center) ? center : null;
+        }
+
+        // 3. Для ОСТАЛЬНЫХ (Глаза -> Центр -> Ноги)
+        Vec3[] checkPoints = new Vec3[] {
+                target.getEyePosition(),
+                target.position().add(0, height / 2, 0),
+                target.position()
+        };
+
+        for (Vec3 end : checkPoints) {
+            if (canSeePoint(start, end)) return end;
+        }
+        return null;
+    }
+
+    private boolean canSeePoint(Vec3 start, Vec3 end) {
+        BlockHitResult blockHit = this.level().clip(new ClipContext(
+                start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this
+        ));
+        return blockHit.getType() == HitResult.Type.MISS ||
+                start.distanceToSqr(blockHit.getLocation()) > start.distanceToSqr(end);
     }
 
     private boolean canShootSafe(LivingEntity target) {
-        Vec3 start = this.getEyePosition();
-        Vec3 end = target.getEyePosition();
-        Vec3 viewVector = end.subtract(start);
-
-        EntityHitResult hitResult = ProjectileUtil.getEntityHitResult(
-                this.level(), this, start, end,
-                this.getBoundingBox().expandTowards(viewVector).inflate(1.0D),
-                (entity) -> !entity.isSpectator() && entity.isPickable() && entity != target
-        );
-
-        if (hitResult != null) {
-            Entity hitEntity = hitResult.getEntity();
-            if (start.distanceToSqr(hitEntity.position()) < start.distanceToSqr(target.position())) {
-                if (isAlliedTo(hitEntity)) return false;
-            }
-        }
-        return true;
+        return getViableTargetPos(target) != null;
     }
 
     @Override
     protected void registerGoals() {
-        // Интервал атаки = длине анимации (SHOT_ANIMATION_LENGTH), чтобы AI не спамил
+        // --- 1. ЦЕЛИ АТАКИ (Execution) ---
+        // Стреляем в того, кого выбрали в targetSelector
         this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.0D, SHOT_ANIMATION_LENGTH, 20.0F) {
             @Override
-            public boolean canUse() {
-                return TurretLightEntity.this.isDeployed() && super.canUse();
-            }
-
+            public boolean canUse() { return TurretLightEntity.this.isDeployed() && super.canUse(); }
             @Override
-            public boolean canContinueToUse() {
-                return TurretLightEntity.this.isDeployed() && super.canContinueToUse();
-            }
+            public boolean canContinueToUse() { return TurretLightEntity.this.isDeployed() && super.canContinueToUse(); }
         });
 
-        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F) {
-            @Override
-            public boolean canUse() {
-                return TurretLightEntity.this.isDeployed() && super.canUse();
-            }
-        });
+        // --- 2. ВЫБОР ЦЕЛИ (Target Selection) ---
 
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, (entity) -> {
-            return TurretLightEntity.this.isDeployed() && !TurretLightEntity.this.isAlliedTo(entity);
+        // ПРИОРИТЕТ 1: ЗАЩИТА ВЛАДЕЛЬЦА (Враги, атакующие хозяина)
+        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, (entity) -> {
+            if (this.isAlliedTo(entity)) return false;
+            UUID ownerUUID = this.getOwnerUUID();
+            if (ownerUUID != null) {
+                Player owner = this.level().getPlayerByUUID(ownerUUID);
+                if (owner != null) {
+                    // Агрится на тех, кто бьет владельца
+                    if (owner.getLastHurtByMob() == entity) return true;
+                    if (entity instanceof net.minecraft.world.entity.Mob mob && mob.getTarget() == owner) return true;
+                }
+            }
+            return false;
         }));
 
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false, (entity) -> {
-            return TurretLightEntity.this.isDeployed() && !TurretLightEntity.this.isAlliedTo(entity);
+        // ПРИОРИТЕТ 2: САМООБОРОНА и ОБОРОНА СОЮЗНИКОВ (Кто ударил меня или другую турель)
+        this.targetSelector.addGoal(2, new HurtByTargetGoal(this).setAlertOthers(TurretLightEntity.class));
+
+        // ПРИОРИТЕТ 3: АССИСТ ВЛАДЕЛЬЦУ (Кого бьет хозяин)
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, (entity) -> {
+            if (this.isAlliedTo(entity)) return false;
+            UUID ownerUUID = this.getOwnerUUID();
+            if (ownerUUID != null) {
+                Player owner = this.level().getPlayerByUUID(ownerUUID);
+                if (owner != null) {
+                    return owner.getLastHurtMob() == entity;
+                }
+            }
+            return false;
+        }));
+
+        // ПРИОРИТЕТ 4: ЗАЧИСТКА ТЕРРИТОРИИ (Монстры)
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false, (entity) -> {
+            // Игнорируем питомцев и союзников
+            if (this.isAlliedTo(entity)) return false;
+            return TurretLightEntity.this.isDeployed();
+        }));
+
+        // ПРИОРИТЕТ 5: ВРАЖДЕБНЫЕ ИГРОКИ
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, (entity) -> {
+            if (this.isAlliedTo(entity)) return false; // Союзников/Владельца не трогаем
+            return TurretLightEntity.this.isDeployed();
         }));
     }
 
+
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
-        // 1. Проверки: деплой, безопасность стрельбы, кулдаун анимации
         if (!this.isDeployed()) return;
-        if (this.shotCooldown > 0) return; // Ждем окончания предыдущей анимации
+        if (this.shotCooldown > 0) return;
         if (!canShootSafe(target)) return;
 
-        // 2. Активируем анимацию и кулдаун
         this.shotCooldown = SHOT_ANIMATION_LENGTH;
         this.setShooting(true);
         this.shootAnimTimer = 0;
 
-        // 3. Создаем пулю (а не стрелу!)
         TurretBulletEntity bullet = new TurretBulletEntity(this.level(), this);
 
-        // --- Расчет позиции дула ---
-        // Y = 10.49 px
-        // Z = 11.86 + 3.0 = 14.86 px (смещение вперед)
         double offsetY = 10.49 / 16.0;
         double offsetZ = 14.86 / 16.0;
 
-        // Перевод углов в радианы
-        // Используем поворот головы (куда смотрит турель)
         float yRotRad = this.yHeadRot * ((float)Math.PI / 180F);
-        // Инвертируем pitch для корректной математики (в MC вверх - это минус)
         float xRotRad = -this.getXRot() * ((float)Math.PI / 180F);
 
-        // Смещение дула с учетом наклона пушки (вверх-вниз)
         double yShift = Math.sin(xRotRad) * offsetZ;
         double forwardShift = Math.cos(xRotRad) * offsetZ;
 
-        // Финальные координаты спавна пули с учетом поворота турели
         double spawnX = this.getX() - Math.sin(yRotRad) * forwardShift;
         double spawnY = this.getY() + offsetY + yShift;
         double spawnZ = this.getZ() + Math.cos(yRotRad) * forwardShift;
 
         bullet.setPos(spawnX, spawnY, spawnZ);
 
-        // ✅ СИНХРОНИЗАЦИЯ ПОВОРОТА
-        // Копируем поворот головы турели в пулю ПЕРЕД выстрелом
-        // Важно: yHeadRot - это "куда смотрит голова" (Yaw)
-        // getXRot() - это "наклон пушки" (Pitch)
+        // Manual Rotation Init
         bullet.setYRot(this.yHeadRot);
         bullet.setXRot(this.getXRot());
-        // Для надежности обновляем "предыдущие" значения, чтобы не было дерганья при интерполяции
         bullet.yRotO = this.yHeadRot;
         bullet.xRotO = this.getXRot();
 
+        Vec3 lookVec = Vec3.directionFromRotation(this.getXRot(), this.yHeadRot);
+        bullet.shoot(lookVec.x, lookVec.y, lookVec.z, 3.0F, 0.1F);
 
-        // --- Расчет вектора полета ---
-        double d0 = target.getX() - spawnX;
-        double d1 = target.getY(0.3333333333333333D) - spawnY;
-        double d2 = target.getZ() - spawnZ;
-        double d3 = Math.sqrt(d0 * d0 + d2 * d2);
+        if (ModSounds.TURRET_FIRE.isPresent()) {
+            this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
+        } else {
+            this.playSound(SoundEvents.GENERIC_EXPLODE, 0.5F, 2.0F);
+        }
 
-        // shoot(x, y, z, velocity, inaccuracy)
-        // velocity = 3.0F (быстрая пуля)
-        // inaccuracy = 0.5F (небольшой разброс)
-        bullet.shoot(d0, d1 + d3 * 0.05D, d2, 3.0F, 0.5F);
-
-        this.playSound(SoundEvents.GENERIC_EXPLODE, 0.5F, 2.0F);
         this.level().addFreshEntity(bullet);
+    }
+
+    // --- Boilerplate ---
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> {
+            if (!this.isDeployed()) return event.setAndContinue(RawAnimation.begin().thenPlay("deploy"));
+            return PlayState.STOP;
+        }));
+        controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
+            if (this.isShooting()) {
+                if (event.getController().getAnimationState() == AnimationController.State.STOPPED) event.getController().forceAnimationReset();
+                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
+            }
+            return PlayState.STOP;
+        }));
     }
 
     @Override
@@ -290,28 +346,14 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     }
 
     @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return this.cache;
-    }
-
-    public void setShooting(boolean shooting) {
-        this.entityData.set(SHOOTING, shooting);
-    }
-
-    public boolean isShooting() {
-        return this.entityData.get(SHOOTING);
-    }
-
-    public boolean isDeployed() {
-        return this.entityData.get(DEPLOYED);
-    }
-
+    public AnimatableInstanceCache getAnimatableInstanceCache() { return this.cache; }
+    public void setOwner(Player player) { this.entityData.set(OWNER_UUID, Optional.of(player.getUUID())); }
+    public UUID getOwnerUUID() { return this.entityData.get(OWNER_UUID).orElse(null); }
+    public void setShooting(boolean shooting) { this.entityData.set(SHOOTING, shooting); }
+    public boolean isShooting() { return this.entityData.get(SHOOTING); }
+    public boolean isDeployed() { return this.entityData.get(DEPLOYED); }
     @Override
-    public boolean isPushable() {
-        return false;
-    }
-
+    public boolean isPushable() { return false; }
     @Override
-    protected void playStepSound(BlockPos pos, BlockState blockIn) {
-    }
+    protected void playStepSound(BlockPos pos, BlockState blockIn) {}
 }

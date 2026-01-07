@@ -76,6 +76,7 @@
     "hbm_m:advanced_assembly_machine",
     "hbm_m:universal_machine_part",
     "hbm_m:turret_block",
+    "hbm_m:turret_light_placer",
     "hbm_m:turret_light",
     "hbm_m:reinforced_stone",
     "hbm_m:reinforced_glass",

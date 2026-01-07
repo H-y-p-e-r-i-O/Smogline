@@ -22,6 +22,12 @@ public class ModEntities {
                     .sized(0.8f, 1.5f) // Размер хитбокса
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light").toString()));
 
+    public static final RegistryObject<EntityType<TurretLightLinkedEntity>> TURRET_LIGHT_LINKED = ENTITY_TYPES.register("turret_light_linked",
+            () -> EntityType.Builder.of(TurretLightLinkedEntity::new, MobCategory.MONSTER) // ✅ ИСПОЛЬЗУЕМ НОВЫЙ КЛАСС
+                    .sized(0.8f, 1.5f)
+                    .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light_linked").toString()));
+
+
     public static final RegistryObject<EntityType<TurretBulletEntity>> TURRET_BULLET =
             ENTITY_TYPES.register("turret_bullet",
                     () -> EntityType.Builder.<TurretBulletEntity>of(TurretBulletEntity::new, MobCategory.MISC)

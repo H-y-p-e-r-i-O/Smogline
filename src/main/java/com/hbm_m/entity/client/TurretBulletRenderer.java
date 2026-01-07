@@ -32,7 +32,7 @@ public class TurretBulletRenderer extends GeoEntityRenderer<TurretBulletEntity> 
 
         // Коррекция модели: если пуля летит "боком", этот поворот исправит её
         // Если летит задом наперед - поменяй на 180, если левым боком - на -90
-        
+
         poseStack.mulPose(Axis.YP.rotationDegrees(90f));
         super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
         poseStack.popPose();

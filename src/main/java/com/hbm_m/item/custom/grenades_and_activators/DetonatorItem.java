@@ -67,10 +67,6 @@ public class DetonatorItem extends Item {
         }
     }
 
-
-
-
-
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();

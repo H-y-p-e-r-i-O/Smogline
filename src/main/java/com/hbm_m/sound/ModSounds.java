@@ -22,6 +22,10 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> GEIGER_5 = registerSoundEvents("item.geiger5");
     public static final RegistryObject<SoundEvent> GEIGER_6 = registerSoundEvents("item.geiger6");
 
+    public static final RegistryObject<SoundEvent> BULLET_HIT2 = registerSoundEvents("bullet_hit2");
+    public static final RegistryObject<SoundEvent> BULLET_HIT1 = registerSoundEvents("bullet_hit1");
+    public static final RegistryObject<SoundEvent> TURRET_LOCK = registerSoundEvents("turret_lock");
+    public static final RegistryObject<SoundEvent> TURRET_FIRE = registerSoundEvents("turret_fire");
     public static final RegistryObject<SoundEvent> BOMBDET3 = registerSoundEvents("bombdet3");
     public static final RegistryObject<SoundEvent> BOMBDET2 = registerSoundEvents("bombdet2");
     public static final RegistryObject<SoundEvent> BOMBDET1 = registerSoundEvents("bombdet1");
