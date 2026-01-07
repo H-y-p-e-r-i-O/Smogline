@@ -31,6 +31,7 @@ import software.bernie.geckolib.core.animation.*;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,7 +81,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
     @Override
     public int getMaxHeadYRot() { return 360; }
-
     @Override
     public int getMaxHeadXRot() { return 90; }
 
@@ -223,27 +223,121 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         }
     }
 
+    /**
+     * ФИЗИЧЕСКИ КОРРЕКТНАЯ БАЛЛИСТИКА
+     * Решает квадратное уравнение для нахождения угла возвышения
+     */
     private Vec3 calculateInterceptPosition(LivingEntity target) {
-        Vec3 targetPos = getViableTargetPos(target);
+        Vec3 targetPos = getSmartTargetPos(target);
         if (targetPos == null) return null;
 
-        double dist = this.getEyePosition().distanceTo(targetPos);
-        double timeToImpact = dist / BULLET_SPEED;
-        Vec3 targetVelocity = target.getDeltaMovement();
+        Vec3 turretPos = this.getEyePosition();
 
-        double predictedX = targetPos.x + (targetVelocity.x * timeToImpact * 15.0);
-        double predictedZ = targetPos.z + (targetVelocity.z * timeToImpact * 15.0);
-        double predictedY = targetPos.y + (targetVelocity.y * timeToImpact);
+        // Предсказываем движение цели
+        Vec3 targetVelocity = target.getDeltaMovement();
+        double horizontalDist = Math.sqrt(
+                Math.pow(targetPos.x - turretPos.x, 2) +
+                        Math.pow(targetPos.z - turretPos.z, 2)
+        );
+
+        // Первичная оценка времени полета
+        double timeEstimate = horizontalDist / BULLET_SPEED;
+
+        // Предсказанная позиция с упреждением (velocity * time * 15.0 - эмпирический коэффициент)
+        double predictedX = targetPos.x + (targetVelocity.x * timeEstimate * 15.0);
+        double predictedZ = targetPos.z + (targetVelocity.z * timeEstimate * 15.0);
+        double predictedY = targetPos.y + (targetVelocity.y * timeEstimate);
 
         if (predictedY < target.getY()) predictedY = target.getY();
 
-        double bulletDrop = 0.5 * BULLET_GRAVITY * timeToImpact * timeToImpact;
-        return new Vec3(predictedX, predictedY + bulletDrop, predictedZ);
+        // Пересчитываем расстояние до предсказанной позиции
+        double dx = predictedX - turretPos.x;
+        double dz = predictedZ - turretPos.z;
+        double dy = predictedY - turretPos.y;
+        double distH = Math.sqrt(dx * dx + dz * dz);
+
+        // ФИЗИКА: Решаем квадратное уравнение для угла возвышения
+        // y = x*tan(θ) - (g*x²)/(2*v²*cos²(θ))
+
+        double v = BULLET_SPEED;
+        double g = BULLET_GRAVITY * 20.0; // Конвертируем в блоки/секунду² (тики -> секунды)
+
+        // Квадратное уравнение: a*tan²(θ) + b*tan(θ) + c = 0
+        double a = 0.5 * g * distH * distH / (v * v);
+        double b = -distH;
+        double c = dy + a;
+
+        // Дискриминант
+        double discriminant = b * b - 4 * a * c;
+
+        if (discriminant < 0) {
+            // Цель недостижима (слишком далеко/высоко), стреляем по высокой дуге
+            return new Vec3(predictedX, predictedY + distH * 0.3, predictedZ);
+        }
+
+        // Берем меньший угол (низкая траектория)
+        double tanTheta = (-b - Math.sqrt(discriminant)) / (2 * a);
+        double heightAdjust = distH * tanTheta;
+
+        return new Vec3(predictedX, turretPos.y + heightAdjust, predictedZ);
     }
+
+
+    /**
+     * УМНОЕ СКАНИРОВАНИЕ ВИДИМОСТИ + КОРРЕКЦИЯ ВЫСОТЫ
+     */
+    private Vec3 getSmartTargetPos(LivingEntity target) {
+        Vec3 start = this.getEyePosition();
+        AABB aabb = target.getBoundingBox();
+
+        List<Vec3> visiblePoints = new ArrayList<>();
+
+        // Сетка сканирования 3x4x3
+        int stepsX = 3;
+        int stepsY = 4;
+        int stepsZ = 3;
+
+        for (int x = 0; x <= stepsX; x++) {
+            for (int y = 0; y <= stepsY; y++) {
+                for (int z = 0; z <= stepsZ; z++) {
+                    double lerpX = aabb.minX + (aabb.maxX - aabb.minX) * (x / (double)stepsX);
+                    double lerpY = aabb.minY + (aabb.maxY - aabb.minY) * (y / (double)stepsY);
+                    double lerpZ = aabb.minZ + (aabb.maxZ - aabb.minZ) * (z / (double)stepsZ);
+
+                    Vec3 point = new Vec3(lerpX, lerpY, lerpZ);
+
+                    if (canSeePoint(start, point)) {
+                        visiblePoints.add(point);
+                    }
+                }
+            }
+        }
+
+        if (visiblePoints.isEmpty()) return null;
+
+        // Вычисляем центроид (среднюю точку) всех видимых частей
+        double sumX = 0, sumY = 0, sumZ = 0;
+        for (Vec3 p : visiblePoints) {
+            sumX += p.x;
+            sumY += p.y;
+            sumZ += p.z;
+        }
+
+        Vec3 center = new Vec3(sumX / visiblePoints.size(), sumY / visiblePoints.size(), sumZ / visiblePoints.size());
+
+        // КОРРЕКЦИЯ ДЛЯ МЕЛКИХ МОБОВ (чешуйницы, слаймы, дети-зомби)
+        if (target.getBbHeight() < 1.0F) {
+            // Поднимаем точку прицеливания на 0.6 блока, иначе турель стреляет в пол
+            center = center.add(0.0D, 0.6D, 0.0D);
+        }
+
+        return center;
+    }
+
 
     private boolean isLineOfFireSafe(LivingEntity target) {
         Vec3 start = this.getEyePosition();
-        Vec3 end = getViableTargetPos(target);
+        Vec3 end = getSmartTargetPos(target);
         if (end == null) return false;
 
         Vec3 vec3 = end.subtract(start);
@@ -257,9 +351,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
             for (Entity e : list) {
                 if (e != this && e != target && e instanceof LivingEntity living) {
-                    if (this.isAlliedTo(living)) {
-                        return false;
-                    }
+                    if (this.isAlliedTo(living)) return false;
                 }
             }
         }
@@ -293,34 +385,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         return null;
     }
 
-    private Vec3 getViableTargetPos(LivingEntity target) {
-        float height = target.getBbHeight();
-        float width = target.getBbWidth();
-        Vec3 pos = target.position();
-
-        if (width > height) {
-            Vec3 center = pos.add(0, height * 0.5, 0);
-            if (canSeePoint(this.getEyePosition(), center)) return center;
-        }
-
-        if (height < 0.9F) {
-            Vec3 center = pos.add(0, height * 0.5, 0);
-            if (canSeePoint(this.getEyePosition(), center)) return center;
-            return null;
-        }
-
-        Vec3 chest = pos.add(0, height * 0.65, 0);
-        if (canSeePoint(this.getEyePosition(), chest)) return chest;
-
-        Vec3 head = target.getEyePosition();
-        if (canSeePoint(this.getEyePosition(), head)) return head;
-
-        Vec3 feet = pos.add(0, 0.1, 0);
-        if (canSeePoint(this.getEyePosition(), feet)) return feet;
-
-        return null;
-    }
-
     private boolean canSeePoint(Vec3 start, Vec3 end) {
         BlockHitResult blockHit = this.level().clip(new ClipContext(
                 start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this
@@ -330,7 +394,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     }
 
     private boolean canShootSafe(LivingEntity target) {
-        return getViableTargetPos(target) != null && isLineOfFireSafe(target);
+        return getSmartTargetPos(target) != null && isLineOfFireSafe(target);
     }
 
     @Override
@@ -433,51 +497,15 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         this.level().addFreshEntity(bullet);
     }
 
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> {
-            if (!this.isDeployed()) return event.setAndContinue(RawAnimation.begin().thenPlay("deploy"));
-            return PlayState.STOP;
-        }));
-
-        controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
-            if (this.isShooting()) {
-                if (event.getController().getAnimationState() == AnimationController.State.STOPPED)
-                    event.getController().forceAnimationReset();
-                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
-            }
-            return PlayState.STOP;
-        }));
-    }
-
-    @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
-        if (this.getOwnerUUID() != null) tag.putUUID("Owner", this.getOwnerUUID());
-        tag.putBoolean("Deployed", this.isDeployed());
-        tag.putInt("DeployTimer", this.entityData.get(DEPLOY_TIMER));
-    }
-
-    @Override
-    public void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
-        if (tag.hasUUID("Owner")) this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("Owner")));
-        if (tag.contains("Deployed")) this.entityData.set(DEPLOYED, tag.getBoolean("Deployed"));
-        if (tag.contains("DeployTimer")) this.entityData.set(DEPLOY_TIMER, tag.getInt("DeployTimer"));
-    }
-
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() { return this.cache; }
-
+    @Override public void registerControllers(AnimatableManager.ControllerRegistrar controllers) { controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> { if (!this.isDeployed()) return event.setAndContinue(RawAnimation.begin().thenPlay("deploy")); return PlayState.STOP; })); controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> { if (this.isShooting()) { if (event.getController().getAnimationState() == AnimationController.State.STOPPED) event.getController().forceAnimationReset(); return event.setAndContinue(RawAnimation.begin().thenPlay("shot")); } return PlayState.STOP; })); }
+    @Override public void addAdditionalSaveData(CompoundTag tag) { super.addAdditionalSaveData(tag); if (this.getOwnerUUID() != null) tag.putUUID("Owner", this.getOwnerUUID()); tag.putBoolean("Deployed", this.isDeployed()); tag.putInt("DeployTimer", this.entityData.get(DEPLOY_TIMER)); }
+    @Override public void readAdditionalSaveData(CompoundTag tag) { super.readAdditionalSaveData(tag); if (tag.hasUUID("Owner")) this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("Owner"))); if (tag.contains("Deployed")) this.entityData.set(DEPLOYED, tag.getBoolean("Deployed")); if (tag.contains("DeployTimer")) this.entityData.set(DEPLOY_TIMER, tag.getInt("DeployTimer")); }
+    @Override public AnimatableInstanceCache getAnimatableInstanceCache() { return this.cache; }
     public void setOwner(Player player) { this.entityData.set(OWNER_UUID, Optional.of(player.getUUID())); }
     public UUID getOwnerUUID() { return this.entityData.get(OWNER_UUID).orElse(null); }
     public void setShooting(boolean shooting) { this.entityData.set(SHOOTING, shooting); }
     public boolean isShooting() { return this.entityData.get(SHOOTING); }
     public boolean isDeployed() { return this.entityData.get(DEPLOYED); }
-
-    @Override
-    public boolean isPushable() { return false; }
-
-    @Override
-    protected void playStepSound(BlockPos pos, BlockState blockIn) {}
+    @Override public boolean isPushable() { return false; }
+    @Override protected void playStepSound(BlockPos pos, BlockState blockIn) {}
 }

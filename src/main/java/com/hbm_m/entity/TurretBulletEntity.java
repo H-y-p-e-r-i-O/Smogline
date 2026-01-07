@@ -21,11 +21,8 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    private float damage = 4.0f;
 
-    // ПАРАМЕТРЫ НАКЛОНА (как в AirBomb)
-    private static final float ROTATION_SPEED = 5.0F; // Градусов в секунду
-    private float currentPitchOffset = 0.0F;
+    private float damage = 4.0f;
 
     public TurretBulletEntity(EntityType<? extends ThrowableProjectile> type, Level level) {
         super(type, level);
@@ -39,34 +36,19 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
     public void tick() {
         super.tick();
 
-        // --- УЛУЧШЕННАЯ ФИЗИКА ВРАЩЕНИЯ (как в авиаударе) ---
-        if (!this.level().isClientSide) {
-            Vec3 motion = this.getDeltaMovement();
+        // ВАЖНО: Ротацию считаем И на клиенте, и на сервере.
+        // Иначе сервер меняет yaw/pitch, но клиент может не получить эти значения и модель будет "боком".
+        Vec3 motion = this.getDeltaMovement();
+        if (motion.lengthSqr() > 1.0E-6D) {
+            double h = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+            float yaw = (float)(Mth.atan2(motion.x, motion.z) * (180.0D / Math.PI));
+            float pitch = (float)(Mth.atan2(motion.y, h) * (180.0D / Math.PI));
 
-            // Если пуля движется (а она движется)
-            if (motion.lengthSqr() > 0.001D) {
-                // 1. Поворот по горизонтали (YAW) - всегда по вектору движения
-                float targetYaw = (float)(Mth.atan2(motion.x, motion.z) * (double)(180F / (float)Math.PI));
-                this.setYRot(targetYaw);
-
-                // 2. Поворот по вертикали (PITCH) - ПЛАВНЫЙ НАКЛОН ВНИЗ
-                // Вместо того чтобы пуля смотрела строго по вектору (который быстро падает вниз),
-                // мы делаем плавный наклон носа, как у реального снаряда.
-
-                // Увеличиваем наклон каждый тик (20 тиков = 1 сек)
-                // За 1 секунду (20 тиков) наклон увеличится на ROTATION_SPEED (5 градусов)
-                currentPitchOffset += (ROTATION_SPEED / 20.0F);
-
-                // Базовый угол от вектора скорости (чтобы старт был правильным)
-                double horizontalDist = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
-                float vectorPitch = (float)(Mth.atan2(motion.y, horizontalDist) * (double)(180F / (float)Math.PI));
-
-                // Применяем наш плавный наклон
-                this.setXRot(vectorPitch + currentPitchOffset);
-            }
+            // setRot обновляет yRot/xRot и связанные поля корректнее, чем setYRot/setXRot по отдельности
+            this.setRot(yaw, pitch);
         }
 
-        // Синхронизация для рендера
+        // Для плавного рендера: previous rotations
         this.yRotO = this.getYRot();
         this.xRotO = this.getXRot();
 
@@ -76,7 +58,8 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
     }
 
     @Override
-    protected void defineSynchedData() {}
+    protected void defineSynchedData() {
+    }
 
     @Override
     protected float getGravity() {
@@ -116,8 +99,11 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
     }
 
     @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+    }
 
     @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
+    }
 }
