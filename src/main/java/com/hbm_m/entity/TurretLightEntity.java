@@ -714,6 +714,10 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
     @Override
     public boolean isPushable() { return false; } // Турель нельзя толкать
+    @Override
+    public double getBoneResetTime() {
+        return 0; // Отключает плавный возврат к дефолтной позе (в тиках)
+    }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState blockIn) {} // У турели нет звука шагов

@@ -340,6 +340,10 @@ public class MachineGunItem extends Item implements GeoItem {
             }
         }
     }
+    @Override
+    public double getBoneResetTime() {
+        return 0; // Отключает плавный возврат к дефолтной позе (в тиках)
+    }
 
     // === ОБЩИЕ ОБРАБОТЧИКИ ===
     @Mod.EventBusSubscriber(modid = RefStrings.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
