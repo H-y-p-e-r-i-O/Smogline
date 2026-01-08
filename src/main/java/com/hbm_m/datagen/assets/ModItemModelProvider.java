@@ -132,6 +132,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.SCREWDRIVER);
         simpleItem(ModItems.CROWBAR);
         simpleItem(ModItems.OIL_DETECTOR);
+        simpleItem(ModItems.AMMO_TEST);
         simpleItem(ModItems.MULTI_DETONATOR);
         simpleItem(ModItems.AIRSTRIKE_TEST);
         simpleItem(ModItems.AIRSTRIKE_HEAVY);

@@ -1,4 +1,4 @@
-// 1.20.1	2026-01-06T19:37:15.3096525	Item Models: hbm_m
+// 1.20.1	2026-01-08T13:31:17.8745782	Item Models: hbm_m
 0edf93465897319e838e8a2dbf3170a8fc825d55 assets/hbm_m/models/item/actinium_ingot.json
 36f411ebae28dbd5666a4aec7b5dd411e43050f4 assets/hbm_m/models/item/actinium_powder.json
 6a0942144f82b039abeb5ad26eaa741312784586 assets/hbm_m/models/item/actinium_powder_tiny.json
@@ -104,6 +104,7 @@ cb9f89bf18e3b72874ba355bfbbee6ffdc51100c assets/hbm_m/models/item/alloy_leggings
 0acbcc927c9f8ecba79ab875b43de36a345829dd assets/hbm_m/models/item/am242_ingot.json
 4fe99c745bffd653687e74225099a8357dbb5aa1 assets/hbm_m/models/item/americium_fuel_ingot.json
 442c51d1c3040432b505d82679fe2d05ad630f9f assets/hbm_m/models/item/americium_ingot.json
+276c34114e97d3c195f56398e73ce2882ed9c08c assets/hbm_m/models/item/ammo_test.json
 7e88affc3852f46bb612c269081a088bbc93858c assets/hbm_m/models/item/am_mix_ingot.json
 4178ba8526d16cf52cfbf8c36a7feb86fed58062 assets/hbm_m/models/item/analog_circuit.json
 ae4cde6abcee6c7b87f01291b4539669a25ac79d assets/hbm_m/models/item/anvil_arsenic_bronze.json

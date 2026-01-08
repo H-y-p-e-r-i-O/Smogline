@@ -662,6 +662,11 @@ public class ModItems {
     public static final RegistryObject<Item> TURRET_REMOVER = ITEMS.register("turret_remover",
             () -> new TurretRemoverItem(new Item.Properties()));
 
+    public static final RegistryObject<Item> MACHINEGUN = ITEMS.register("machinegun",
+            () -> new MachineGunItem(new Item.Properties()));
+
+    public static final RegistryObject<Item> AMMO_TEST = ITEMS.register("ammo_test",
+            () -> new AmmoTestItem(new Item.Properties()));
 
     public static final RegistryObject<Item> NUGGET_SILICON = ITEMS.register("nugget_silicon",
             () -> new Item(new Item.Properties()));

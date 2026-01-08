@@ -39,6 +39,7 @@ import com.hbm_m.block.entity.ModBlockEntities;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.block.BlockModelShaper;
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
@@ -89,6 +90,21 @@ public class ClientSetup {
         // MinecraftForge.EVENT_BUS.register(DoorDebugRenderer.class);
         // MinecraftForge.EVENT_BUS.register(ClientSetup.class);
 
+        // ✅ ДОБАВЬТЕ ЭТО:
+        ModItems.MACHINEGUN.ifPresent(item -> {
+            ItemProperties.register(item,
+                    new ResourceLocation(RefStrings.MODID, "pull"),
+                    (pStack, pLevel, pEntity, pSeed) -> {
+                        if (pEntity != null && pEntity.isUsingItem() && pEntity.getUseItem() == pStack) {
+                            return 1.0f;
+                        }
+                        return 0.0f;
+                    });
+        });
+
+// Register Entity Renders
+
+
         // Register Entity Renders
         ModEntities.GRENADE_NUC_PROJECTILE.ifPresent(entityType ->
                 EntityRenderers.register(entityType, ThrownItemRenderer::new)
@@ -120,6 +136,9 @@ public class ClientSetup {
         ModEntities.GRENADE_IF_PROJECTILE.ifPresent(entityType ->
                 EntityRenderers.register(entityType, ThrownItemRenderer::new)
         );
+
+        MinecraftForge.EVENT_BUS.register(new com.hbm_m.event.MachineGunEventHandler());
+
 
         // MinecraftForge.EVENT_BUS.register(new ClientTickHandler());
 
@@ -217,6 +236,7 @@ public class ClientSetup {
 
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        event.register(ModKeyBindings.RELOAD_KEY);
         ModConfigKeybindHandler.onRegisterKeyMappings(event);
         MainRegistry.LOGGER.info("Registered key mappings.");
     }
