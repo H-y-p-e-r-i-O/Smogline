@@ -1,4 +1,3 @@
-// PacketReloadGun.java
 package com.hbm_m.network;
 
 import com.hbm_m.item.MachineGunItem;
@@ -9,9 +8,9 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class PacketReloadGun {
-    public PacketReloadGun() {}
-    public PacketReloadGun(FriendlyByteBuf buf) {}
+public class PacketShoot {
+    public PacketShoot() {}
+    public PacketShoot(FriendlyByteBuf buf) {}
 
     public void toBytes(FriendlyByteBuf buf) {}
 
@@ -22,7 +21,9 @@ public class PacketReloadGun {
             if (player != null) {
                 ItemStack stack = player.getMainHandItem();
                 if (stack.getItem() instanceof MachineGunItem gun) {
-                    gun.reloadGun(player, stack);
+                    // Вызываем метод стрельбы на сервере
+                    gun.performShooting(player.serverLevel(), player, stack);
+                    // Синхронизируем изменение патронов
                     player.inventoryMenu.broadcastChanges();
                 }
             }

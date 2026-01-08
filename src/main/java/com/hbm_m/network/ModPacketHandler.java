@@ -1,8 +1,5 @@
 package com.hbm_m.network;
 
-// Основной обработчик сетевых пакетов мода HBM-Modernized.
-// Регистрирует все сетевые пакеты, используемые модом, и обеспечивает их правильную сериализацию и обработку.
-
 import com.hbm_m.lib.RefStrings;
 import com.hbm_m.network.sounds.GeigerSoundPacket;
 import com.hbm_m.network.ToggleWoodBurnerPacket;
@@ -11,11 +8,9 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public class ModPacketHandler {
-
     private static final String PROTOCOL_VERSION = "1";
-
     public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
-            ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "main_channel"),
+            new ResourceLocation(RefStrings.MODID, "main_channel"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
@@ -23,7 +18,7 @@ public class ModPacketHandler {
 
     public static void register() {
         int id = 0;
-
+        // ... ваши существующие пакеты ...
         INSTANCE.registerMessage(id++, GeigerSoundPacket.class, GeigerSoundPacket::encode, GeigerSoundPacket::decode, GeigerSoundPacket::handle);
         INSTANCE.registerMessage(id++, RadiationDataPacket.class, RadiationDataPacket::encode, RadiationDataPacket::decode, RadiationDataPacket::handle);
         INSTANCE.registerMessage(id++, ChunkRadiationDebugBatchPacket.class, ChunkRadiationDebugBatchPacket::encode, ChunkRadiationDebugBatchPacket::decode, ChunkRadiationDebugBatchPacket::handle);
@@ -36,7 +31,6 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(id++, AnvilCraftC2SPacket.class, AnvilCraftC2SPacket::encode, AnvilCraftC2SPacket::decode, AnvilCraftC2SPacket::handle);
         INSTANCE.registerMessage(id++, AnvilSelectRecipeC2SPacket.class, AnvilSelectRecipeC2SPacket::encode, AnvilSelectRecipeC2SPacket::decode, AnvilSelectRecipeC2SPacket::handle);
 
-        // Пакет синхронизации энергии
         INSTANCE.registerMessage(id++,
                 com.hbm_m.network.packet.PacketSyncEnergy.class,
                 com.hbm_m.network.packet.PacketSyncEnergy::encode,
@@ -44,12 +38,20 @@ public class ModPacketHandler {
                 com.hbm_m.network.packet.PacketSyncEnergy::handle
         );
 
-        // === ДОБАВЛЕН ПАКЕТ ПЕРЕЗАРЯДКИ ===
+        // Пакет перезарядки (ОБНОВИТЬ: использовать типизированный Supplier)
         INSTANCE.registerMessage(id++,
                 PacketReloadGun.class,
                 PacketReloadGun::toBytes,
-                PacketReloadGun::new,    // Или PacketReloadGun::new если у вас конструктор принимает буфер
+                PacketReloadGun::new,
                 PacketReloadGun::handle
+        );
+
+        // === ДОБАВЬТЕ ЭТОТ ПАКЕТ ДЛЯ СТРЕЛЬБЫ ===
+        INSTANCE.registerMessage(id++,
+                PacketShoot.class,
+                PacketShoot::toBytes,
+                PacketShoot::new,
+                PacketShoot::handle
         );
     }
 }

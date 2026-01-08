@@ -22,7 +22,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    private float damage = 4.0f;
+    private float damage = 6.0f;
 
     public TurretBulletEntity(EntityType<? extends ThrowableProjectile> type, Level level) {
         super(type, level);

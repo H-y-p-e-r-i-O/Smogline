@@ -6,9 +6,9 @@ import com.hbm_m.item.client.MachineGunRenderer;
 import com.hbm_m.lib.RefStrings;
 import com.hbm_m.network.ModPacketHandler;
 import com.hbm_m.network.PacketReloadGun;
+import com.hbm_m.network.PacketShoot;
 import com.hbm_m.sound.ModSounds;
 import com.hbm_m.item.ModItems;
-// Убедитесь, что импорт вашего класса патрона правильный
 import com.hbm_m.item.AmmoTestItem;
 
 import net.minecraft.ChatFormatting;
@@ -17,7 +17,7 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -59,169 +59,162 @@ public class MachineGunItem extends Item implements GeoItem {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public MachineGunItem(Properties properties) {
-        super(properties);
+        // ВАЖНО: Принудительно ставим макс. стак = 1
+        super(properties.stacksTo(1));
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
 
-    // === ЛОГИКА ПАТРОНОВ ===
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        if (oldStack.getItem() == newStack.getItem() && !slotChanged) {
+            return false;
+        }
+        return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);
+    }
 
     public int getAmmo(ItemStack stack) {
-        CompoundTag tag = stack.getOrCreateTag();
-        return tag.getInt("Ammo");
+        return stack.getOrCreateTag().getInt("Ammo");
     }
 
     public void setAmmo(ItemStack stack, int ammo) {
-        CompoundTag tag = stack.getOrCreateTag();
-        tag.putInt("Ammo", Math.max(0, Math.min(ammo, MAX_AMMO)));
+        stack.getOrCreateTag().putInt("Ammo", Math.max(0, Math.min(ammo, MAX_AMMO)));
     }
 
-    // Метод перезарядки (вызывается на сервере)
+    public int getShootDelay(ItemStack stack) {
+        return stack.getOrCreateTag().getInt("ShootDelay");
+    }
+
+    public void setShootDelay(ItemStack stack, int delay) {
+        stack.getOrCreateTag().putInt("ShootDelay", delay);
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected) {
+        if (!level.isClientSide) {
+            int delay = getShootDelay(stack);
+            if (delay > 0) {
+                setShootDelay(stack, delay - 1);
+            }
+        }
+    }
+
+    private void syncHand(Player player, ItemStack stack) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            int slot = serverPlayer.getInventory().selected;
+            serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket(
+                    -2, 0, slot, stack));
+        }
+    }
+
     public void reloadGun(Player player, ItemStack stack) {
         if (player.level().isClientSide) return;
 
         int currentAmmo = getAmmo(stack);
         if (currentAmmo >= MAX_AMMO) return;
 
-        // Креатив: полная перезарядка бесплатно
         if (player.isCreative()) {
             setAmmo(stack, MAX_AMMO);
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.FLINTANDSTEEL_USE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+            syncHand(player, stack);
             return;
         }
 
         int needed = MAX_AMMO - currentAmmo;
-        int found = 0;
+        int foundTotal = 0;
 
-        // Ищем патроны в инвентаре
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack slotStack = player.getInventory().getItem(i);
+            if (!slotStack.isEmpty() && slotStack.getItem() instanceof AmmoTestItem) {
+                int inSlot = slotStack.getCount();
+                int toTake = Math.min(inSlot, needed - foundTotal);
 
-            // Проверка на класс патрона
-            if (slotStack.getItem() instanceof AmmoTestItem) {
-                int count = slotStack.getCount();
-                int take = Math.min(count, needed - found);
-
-                slotStack.shrink(take);
-                found += take;
-
-                // Удаляем пустой стак (хотя shrink обычно сам справляется, но для надежности)
-                if (slotStack.isEmpty()) {
-                    player.getInventory().setItem(i, ItemStack.EMPTY);
+                if (toTake > 0) {
+                    slotStack.shrink(toTake);
+                    foundTotal += toTake;
+                    if (slotStack.isEmpty()) {
+                        player.getInventory().setItem(i, ItemStack.EMPTY);
+                    }
                 }
-
-                if (found >= needed) break;
+                if (foundTotal >= needed) break;
             }
         }
 
-        // Если нашли патроны - обновляем оружие
-        if (found > 0) {
-            setAmmo(stack, currentAmmo + found);
-
+        if (foundTotal > 0) {
+            setAmmo(stack, currentAmmo + foundTotal);
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.IRON_DOOR_OPEN, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
-
-            // СИНХРОНИЗАЦИЯ: сообщаем клиенту об изменениях в инвентаре
             player.getInventory().setChanged();
-            player.inventoryMenu.broadcastChanges();
+            syncHand(player, stack);
         }
     }
 
-    // === ВАНИЛЬНЫЕ МЕТОДЫ ===
+    public void performShooting(Level level, Player player, ItemStack stack) {
+        if (level.isClientSide) return;
 
-    @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        int ammo = getAmmo(stack);
-        tooltip.add(Component.literal("Ammo: " + ammo + " / " + MAX_AMMO).withStyle(ChatFormatting.GRAY));
-        super.appendHoverText(stack, level, tooltip, flag);
-    }
+        if (getShootDelay(stack) > 0) return;
 
-    @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        return InteractionResultHolder.pass(player.getItemInHand(hand));
-    }
-
-    @Override
-    public UseAnim getUseAnimation(ItemStack stack) {
-        return UseAnim.NONE;
-    }
-
-    @Override
-    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected) {
-        if (!level.isClientSide && stack.hasTag()) {
-            CompoundTag tag = stack.getTag();
-            if (tag.contains("ShootDelay")) {
-                int delay = tag.getInt("ShootDelay");
-                if (delay > 0) {
-                    tag.putInt("ShootDelay", delay - 1);
-                }
-            }
-        }
-    }
-
-    @Override
-    public boolean onEntitySwing(ItemStack stack, LivingEntity entity) {
-        if (!(entity instanceof Player player)) return false;
-
-        // На клиенте ничего не делаем, только отменяем ванильный свинг
-        if (entity.level().isClientSide) return true;
-
-        // Проверка патронов перед выстрелом
         if (getAmmo(stack) <= 0) {
-            if (!player.getCooldowns().isOnCooldown(this)) {
-                entity.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.DISPENSER_FAIL, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
-                player.getCooldowns().addCooldown(this, 10);
-            }
-            return true;
+            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.DISPENSER_FAIL, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
+            return;
         }
 
-        CompoundTag tag = stack.getOrCreateTag();
-        int currentDelay = tag.getInt("ShootDelay");
-
-        if (currentDelay <= 0) {
-            performShooting(entity.level(), player, stack);
-
-            // Ставим задержку
-            tag.putInt("ShootDelay", SHOT_ANIM_TICKS);
-
-            // Запускаем анимацию на всех клиентах
-            triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel)entity.level()), "controller", "shot");
-        }
-
-        return true;
-    }
-
-    private void performShooting(Level level, Player player, ItemStack stack) {
-        // Трата патронов (ТОЛЬКО СЕРВЕР)
-        if (!level.isClientSide && !player.isCreative()) {
+        if (!player.isCreative()) {
             setAmmo(stack, getAmmo(stack) - 1);
-            // Синхронизация, чтобы тултип обновился
-            player.getInventory().setChanged();
+            syncHand(player, stack);
         }
+
+        setShootDelay(stack, SHOT_ANIM_TICKS);
 
         TurretBulletEntity bullet = new TurretBulletEntity(level, player);
 
-        // Позиционирование пули (от правой руки)
+        // Позиционирование
         Vec3 look = player.getLookAngle();
-        Vec3 basePos = player.getEyePosition().add(0, -0.3, 0);
-        float yaw = (float) Math.toRadians(-player.getYRot());
-        Vec3 rightDir = new Vec3(Math.cos(yaw), 0, Math.sin(yaw));
-        Vec3 spawnPos = basePos.add(rightDir.scale(0.3)).add(look.scale(0.5));
+        Vec3 eyePos = player.getEyePosition();
+        float yawRad = (float) Math.toRadians(-player.getYRot());
+        Vec3 right = new Vec3(Math.cos(yawRad), 0, Math.sin(yawRad));
+
+        // Смещение ствола
+        double forwardOffset = 0.8;
+        double rightOffset = 0.25;
+        double downOffset = -0.25;
+
+        Vec3 spawnPos = eyePos
+                .add(look.scale(forwardOffset))
+                .add(right.scale(rightOffset))
+                .add(0, downOffset, 0);
 
         bullet.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+
+        // 1. Задаем вектор скорости (включая разброс)
         bullet.shoot(look.x, look.y, look.z, BULLET_SPEED, BULLET_DIVERGENCE);
+
+        // 2. СИНХРОНИЗАЦИЯ ПОВОРОТА (ПОСЛЕ shoot, ТАК КАК ОН МЕНЯЕТ ВЕКТОР)
+        // Берем итоговый вектор скорости (с учетом разброса)
+        Vec3 velocity = bullet.getDeltaMovement();
+        double hDist = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+
+        // Математика поворота (как в турели)
+        float yRot = (float)(Math.atan2(velocity.x, velocity.z) * (180D / Math.PI));
+        float xRot = (float)(Math.atan2(velocity.y, hDist) * (180D / Math.PI));
+
+        bullet.setYRot(yRot);
+        bullet.setXRot(xRot);
+        // Важно для интерполяции первого кадра
+        bullet.yRotO = yRot;
+        bullet.xRotO = xRot;
+
         level.addFreshEntity(bullet);
 
         float pitch = 0.9F + level.random.nextFloat() * 0.2F;
         if (ModSounds.TURRET_FIRE.isPresent()) {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    ModSounds.TURRET_FIRE.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.TURRET_FIRE.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
         } else {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.GENERIC_EXPLODE, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 2.0F);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GENERIC_EXPLODE, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 2.0F);
         }
+
+        triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel)level), "controller", "shot");
     }
 
-    // === GECKOLIB ===
-
+    // === GECKOLIB & CLIENT ===
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "controller", 0, event -> {
@@ -230,23 +223,17 @@ public class MachineGunItem extends Item implements GeoItem {
     }
 
     @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return cache;
-    }
-
-    // === CLIENT SETUP ===
+    public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
 
     @Override
-    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+    public void initializeClient(Consumer consumer) {
         consumer.accept(new IClientItemExtensions() {
             private MachineGunRenderer renderer;
-
             @Override
             public BlockEntityWithoutLevelRenderer getCustomRenderer() {
                 if (renderer == null) renderer = new MachineGunRenderer();
                 return renderer;
             }
-
             @Override
             public HumanoidModel.ArmPose getArmPose(LivingEntity entity, InteractionHand hand, ItemStack stack) {
                 return HumanoidModel.ArmPose.CROSSBOW_HOLD;
@@ -254,11 +241,24 @@ public class MachineGunItem extends Item implements GeoItem {
         });
     }
 
-    // === HANDLERS ===
+    @Override
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List tooltip, TooltipFlag flag) {
+        int ammo = getAmmo(stack);
+        tooltip.add(Component.literal("Ammo: " + ammo + " / " + MAX_AMMO).withStyle(ChatFormatting.GRAY));
+        super.appendHoverText(stack, level, tooltip, flag);
+    }
+
+    @Override
+    public InteractionResultHolder use(Level level, Player player, InteractionHand hand) {
+        return InteractionResultHolder.pass(player.getItemInHand(hand));
+    }
+
+    @Override
+    public UseAnim getUseAnimation(ItemStack stack) { return UseAnim.NONE; }
 
     @Mod.EventBusSubscriber(modid = RefStrings.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientHandlers {
-        private static int clientTickCounter = 0;
+        private static int clientShootTimer = 0;
 
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
@@ -268,35 +268,25 @@ public class MachineGunItem extends Item implements GeoItem {
 
             ItemStack stack = mc.player.getMainHandItem();
             if (!(stack.getItem() instanceof MachineGunItem)) {
-                clientTickCounter = 0;
+                clientShootTimer = 0;
                 return;
             }
 
-            // Перезарядка по R
+            if (clientShootTimer > 0) clientShootTimer--;
+
             if (ModKeyBindings.RELOAD_KEY.consumeClick()) {
                 ModPacketHandler.INSTANCE.sendToServer(new PacketReloadGun());
             }
 
-            // Стрельба по ЛКМ
             if (mc.options.keyAttack.isDown()) {
-                if (clientTickCounter <= 0) {
-                    // Отправляем пакет на сервер (выстрел)
-                    mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
-
-                    // ХАК: Глушим локальную анимацию руки, чтобы не дергалась
+                if (clientShootTimer <= 0) {
+                    ModPacketHandler.INSTANCE.sendToServer(new PacketShoot());
                     mc.player.attackAnim = 0;
                     mc.player.oAttackAnim = 0;
                     mc.player.swinging = false;
-
-                    clientTickCounter = SHOT_ANIM_TICKS;
-                } else {
-                    clientTickCounter--;
+                    clientShootTimer = SHOT_ANIM_TICKS;
                 }
-
-                // Блокируем ванильную обработку клика (ломание блоков)
                 while (mc.options.keyAttack.consumeClick()) { }
-            } else {
-                clientTickCounter = 0;
             }
         }
 
@@ -317,13 +307,6 @@ public class MachineGunItem extends Item implements GeoItem {
         @SubscribeEvent
         public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
             if (event.getItemStack().getItem() instanceof MachineGunItem && !event.getEntity().isCreative()) {
-                event.setCanceled(true);
-            }
-        }
-
-        @SubscribeEvent
-        public static void onAttackEntity(AttackEntityEvent event) {
-            if (event.getEntity().getMainHandItem().getItem() instanceof MachineGunItem) {
                 event.setCanceled(true);
             }
         }
