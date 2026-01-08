@@ -43,6 +43,7 @@ import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
@@ -54,12 +55,15 @@ public class MachineGunItem extends Item implements GeoItem {
     private static final int SHOT_ANIM_TICKS = 14;
     private static final float BULLET_SPEED = 3.0F;
     private static final float BULLET_DIVERGENCE = 1.5F;
-    private static final int MAX_AMMO = 24;
+
+    // 24 в магазине + 1 в патроннике = 25 макс
+    private static final int MAG_CAPACITY = 24;
+    private static final int MAX_TOTAL_AMMO = MAG_CAPACITY + 1;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public MachineGunItem(Properties properties) {
-        // ВАЖНО: Принудительно ставим макс. стак = 1
+        // Стек = 1 (оружие не стакается)
         super(properties.stacksTo(1));
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
@@ -77,7 +81,7 @@ public class MachineGunItem extends Item implements GeoItem {
     }
 
     public void setAmmo(ItemStack stack, int ammo) {
-        stack.getOrCreateTag().putInt("Ammo", Math.max(0, Math.min(ammo, MAX_AMMO)));
+        stack.getOrCreateTag().putInt("Ammo", Math.max(0, Math.min(ammo, MAX_TOTAL_AMMO)));
     }
 
     public int getShootDelay(ItemStack stack) {
@@ -98,6 +102,7 @@ public class MachineGunItem extends Item implements GeoItem {
         }
     }
 
+    // Синхронизация слота руки
     private void syncHand(Player player, ItemStack stack) {
         if (player instanceof ServerPlayer serverPlayer) {
             int slot = serverPlayer.getInventory().selected;
@@ -106,20 +111,21 @@ public class MachineGunItem extends Item implements GeoItem {
         }
     }
 
+    // Перезарядка
     public void reloadGun(Player player, ItemStack stack) {
         if (player.level().isClientSide) return;
 
         int currentAmmo = getAmmo(stack);
-        if (currentAmmo >= MAX_AMMO) return;
+        if (currentAmmo >= MAX_TOTAL_AMMO) return;
 
         if (player.isCreative()) {
-            setAmmo(stack, MAX_AMMO);
+            setAmmo(stack, MAX_TOTAL_AMMO);
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.FLINTANDSTEEL_USE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
             syncHand(player, stack);
             return;
         }
 
-        int needed = MAX_AMMO - currentAmmo;
+        int needed = MAX_TOTAL_AMMO - currentAmmo;
         int foundTotal = 0;
 
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
@@ -147,6 +153,7 @@ public class MachineGunItem extends Item implements GeoItem {
         }
     }
 
+    // Стрельба
     public void performShooting(Level level, Player player, ItemStack stack) {
         if (level.isClientSide) return;
 
@@ -187,18 +194,15 @@ public class MachineGunItem extends Item implements GeoItem {
         // 1. Задаем вектор скорости (включая разброс)
         bullet.shoot(look.x, look.y, look.z, BULLET_SPEED, BULLET_DIVERGENCE);
 
-        // 2. СИНХРОНИЗАЦИЯ ПОВОРОТА (ПОСЛЕ shoot, ТАК КАК ОН МЕНЯЕТ ВЕКТОР)
-        // Берем итоговый вектор скорости (с учетом разброса)
+        // 2. 3D Поворот пули
         Vec3 velocity = bullet.getDeltaMovement();
         double hDist = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 
-        // Математика поворота (как в турели)
         float yRot = (float)(Math.atan2(velocity.x, velocity.z) * (180D / Math.PI));
         float xRot = (float)(Math.atan2(velocity.y, hDist) * (180D / Math.PI));
 
         bullet.setYRot(yRot);
         bullet.setXRot(xRot);
-        // Важно для интерполяции первого кадра
         bullet.yRotO = yRot;
         bullet.xRotO = xRot;
 
@@ -214,13 +218,39 @@ public class MachineGunItem extends Item implements GeoItem {
         triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel)level), "controller", "shot");
     }
 
-    // === GECKOLIB & CLIENT ===
+    // === GECKOLIB (РЕАЛИЗАЦИЯ ИНТЕРФЕЙСА) ===
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0, event -> {
+        controllers.add(new AnimationController<>(this, "shoot_controller", 0, event -> {
+            event.getController().setTransitionLength(0);
+
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return event.setAndContinue(RawAnimation.begin().thenLoop("idle"));
+
+            boolean isKeyDown = mc.options.keyAttack.isDown();
+            boolean isRightItem = mc.player.getMainHandItem().getItem() == this;
+
+            // Если анимация сейчас играет, даем ей доиграть до конца!
+            if (event.getController().getAnimationState() == AnimationController.State.RUNNING) {
+                // Если это "shot", мы не прерываем её, пока она сама не остановится
+                if ("shot".equals(event.getController().getCurrentAnimation().animation().name())) {
+                    return PlayState.CONTINUE;
+                }
+            }
+
+            // Если анимация закончилась (или была idle) И кнопка зажата -> запускаем НОВЫЙ выстрел
+            if (isRightItem && isKeyDown) {
+                // Force reset нужен, чтобы если мы только что закончили shot, он запустился заново
+                event.getController().forceAnimationReset();
+                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
+            }
+
+            // Иначе idle
             return event.setAndContinue(RawAnimation.begin().thenLoop("idle"));
-        }).triggerableAnim("shot", RawAnimation.begin().thenPlay("shot")));
+        }));
     }
+
+
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
@@ -243,8 +273,16 @@ public class MachineGunItem extends Item implements GeoItem {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List tooltip, TooltipFlag flag) {
-        int ammo = getAmmo(stack);
-        tooltip.add(Component.literal("Ammo: " + ammo + " / " + MAX_AMMO).withStyle(ChatFormatting.GRAY));
+        int totalAmmo = getAmmo(stack);
+        String displayString;
+
+        if (totalAmmo > MAG_CAPACITY) {
+            displayString = MAG_CAPACITY + " + " + (totalAmmo - MAG_CAPACITY);
+        } else {
+            displayString = String.valueOf(totalAmmo);
+        }
+
+        tooltip.add(Component.literal("Ammo: " + displayString + " / " + MAG_CAPACITY).withStyle(ChatFormatting.GRAY));
         super.appendHoverText(stack, level, tooltip, flag);
     }
 
@@ -256,6 +294,7 @@ public class MachineGunItem extends Item implements GeoItem {
     @Override
     public UseAnim getUseAnimation(ItemStack stack) { return UseAnim.NONE; }
 
+    // === КЛИЕНТСКИЕ ОБРАБОТЧИКИ ===
     @Mod.EventBusSubscriber(modid = RefStrings.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientHandlers {
         private static int clientShootTimer = 0;
@@ -302,6 +341,7 @@ public class MachineGunItem extends Item implements GeoItem {
         }
     }
 
+    // === ОБЩИЕ ОБРАБОТЧИКИ ===
     @Mod.EventBusSubscriber(modid = RefStrings.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class CommonHandlers {
         @SubscribeEvent
