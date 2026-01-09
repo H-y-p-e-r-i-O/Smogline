@@ -1,0 +1,11 @@
+{
+  "type": "forge:add_features",
+  "biomes": [
+    "minecraft:birch_forest",
+    "minecraft:old_growth_birch_forest",
+    "minecraft:forest",
+    "minecraft:flower_forest"
+  ],
+  "features": "hbm_m:charred_birch_tree_placed",
+  "step": "vegetal_decoration"
+}
