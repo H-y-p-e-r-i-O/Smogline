@@ -17,6 +17,7 @@ import com.hbm_m.entity.ModEntities;
 import com.hbm_m.entity.client.TurretBulletRenderer;
 import com.hbm_m.entity.client.TurretLightLinkedRenderer;
 import com.hbm_m.entity.client.TurretLightRenderer;
+import com.hbm_m.item.MachineGunItem;
 import com.hbm_m.item.custom.industrial.ItemAssemblyTemplate;
 import com.hbm_m.item.custom.industrial.ItemBlueprintFolder;
 import com.hbm_m.item.ModItems;
@@ -36,6 +37,7 @@ import com.hbm_m.block.ModBlocks;
 import com.hbm_m.block.entity.custom.doors.DoorDeclRegistry;
 import com.hbm_m.block.entity.ModBlockEntities;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.block.BlockModelShaper;

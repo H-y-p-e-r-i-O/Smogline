@@ -8,14 +8,11 @@ import com.hbm_m.network.ModPacketHandler;
 import com.hbm_m.network.PacketReloadGun;
 import com.hbm_m.network.PacketShoot;
 import com.hbm_m.sound.ModSounds;
-import com.hbm_m.item.ModItems;
-import com.hbm_m.item.AmmoTestItem;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
@@ -34,7 +31,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -130,7 +126,7 @@ public class MachineGunItem extends Item implements GeoItem {
 
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack slotStack = player.getInventory().getItem(i);
-            if (!slotStack.isEmpty() && slotStack.getItem() instanceof AmmoTestItem) {
+            if (!slotStack.isEmpty() && slotStack.getItem() instanceof AmmoTurretItem) {
                 int inSlot = slotStack.getCount();
                 int toTake = Math.min(inSlot, needed - foundTotal);
 

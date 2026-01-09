@@ -2,18 +2,26 @@ package com.hbm_m.client;
 
 // Этот класс отвечает за подсветку блоков, если те мешают установке многоблочной структуры
 import com.hbm_m.config.ModClothConfig;
+import com.hbm_m.item.AmmoTurretItem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
 
 import java.awt.Color;
 import java.util.HashMap;
@@ -48,6 +56,78 @@ public class ClientRenderHandler {
         }
     }
 
+    // === Вставь в ClientRenderHandler.java ===
+
+// Добавь/проверь импорты:
+// import net.minecraftforge.client.event.InputEvent;
+// import org.lwjgl.glfw.GLFW; // Обязательно этот импорт для констант кнопок!
+
+    @SubscribeEvent
+    public static void onMouseClick(InputEvent.MouseButton.Pre event) {
+        // Проверяем нажатие (ACTION_PRESS = 1) ЛЕВОЙ кнопки (GLFW_MOUSE_BUTTON_LEFT = 0)
+        if (event.getAction() == GLFW.GLFW_PRESS && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+
+            Minecraft mc = Minecraft.getInstance();
+            // Проверка: игрок в игре, меню закрыто
+            if (mc.player != null && mc.screen == null) {
+
+                // Если в руке наш патрон
+                if (mc.player.getMainHandItem().getItem() instanceof AmmoTurretItem) {
+
+                    ItemStack stack = mc.player.getMainHandItem();
+
+                    // Логика анимации и кулдауна
+                    if (!mc.player.getCooldowns().isOnCooldown(stack.getItem())) {
+                        CompoundTag tag = stack.getOrCreateTag();
+                        long instanceId;
+                        if (tag.contains("GeckoLibID")) {
+                            instanceId = tag.getLong("GeckoLibID");
+                        } else {
+                            instanceId = java.util.UUID.randomUUID().getMostSignificantBits();
+                            tag.putLong("GeckoLibID", instanceId);
+                        }
+
+                        ((AmmoTurretItem)stack.getItem()).triggerAnim(
+                                mc.player, instanceId, "controller", "flip");
+
+                        mc.player.getCooldowns().addCooldown(stack.getItem(), 60);
+
+                        // Чтобы анимация удара не проигрывалась визуально
+                        mc.player.attackAnim = 0;
+                        mc.player.swinging = false;
+                    }
+
+                    // ГЛАВНОЕ: Полностью отменяем клик.
+                    // Игра даже не узнает, что ты нажал кнопку -> удара не будет.
+                    event.setCanceled(true);
+                }
+            }
+        }
+    }
+
+
+    @SubscribeEvent
+    public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Pre event) {
+        if (event.getOverlay() == VanillaGuiOverlay.CROSSHAIR.type()) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null && mc.player.getMainHandItem().getItem() instanceof com.hbm_m.item.MachineGunItem) {
+                event.setCanceled(true);
+
+                GuiGraphics graphics = event.getGuiGraphics();
+                int width = event.getWindow().getGuiScaledWidth();
+                int height = event.getWindow().getGuiScaledHeight();
+                int x = width / 2;
+                int y = height / 2;
+
+                // Было: 2x2 пикселя, непрозрачный белый
+                // graphics.fill(x - 1, y - 1, x + 1, y + 1, 0xFFFFFFFF);
+
+                // Стало: 1x1 пиксель, 70% непрозрачности (полупрозрачный)
+                // 0xB2FFFFFF: B2 = 178 (из 255) альфа, FFFFFF = белый
+                graphics.fill(x, y, x + 1, y + 1, 0x80FFFFFF);
+            }
+        }
+    }
     @SubscribeEvent
     public static void onRenderWorldLast(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES || highlightedBlocks.isEmpty()) {
