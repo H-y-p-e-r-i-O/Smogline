@@ -3,6 +3,7 @@ package com.hbm_m.client;
 // Этот класс отвечает за подсветку блоков, если те мешают установке многоблочной структуры
 import com.hbm_m.config.ModClothConfig;
 import com.hbm_m.item.AmmoTurretItem;
+import com.hbm_m.item.AmmoTurretPiercingItem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -22,6 +23,7 @@ import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
+import software.bernie.geckolib.animatable.GeoItem;
 
 import java.awt.Color;
 import java.util.HashMap;
@@ -64,19 +66,16 @@ public class ClientRenderHandler {
 
     @SubscribeEvent
     public static void onMouseClick(InputEvent.MouseButton.Pre event) {
-        // Проверяем нажатие (ACTION_PRESS = 1) ЛЕВОЙ кнопки (GLFW_MOUSE_BUTTON_LEFT = 0)
         if (event.getAction() == GLFW.GLFW_PRESS && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
 
             Minecraft mc = Minecraft.getInstance();
-            // Проверка: игрок в игре, меню закрыто
             if (mc.player != null && mc.screen == null) {
 
-                // Если в руке наш патрон
-                if (mc.player.getMainHandItem().getItem() instanceof AmmoTurretItem) {
+                ItemStack stack = mc.player.getMainHandItem();
 
-                    ItemStack stack = mc.player.getMainHandItem();
+                // ✅ Добавлена проверка на второй предмет (AmmoPiercingItem)
+                if (stack.getItem() instanceof AmmoTurretItem || stack.getItem() instanceof AmmoTurretPiercingItem) {
 
-                    // Логика анимации и кулдауна
                     if (!mc.player.getCooldowns().isOnCooldown(stack.getItem())) {
                         CompoundTag tag = stack.getOrCreateTag();
                         long instanceId;
@@ -87,23 +86,23 @@ public class ClientRenderHandler {
                             tag.putLong("GeckoLibID", instanceId);
                         }
 
-                        ((AmmoTurretItem)stack.getItem()).triggerAnim(
-                                mc.player, instanceId, "controller", "flip");
+                        // ✅ Кастим к интерфейсу GeoItem, так как он есть у обоих предметов
+                        if (stack.getItem() instanceof GeoItem geoItem) {
+                            geoItem.triggerAnim(mc.player, instanceId, "controller", "flip");
+                        }
 
                         mc.player.getCooldowns().addCooldown(stack.getItem(), 60);
 
-                        // Чтобы анимация удара не проигрывалась визуально
                         mc.player.attackAnim = 0;
                         mc.player.swinging = false;
                     }
 
-                    // ГЛАВНОЕ: Полностью отменяем клик.
-                    // Игра даже не узнает, что ты нажал кнопку -> удара не будет.
                     event.setCanceled(true);
                 }
             }
         }
     }
+
 
 
     @SubscribeEvent

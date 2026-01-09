@@ -49,7 +49,7 @@ import java.util.function.Consumer;
 
 public class MachineGunItem extends Item implements GeoItem {
 
-    private static final int SHOT_ANIM_TICKS = 15;
+    private static final int SHOT_ANIM_TICKS = 14;
     private static final float BULLET_SPEED = 3.0F;
     private static final float BULLET_DIVERGENCE = 1.5F;
     private static final int MAG_CAPACITY = 24;

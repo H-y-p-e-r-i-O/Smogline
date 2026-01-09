@@ -668,6 +668,9 @@ public class ModItems {
     public static final RegistryObject<Item> AMMO_TURRET = ITEMS.register("ammo_turret",
             () -> new AmmoTurretItem(new Item.Properties()));
 
+    public static final RegistryObject<Item> AMMO_TURRET_PIERCING = ITEMS.register("ammo_turret_piercing",
+            () -> new AmmoTurretPiercingItem(new Item.Properties()));
+
     public static final RegistryObject<Item> NUGGET_SILICON = ITEMS.register("nugget_silicon",
             () -> new Item(new Item.Properties()));
 
