@@ -34,26 +34,36 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
 
     @Override
     public void tick() {
+        // 1. ВАЖНО: Сохраняем предыдущие значения ДО любых изменений
+        // Это обеспечивает плавную интерполяцию (lerp) в рендерере
+        this.xRotO = this.getXRot();
+        this.yRotO = this.getYRot();
+
         super.tick();
 
-        // ВАЖНО: Ротацию считаем И на клиенте, и на сервере.
-        // Иначе сервер меняет yaw/pitch, но клиент может не получить эти значения и модель будет "боком".
+        // 2. Обновляем вращение по вектору движения
+        updateRotationByMotion();
+
+        // Удаляем старый код, где xRotO присваивался в конце метода!
+    }
+
+    /**
+     * Метод для синхронизации поворота модели с вектором движения.
+     * Вызывайте его в tick(), а также СРАЗУ ПОСЛЕ создания пули и задания ей скорости.
+     */
+    public void updateRotationByMotion() {
         Vec3 motion = this.getDeltaMovement();
-        if (motion.lengthSqr() > 1.0E-6D) {
-            double h = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
-            float yaw = (float)(Mth.atan2(motion.x, motion.z) * (180.0D / Math.PI));
-            float pitch = (float)(Mth.atan2(motion.y, h) * (180.0D / Math.PI));
 
-            // setRot обновляет yRot/xRot и связанные поля корректнее, чем setYRot/setXRot по отдельности
+        // Если пуля почти стоит, не крутим её, чтобы не сбить ориентацию
+        if (motion.lengthSqr() > 1.0E-7D) {
+            double horizontalDist = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+
+            // Minecraft использует градусы, atan2 возвращает радианы
+            float yaw = (float) (Mth.atan2(motion.x, motion.z) * (180.0D / Math.PI));
+            float pitch = (float) (Mth.atan2(motion.y, horizontalDist) * (180.0D / Math.PI));
+
+            // setRot автоматически обновляет YRot и XRot
             this.setRot(yaw, pitch);
-        }
-
-        // Для плавного рендера: previous rotations
-        this.yRotO = this.getYRot();
-        this.xRotO = this.getXRot();
-
-        if (this.tickCount > 200) {
-            this.discard();
         }
     }
 

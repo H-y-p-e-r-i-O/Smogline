@@ -155,8 +155,10 @@ public class MachineGunItem extends Item implements GeoItem {
 
         if (getShootDelay(stack) > 0) return;
 
+        // Проверка патронов
         if (getAmmo(stack) <= 0) {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.DISPENSER_FAIL, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.DISPENSER_FAIL, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
             return;
         }
 
@@ -169,50 +171,58 @@ public class MachineGunItem extends Item implements GeoItem {
 
         TurretBulletEntity bullet = new TurretBulletEntity(level, player);
 
-        // Позиционирование
+        // --- РАСЧЕТ ПОЗИЦИИ СПАВНА ---
         Vec3 look = player.getLookAngle();
-        Vec3 eyePos = player.getEyePosition();
-        float yawRad = (float) Math.toRadians(-player.getYRot());
-        Vec3 right = new Vec3(Math.cos(yawRad), 0, Math.sin(yawRad));
+        Vec3 upGlobal = new Vec3(0, 1, 0);
 
-        // Смещение ствола
-        double forwardOffset = 0.8;
+        // Вектор "вправо"
+        Vec3 right = look.cross(upGlobal);
+        if (right.lengthSqr() < 1.0E-5) {
+            right = new Vec3(1, 0, 0);
+        }
+        right = right.normalize();
+
+        // Вектор "вверх" (локальный)
+        Vec3 upLocal = right.cross(look).normalize();
+
+        // Оффсеты (настройте под модель)
+        double forwardOffset = 1.7;
         double rightOffset = 0.25;
-        double downOffset = -0.25;
+        double downOffset = 0.13;
 
-        Vec3 spawnPos = eyePos
+        Vec3 spawnPos = player.getEyePosition()
                 .add(look.scale(forwardOffset))
                 .add(right.scale(rightOffset))
-                .add(0, downOffset, 0);
+                .add(upLocal.scale(-downOffset));
 
         bullet.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
 
-        // 1. Задаем вектор скорости (включая разброс)
+        // --- ЗАПУСК ПУЛИ ---
+
+        // 1. shoot() задает скорость и направление с учетом разброса
         bullet.shoot(look.x, look.y, look.z, BULLET_SPEED, BULLET_DIVERGENCE);
 
-        // 2. 3D Поворот пули
-        Vec3 velocity = bullet.getDeltaMovement();
-        double hDist = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
-
-        float yRot = (float)(Math.atan2(velocity.x, velocity.z) * (180D / Math.PI));
-        float xRot = (float)(Math.atan2(velocity.y, hDist) * (180D / Math.PI));
-
-        bullet.setYRot(yRot);
-        bullet.setXRot(xRot);
-        bullet.yRotO = yRot;
-        bullet.xRotO = xRot;
+        // 2. КРИТИЧЕСКИ ВАЖНО: Синхронизация интерполяции
+        // Метод shoot() обновляет YRot/XRot, но оставляет yRotO/xRotO старыми (0).
+        // Мы копируем текущие значения в старые, чтобы не было визуального рывка в 1-й тик.
+        bullet.yRotO = bullet.getYRot();
+        bullet.xRotO = bullet.getXRot();
 
         level.addFreshEntity(bullet);
 
+        // --- ЗВУКИ И АНИМАЦИЯ ---
         float pitch = 0.9F + level.random.nextFloat() * 0.2F;
         if (ModSounds.TURRET_FIRE.isPresent()) {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.TURRET_FIRE.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    ModSounds.TURRET_FIRE.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
         } else {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GENERIC_EXPLODE, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 2.0F);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.GENERIC_EXPLODE, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 2.0F);
         }
 
         triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel)level), "controller", "shot");
     }
+
 
     // === GECKOLIB (РЕАЛИЗАЦИЯ ИНТЕРФЕЙСА) ===
     @Override

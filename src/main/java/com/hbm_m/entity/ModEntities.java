@@ -19,7 +19,7 @@ public class ModEntities {
 
     public static final RegistryObject<EntityType<TurretLightEntity>> TURRET_LIGHT = ENTITY_TYPES.register("turret_light",
             () -> EntityType.Builder.of(TurretLightEntity::new, MobCategory.MONSTER)
-                    .sized(0.8f, 1.5f) // Размер хитбокса
+                    .sized(0.8f, 0.8f) // Размер хитбокса
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light").toString()));
 
     public static final RegistryObject<EntityType<TurretLightLinkedEntity>> TURRET_LIGHT_LINKED = ENTITY_TYPES.register("turret_light_linked",
@@ -31,7 +31,7 @@ public class ModEntities {
     public static final RegistryObject<EntityType<TurretBulletEntity>> TURRET_BULLET =
             ENTITY_TYPES.register("turret_bullet",
                     () -> EntityType.Builder.<TurretBulletEntity>of(TurretBulletEntity::new, MobCategory.MISC)
-                            .sized(0.2f, 0.2f) // Маленький хитбокс
+                            .sized(0.15f, 0.15f) // Маленький хитбокс
                             .clientTrackingRange(4) // Дальность прорисовки (в чанках)
                             .updateInterval(10)     // Частота обновлений пакетов (можно 2 или 1 для супер-плавности, но 10 ок)
                             .setShouldReceiveVelocityUpdates(true) // Обязательно true для снарядов!

@@ -7,6 +7,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -614,41 +615,51 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         if (!this.isDeployed()) return;
         if (this.shotCooldown > 0) return;
 
-        // 1. Проверка видимости и безопасности
+        // 1. Проверка видимости
         if (!canShootSafe(target)) return;
 
         // 2. Позиция дула
         Vec3 muzzlePos = getMuzzlePos();
 
-        // 3. Расчет баллистики (получаем вектор скорости)
+        // 3. Расчет баллистики
         Vec3 ballisticVelocity = calculateBallisticVelocity(target, muzzlePos, BULLET_SPEED, BULLET_GRAVITY);
 
-        if (ballisticVelocity == null) return; // Не достаем до цели
+        if (ballisticVelocity == null) return; // Цель недосягаема
 
-        // 4. Передаем вектор на клиент для дебага
+        // 4. Дебаг для клиента
         if (this.level().isClientSide) {
             this.debugBallisticVelocity = ballisticVelocity;
         }
 
-        // 5. Запуск пули
+        // 5. Подготовка к выстрелу
         this.shotCooldown = SHOT_ANIMATION_LENGTH;
-        this.setShooting(true); // Запускает анимацию
+        this.setShooting(true);
         this.shootAnimTimer = 0;
 
         TurretBulletEntity bullet = new TurretBulletEntity(this.level(), this);
         bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
 
-        // Устанавливаем скорость напрямую (без нормализации, чтобы сохранить расчетную дугу)
+        // 6. Установка скорости
         bullet.setDeltaMovement(ballisticVelocity);
 
-        // Поворот самой модельки пули по вектору движения
+        // 7. СИНХРОНИЗАЦИЯ ПОВОРОТА
+        // Считаем угол поворота на основе вектора скорости
         double hDist = Math.sqrt(ballisticVelocity.x * ballisticVelocity.x + ballisticVelocity.z * ballisticVelocity.z);
-        float yRot = (float)(Math.atan2(ballisticVelocity.x, ballisticVelocity.z) * (180D / Math.PI));
-        float xRot = (float)(Math.atan2(ballisticVelocity.y, hDist) * (180D / Math.PI));
+
+        // Mth.atan2 возвращает радианы, переводим в градусы
+        float yRot = (float)(Mth.atan2(ballisticVelocity.x, ballisticVelocity.z) * (180D / Math.PI));
+        float xRot = (float)(Mth.atan2(ballisticVelocity.y, hDist) * (180D / Math.PI));
+
+        // Устанавливаем текущий поворот
         bullet.setYRot(yRot);
         bullet.setXRot(xRot);
 
-        // Звук выстрела
+        // КРИТИЧЕСКИ ВАЖНО: Устанавливаем "предыдущий" поворот равным текущему
+        // Это гарантирует, что Lerp(tick, old, new) вернет правильный угол даже при tick=0
+        bullet.yRotO = yRot;
+        bullet.xRotO = xRot;
+
+        // 8. Звук и спавн
         if (ModSounds.TURRET_FIRE.isPresent()) {
             this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
         } else {
