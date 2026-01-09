@@ -28,6 +28,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.event.TickEvent;
@@ -48,79 +49,107 @@ import java.util.function.Consumer;
 
 public class MachineGunItem extends Item implements GeoItem {
 
-    private static final int SHOT_ANIM_TICKS = 14;
+    private static final int SHOT_ANIM_TICKS = 15;
     private static final float BULLET_SPEED = 3.0F;
     private static final float BULLET_DIVERGENCE = 1.5F;
-
-    // 24 в магазине + 1 в патроннике = 25 макс
     private static final int MAG_CAPACITY = 24;
     private static final int MAX_TOTAL_AMMO = MAG_CAPACITY + 1;
+
+    private static final int RELOAD_ANIM_TICKS = 100;  // 5 сек
+    private static final int FLIP_ANIM_TICKS = 80;     // 4 сек
+    private static final int RELOAD_AMMO_ADD_TICK = 50; // 2.5 сек
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public MachineGunItem(Properties properties) {
-        // Стек = 1 (оружие не стакается)
         super(properties.stacksTo(1));
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
 
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
-        if (oldStack.getItem() == newStack.getItem() && !slotChanged) {
-            return false;
-        }
+        if (oldStack.getItem() == newStack.getItem() && !slotChanged) return false;
         return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);
     }
 
-    public int getAmmo(ItemStack stack) {
-        return stack.getOrCreateTag().getInt("Ammo");
-    }
+    // === NBT МЕТОДЫ ===
+    public int getAmmo(ItemStack stack) { return stack.getOrCreateTag().getInt("Ammo"); }
+    public void setAmmo(ItemStack stack, int ammo) { stack.getOrCreateTag().putInt("Ammo", Math.max(0, Math.min(ammo, MAX_TOTAL_AMMO))); }
 
-    public void setAmmo(ItemStack stack, int ammo) {
-        stack.getOrCreateTag().putInt("Ammo", Math.max(0, Math.min(ammo, MAX_TOTAL_AMMO)));
-    }
+    public int getShootDelay(ItemStack stack) { return stack.getOrCreateTag().getInt("ShootDelay"); }
+    public void setShootDelay(ItemStack stack, int delay) { stack.getOrCreateTag().putInt("ShootDelay", delay); }
 
-    public int getShootDelay(ItemStack stack) {
-        return stack.getOrCreateTag().getInt("ShootDelay");
-    }
+    public int getReloadTimer(ItemStack stack) { return stack.getOrCreateTag().getInt("ReloadTimer"); }
+    public void setReloadTimer(ItemStack stack, int timer) { stack.getOrCreateTag().putInt("ReloadTimer", timer); }
 
-    public void setShootDelay(ItemStack stack, int delay) {
-        stack.getOrCreateTag().putInt("ShootDelay", delay);
-    }
+    public int getPendingAmmo(ItemStack stack) { return stack.getOrCreateTag().getInt("PendingAmmo"); }
+    public void setPendingAmmo(ItemStack stack, int ammo) { stack.getOrCreateTag().putInt("PendingAmmo", ammo); }
 
     @Override
     public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected) {
-        if (!level.isClientSide) {
+        super.inventoryTick(stack, level, entity, slotId, isSelected);
+
+        if (!level.isClientSide && entity instanceof Player player) {
+            // Таймер стрельбы
             int delay = getShootDelay(stack);
-            if (delay > 0) {
-                setShootDelay(stack, delay - 1);
+            if (delay > 0) setShootDelay(stack, delay - 1);
+
+            // Таймер перезарядки/flip
+            int reloadTimer = getReloadTimer(stack);
+            if (reloadTimer > 0) {
+                setReloadTimer(stack, reloadTimer - 1);
+
+                // На 2.5 сек анимации добавляем патроны в магазин
+                if (reloadTimer == (RELOAD_ANIM_TICKS - RELOAD_AMMO_ADD_TICK) ||
+                        reloadTimer == (FLIP_ANIM_TICKS - RELOAD_AMMO_ADD_TICK)) {
+
+                    int pending = getPendingAmmo(stack);
+                    if (pending > 0) {
+                        setAmmo(stack, getAmmo(stack) + pending);
+                        setPendingAmmo(stack, 0);
+                        syncHand(player, stack);
+                    }
+                }
             }
         }
     }
 
-    // Синхронизация слота руки
     private void syncHand(Player player, ItemStack stack) {
         if (player instanceof ServerPlayer serverPlayer) {
             int slot = serverPlayer.getInventory().selected;
-            serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket(
-                    -2, 0, slot, stack));
+            serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket(-2, 0, slot, stack));
         }
     }
 
-    // Перезарядка
+    // === ПЕРЕЗАРЯДКА ===
     public void reloadGun(Player player, ItemStack stack) {
         if (player.level().isClientSide) return;
 
-        int currentAmmo = getAmmo(stack);
-        if (currentAmmo >= MAX_TOTAL_AMMO) return;
+        // Если уже идёт перезарядка/flip - игнорируем
+        if (getReloadTimer(stack) > 0) return;
 
-        if (player.isCreative()) {
-            setAmmo(stack, MAX_TOTAL_AMMO);
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.FLINTANDSTEEL_USE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
-            syncHand(player, stack);
+        long instanceId = GeoItem.getOrAssignId(stack, (ServerLevel) player.level());
+        int currentAmmo = getAmmo(stack);
+
+        // 1️⃣ ПОЛНЫЙ МАГАЗИН → FLIP (просто выбрасываем пустой магазин)
+        if (currentAmmo >= MAX_TOTAL_AMMO) {
+            triggerAnim(player, instanceId, "controller", "flip");
+            setReloadTimer(stack, FLIP_ANIM_TICKS);
+            playSound(player, 1.0F);
             return;
         }
 
+        // 2️⃣ CREATIVE MODE → RELOAD
+        if (player.isCreative()) {
+            int toAdd = MAX_TOTAL_AMMO - currentAmmo;
+            setPendingAmmo(stack, toAdd);
+            triggerAnim(player, instanceId, "controller", "reload");
+            setReloadTimer(stack, RELOAD_ANIM_TICKS);
+            playSound(player, 1.0F);
+            return;
+        }
+
+        // 3️⃣ ПОИСК ПАТРОНОВ
         int needed = MAX_TOTAL_AMMO - currentAmmo;
         int foundTotal = 0;
 
@@ -137,56 +166,65 @@ public class MachineGunItem extends Item implements GeoItem {
                         player.getInventory().setItem(i, ItemStack.EMPTY);
                     }
                 }
+
                 if (foundTotal >= needed) break;
             }
         }
 
+        // РЕЗУЛЬТАТ:
         if (foundTotal > 0) {
-            setAmmo(stack, currentAmmo + foundTotal);
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.IRON_DOOR_OPEN, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+            // Нашли хотя бы один патрон → RELOAD
+            setPendingAmmo(stack, foundTotal);
             player.getInventory().setChanged();
-            syncHand(player, stack);
+            triggerAnim(player, instanceId, "controller", "reload");
+            setReloadTimer(stack, RELOAD_ANIM_TICKS);
+            playSound(player, 1.0F);
+        } else {
+            // Нет патронов → FLIP
+            triggerAnim(player, instanceId, "controller", "flip");
+            setReloadTimer(stack, FLIP_ANIM_TICKS);
+            playSound(player, 1.5F);
         }
     }
 
-    // Стрельба
+    private void playSound(Player player, float pitch) {
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.IRON_DOOR_OPEN, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
+    }
+
+    // === СТРЕЛЬБА ===
     public void performShooting(Level level, Player player, ItemStack stack) {
         if (level.isClientSide) return;
 
+        // 🔒 Блокировка при перезарядке/flip
+        if (getReloadTimer(stack) > 0) return;
         if (getShootDelay(stack) > 0) return;
 
-        // Проверка патронов
-        if (getAmmo(stack) <= 0) {
+        int ammo = getAmmo(stack);
+        if (ammo <= 0) {
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.DISPENSER_FAIL, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
             return;
         }
 
         if (!player.isCreative()) {
-            setAmmo(stack, getAmmo(stack) - 1);
+            setAmmo(stack, ammo - 1);
             syncHand(player, stack);
         }
 
         setShootDelay(stack, SHOT_ANIM_TICKS);
 
         TurretBulletEntity bullet = new TurretBulletEntity(level, player);
-
-        // --- РАСЧЕТ ПОЗИЦИИ СПАВНА ---
         Vec3 look = player.getLookAngle();
         Vec3 upGlobal = new Vec3(0, 1, 0);
-
-        // Вектор "вправо"
         Vec3 right = look.cross(upGlobal);
-        if (right.lengthSqr() < 1.0E-5) {
-            right = new Vec3(1, 0, 0);
-        }
+
+        if (right.lengthSqr() < 1.0E-5) right = new Vec3(1, 0, 0);
         right = right.normalize();
 
-        // Вектор "вверх" (локальный)
         Vec3 upLocal = right.cross(look).normalize();
 
-        // Оффсеты (настройте под модель)
-        double forwardOffset = 1.7;
+        double forwardOffset = 1.9;
         double rightOffset = 0.25;
         double downOffset = 0.13;
 
@@ -196,21 +234,11 @@ public class MachineGunItem extends Item implements GeoItem {
                 .add(upLocal.scale(-downOffset));
 
         bullet.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
-
-        // --- ЗАПУСК ПУЛИ ---
-
-        // 1. shoot() задает скорость и направление с учетом разброса
         bullet.shoot(look.x, look.y, look.z, BULLET_SPEED, BULLET_DIVERGENCE);
-
-        // 2. КРИТИЧЕСКИ ВАЖНО: Синхронизация интерполяции
-        // Метод shoot() обновляет YRot/XRot, но оставляет yRotO/xRotO старыми (0).
-        // Мы копируем текущие значения в старые, чтобы не было визуального рывка в 1-й тик.
         bullet.yRotO = bullet.getYRot();
         bullet.xRotO = bullet.getXRot();
-
         level.addFreshEntity(bullet);
 
-        // --- ЗВУКИ И АНИМАЦИЯ ---
         float pitch = 0.9F + level.random.nextFloat() * 0.2F;
         if (ModSounds.TURRET_FIRE.isPresent()) {
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -223,53 +251,58 @@ public class MachineGunItem extends Item implements GeoItem {
         triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel)level), "controller", "shot");
     }
 
-
-    // === GECKOLIB (РЕАЛИЗАЦИЯ ИНТЕРФЕЙСА) ===
+    // === GECKOLIB КОНТРОЛЛЕР ===
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "shoot_controller", 0, event -> {
-            event.getController().setTransitionLength(0);
-
+        controllers.add(new AnimationController<>(this, "controller", 0, event -> {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null) return event.setAndContinue(RawAnimation.begin().thenLoop("idle"));
+            if (mc.player == null) return PlayState.CONTINUE;
 
-            boolean isKeyDown = mc.options.keyAttack.isDown();
-            boolean isRightItem = mc.player.getMainHandItem().getItem() == this;
+            ItemStack mainHandStack = mc.player.getMainHandItem();
+            if (mainHandStack.getItem() != this) return event.setAndContinue(RawAnimation.begin().thenLoop("idle"));
 
-            // Если анимация сейчас играет, даем ей доиграть до конца!
+            // 🔒 ЗАЩИТА: reload и flip НЕ прерываются
             if (event.getController().getAnimationState() == AnimationController.State.RUNNING) {
-                // Если это "shot", мы не прерываем её, пока она сама не остановится
-                if ("shot".equals(event.getController().getCurrentAnimation().animation().name())) {
+                String currentAnim = event.getController().getCurrentAnimation().animation().name();
+                if ("reload".equals(currentAnim) || "flip".equals(currentAnim)) {
+                    return PlayState.CONTINUE;
+                }
+                if ("shot".equals(currentAnim)) {
                     return PlayState.CONTINUE;
                 }
             }
 
-            // Если анимация закончилась (или была idle) И кнопка зажата -> запускаем НОВЫЙ выстрел
-            if (isRightItem && isKeyDown) {
-                // Force reset нужен, чтобы если мы только что закончили shot, он запустился заново
+            boolean isKeyDown = mc.options.keyAttack.isDown();
+            boolean hasAmmo = getAmmo(mainHandStack) > 0;
+            boolean isReloading = getReloadTimer(mainHandStack) > 0;
+
+            if (isKeyDown && hasAmmo && !isReloading) {
                 event.getController().forceAnimationReset();
                 return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
             }
 
-            // Иначе idle
             return event.setAndContinue(RawAnimation.begin().thenLoop("idle"));
-        }));
+        })
+                // 🎯 РЕГИСТРИРУЕМ ТРИГГЕРНЫЕ АНИМАЦИИ
+                .triggerableAnim("reload", RawAnimation.begin().thenPlay("reload"))
+                .triggerableAnim("flip", RawAnimation.begin().thenPlay("flip"))
+                .triggerableAnim("shot", RawAnimation.begin().thenPlay("shot")));
     }
-
-
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
 
     @Override
-    public void initializeClient(Consumer consumer) {
+    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
             private MachineGunRenderer renderer;
+
             @Override
             public BlockEntityWithoutLevelRenderer getCustomRenderer() {
                 if (renderer == null) renderer = new MachineGunRenderer();
                 return renderer;
             }
+
             @Override
             public HumanoidModel.ArmPose getArmPose(LivingEntity entity, InteractionHand hand, ItemStack stack) {
                 return HumanoidModel.ArmPose.CROSSBOW_HOLD;
@@ -278,29 +311,27 @@ public class MachineGunItem extends Item implements GeoItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         int totalAmmo = getAmmo(stack);
-        String displayString;
-
-        if (totalAmmo > MAG_CAPACITY) {
-            displayString = MAG_CAPACITY + " + " + (totalAmmo - MAG_CAPACITY);
-        } else {
-            displayString = String.valueOf(totalAmmo);
-        }
-
+        String displayString = (totalAmmo > MAG_CAPACITY)
+                ? MAG_CAPACITY + " + " + (totalAmmo - MAG_CAPACITY)
+                : String.valueOf(totalAmmo);
         tooltip.add(Component.literal("Ammo: " + displayString + " / " + MAG_CAPACITY).withStyle(ChatFormatting.GRAY));
         super.appendHoverText(stack, level, tooltip, flag);
     }
 
     @Override
-    public InteractionResultHolder use(Level level, Player player, InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         return InteractionResultHolder.pass(player.getItemInHand(hand));
     }
 
     @Override
     public UseAnim getUseAnimation(ItemStack stack) { return UseAnim.NONE; }
 
-    // === КЛИЕНТСКИЕ ОБРАБОТЧИКИ ===
+    @Override
+    public double getBoneResetTime() { return 0; }
+
+    // === КЛИЕНТ ===
     @Mod.EventBusSubscriber(modid = RefStrings.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientHandlers {
         private static int clientShootTimer = 0;
@@ -308,22 +339,31 @@ public class MachineGunItem extends Item implements GeoItem {
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.END) return;
+
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null || mc.screen != null) return;
 
             ItemStack stack = mc.player.getMainHandItem();
-            if (!(stack.getItem() instanceof MachineGunItem)) {
+            if (!(stack.getItem() instanceof MachineGunItem item)) {
                 clientShootTimer = 0;
                 return;
             }
 
             if (clientShootTimer > 0) clientShootTimer--;
 
+            // Перезарядка
             if (ModKeyBindings.RELOAD_KEY.consumeClick()) {
                 ModPacketHandler.INSTANCE.sendToServer(new PacketReloadGun());
+                return;
             }
 
+            // 🔒 Блокировка стрельбы при перезарядке
+            if (item.getReloadTimer(stack) > 0) return;
+
+            // Стрельба
             if (mc.options.keyAttack.isDown()) {
+                if (item.getAmmo(stack) <= 0) return;
+
                 if (clientShootTimer <= 0) {
                     ModPacketHandler.INSTANCE.sendToServer(new PacketShoot());
                     mc.player.attackAnim = 0;
@@ -331,7 +371,8 @@ public class MachineGunItem extends Item implements GeoItem {
                     mc.player.swinging = false;
                     clientShootTimer = SHOT_ANIM_TICKS;
                 }
-                while (mc.options.keyAttack.consumeClick()) { }
+            } else {
+                if (clientShootTimer < SHOT_ANIM_TICKS - 2) clientShootTimer = 0;
             }
         }
 
@@ -346,12 +387,7 @@ public class MachineGunItem extends Item implements GeoItem {
             }
         }
     }
-    @Override
-    public double getBoneResetTime() {
-        return 0; // Отключает плавный возврат к дефолтной позе (в тиках)
-    }
 
-    // === ОБЩИЕ ОБРАБОТЧИКИ ===
     @Mod.EventBusSubscriber(modid = RefStrings.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class CommonHandlers {
         @SubscribeEvent
