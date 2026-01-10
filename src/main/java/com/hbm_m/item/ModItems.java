@@ -665,11 +665,18 @@ public class ModItems {
     public static final RegistryObject<Item> MACHINEGUN = ITEMS.register("machinegun",
             () -> new MachineGunItem(new Item.Properties()));
 
+    // Обычный
     public static final RegistryObject<Item> AMMO_TURRET = ITEMS.register("ammo_turret",
-            () -> new AmmoTurretItem(new Item.Properties()));
+            () -> new AmmoTurretItem(new Item.Properties(), 6.0f, 3.0f, false));
 
+    // Пробивной
     public static final RegistryObject<Item> AMMO_TURRET_PIERCING = ITEMS.register("ammo_turret_piercing",
-            () -> new AmmoTurretPiercingItem(new Item.Properties()));
+            () -> new AmmoTurretItem(new Item.Properties(), 20.0f, 5.0f, true));
+
+    // ОГНЕННЫЙ (убедись, что параметры правильные!)
+    public static final RegistryObject<Item> AMMO_TURRET_FIRE = ITEMS.register("ammo_turret_fire",
+            () -> new AmmoTurretItem(new Item.Properties(), 3.0f, 3.0f, false)); // Урон 3.0, не пробивает
+
 
     public static final RegistryObject<Item> NUGGET_SILICON = ITEMS.register("nugget_silicon",
             () -> new Item(new Item.Properties()));

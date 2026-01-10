@@ -33,21 +33,39 @@ public class TurretBulletRenderer extends GeoEntityRenderer<TurretBulletEntity> 
                            RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
                            float partialTick, int packedLight, int packedOverlay) {
 
-            String ammoId = animatable.getAmmoId();
-            ResourceLocation glowTexture;
+            String ammoId = animatable.getAmmoId(); // Например: "hbm_m:ammo_turret_fire"
 
-            // Выбираем текстуру свечения так же, как и основную
-            if (ammoId.contains("piercing")) {
-                glowTexture = new ResourceLocation(RefStrings.MODID, "textures/entity/turret_bullet_piercing_glow.png");
-            } else {
-                // Если для обычной пули нет свечения, используем дефолтную
-                glowTexture = new ResourceLocation(RefStrings.MODID, "textures/entity/turret_bullet_glow.png");
+            // Логика формирования пути к текстуре свечения
+            // 1. Убираем префикс мода
+            String path = ammoId;
+            if (path.contains(":")) {
+                path = path.split(":")[1];
             }
 
-            // Рендерим слой, который светится в темноте (Eyes = полный свет, игнорирует освещение мира)
+            String itemPrefix = "ammo_turret";
+            String bulletPrefix = "turret_bullet";
+            String textureName = "turret_bullet_glow"; // Дефолтная текстура
+
+            // Если это патрон из нашего семейства
+            if (path.startsWith(itemPrefix)) {
+                // Получаем суффикс (например "_fire")
+                String suffix = path.replace(itemPrefix, "");
+
+                // Если суффикс пустой (обычный патрон) -> turret_bullet_glow.png
+                // Если суффикс есть (_fire) -> turret_bullet_fire_glow.png
+                if (!suffix.isEmpty()) {
+                    textureName = bulletPrefix + suffix + "_glow";
+                }
+            } else if (path.contains("piercing")) {
+                // Фолбэк для старых ID или если логика префиксов не сработает
+                textureName = "turret_bullet_piercing_glow";
+            }
+
+            ResourceLocation glowTexture = new ResourceLocation(RefStrings.MODID, "textures/entity/" + textureName + ".png");
+
+            // Рендерим слой, который светится в темноте (Eyes = полный свет)
             RenderType glowRenderType = RenderType.eyes(glowTexture);
 
-            // Используем bakedModel, который передан в аргументы метода
             getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable,
                     glowRenderType, bufferSource.getBuffer(glowRenderType),
                     partialTick, 15728880, packedOverlay,

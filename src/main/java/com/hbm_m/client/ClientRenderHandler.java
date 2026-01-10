@@ -3,7 +3,6 @@ package com.hbm_m.client;
 // Этот класс отвечает за подсветку блоков, если те мешают установке многоблочной структуры
 import com.hbm_m.config.ModClothConfig;
 import com.hbm_m.item.AmmoTurretItem;
-import com.hbm_m.item.AmmoTurretPiercingItem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -74,7 +73,7 @@ public class ClientRenderHandler {
                 ItemStack stack = mc.player.getMainHandItem();
 
                 // ✅ Добавлена проверка на второй предмет (AmmoPiercingItem)
-                if (stack.getItem() instanceof AmmoTurretItem || stack.getItem() instanceof AmmoTurretPiercingItem) {
+                if (stack.getItem() instanceof AmmoTurretItem) {
 
                     if (!mc.player.getCooldowns().isOnCooldown(stack.getItem())) {
                         CompoundTag tag = stack.getOrCreateTag();

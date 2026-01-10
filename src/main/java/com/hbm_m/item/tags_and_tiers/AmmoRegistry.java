@@ -1,6 +1,7 @@
 package com.hbm_m.item.tags_and_tiers;
 
 import com.hbm_m.item.ModItems;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -35,35 +36,38 @@ public class AmmoRegistry {
         AMMO_BY_CALIBER.putIfAbsent(caliber, type);
     }
 
-    public static AmmoType getAmmoTypeFromItem(Item item) {
-        // ✅ Сначала проверяем интерфейс
-        if (item instanceof IAmmoItem iAmmo) {
-            return new AmmoType(
-                    ForgeRegistries.ITEMS.getKey(item).toString(),
-                    iAmmo.getCaliber(),
-                    iAmmo.getDamage(),
-                    iAmmo.getSpeed(),
-                    iAmmo.isPiercing()
-            );
-        }
-        // Затем в карте
-        String itemId = ForgeRegistries.ITEMS.getKey(item).toString();
-        return AMMO_BY_ID.get(itemId);
-    }
 
     public static AmmoType getAmmoTypeById(String itemId) {
-        // ✅ Если в карте нет, пытаемся получить через Item
+        // 1. Ищем в карте (для старых регистраций)
         AmmoType cached = AMMO_BY_ID.get(itemId);
         if (cached != null) return cached;
 
-        // Пытаемся получить Item и проверить интерфейс
+        // 2. Если нет, пробуем создать динамически через IAmmoItem
         Item item = ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(itemId));
-        if (item instanceof IAmmoItem) {
+        if (item != null) {
             return getAmmoTypeFromItem(item);
         }
 
         return null;
     }
+
+
+    /**
+     * Создает AmmoType на основе предмета, реализующего IAmmoItem.
+     */
+    public static AmmoType getAmmoTypeFromItem(Item item) {
+        if (item instanceof IAmmoItem iAmmo) {
+            return new AmmoType(
+                    ForgeRegistries.ITEMS.getKey(item).toString(), // ID
+                    iAmmo.getCaliber(),                            // Калибр
+                    iAmmo.getDamage(),                             // Урон
+                    iAmmo.getSpeed(),                              // Скорость
+                    iAmmo.isPiercing()                             // Пробивание
+            );
+        }
+        return null;
+    }
+
 
     public static AmmoType getAmmoTypeByCaliber(String caliber) {
         return AMMO_BY_CALIBER.get(caliber);

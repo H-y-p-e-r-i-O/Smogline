@@ -173,8 +173,20 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
         Entity target = result.getEntity();
+
+        // Наносим урон
         target.hurt(this.damageSources().thrown(this, this.getOwner()), getDamage());
 
+        // ✅ ЛОГИКА ОГНЕННОГО ПАТРОНА
+        // Если ID патрона содержит "fire" и цель живая
+        if (getAmmoId().contains("fire") && target instanceof LivingEntity livingTarget) {
+            // Проверяем броню: загорается только если броня слабая (<= 12)
+            if (livingTarget.getArmorValue() <= 20) {
+                livingTarget.setSecondsOnFire(5); // Поджигаем на 3 секунды
+            }
+        }
+
+        // Звуки попадания
         if (!this.level().isClientSide) {
             SoundEvent hitSound = null;
             if (this.random.nextBoolean()) {
@@ -193,6 +205,7 @@ public class TurretBulletEntity extends ThrowableProjectile implements GeoEntity
             this.discard();
         }
     }
+
 
     @Override
     protected void onHit(HitResult result) {
