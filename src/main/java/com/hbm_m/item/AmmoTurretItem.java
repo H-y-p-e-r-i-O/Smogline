@@ -1,30 +1,28 @@
 package com.hbm_m.item;
 
 import com.hbm_m.item.client.AmmoTurretRenderer;
-import com.hbm_m.lib.RefStrings;
+import com.hbm_m.item.tags_and_tiers.IAmmoItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.function.Consumer;
 
-public class AmmoTurretItem extends Item implements GeoItem {
+public class AmmoTurretItem extends Item implements GeoItem, IAmmoItem {
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public AmmoTurretItem(Properties properties) {
@@ -32,7 +30,27 @@ public class AmmoTurretItem extends Item implements GeoItem {
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
 
-    // === GECKOLIB SETUP ===
+    // ✅ РЕАЛИЗАЦИЯ ИНТЕРФЕЙСА
+    @Override
+    public String getCaliber() {
+        return "20mm_turret";
+    }
+
+    @Override
+    public float getDamage() {
+        return 6.0f;
+    }
+
+    @Override
+    public float getSpeed() {
+        return 3.0f;
+    }
+
+    @Override
+    public boolean isPiercing() {
+        return false;
+    }
+
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.CONTINUE)
@@ -59,17 +77,11 @@ public class AmmoTurretItem extends Item implements GeoItem {
 
     @SubscribeEvent
     public static void onAmmoTurretClick(InputEvent.InteractionKeyMappingTriggered event) {
-        // Проверяем ЛКМ (Attack)
         if (event.isAttack()) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null && mc.player.getMainHandItem().getItem() instanceof AmmoTurretItem) {
-
                 ItemStack stack = mc.player.getMainHandItem();
-
-                // Проверяем кулдаун
                 if (!mc.player.getCooldowns().isOnCooldown(stack.getItem())) {
-
-                    // Генерируем ID для анимации
                     CompoundTag tag = stack.getOrCreateTag();
                     long instanceId;
                     if (tag.contains("GeckoLibID")) {
@@ -79,19 +91,13 @@ public class AmmoTurretItem extends Item implements GeoItem {
                         tag.putLong("GeckoLibID", instanceId);
                     }
 
-                    // Запускаем анимацию "flip"
                     ((AmmoTurretItem)stack.getItem()).triggerAnim(
                             mc.player, instanceId, "controller", "flip");
-
-                    // Ставим кулдаун (3 сек = 60 тиков)
                     mc.player.getCooldowns().addCooldown(stack.getItem(), 60);
                 }
-
-                // ВАЖНО: Отменяем удар рукой
                 event.setCanceled(true);
                 event.setSwingHand(false);
             }
         }
     }
 }
-

@@ -1,58 +1,59 @@
-[09янв.2026 17:11:30.939] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgedatauserdev, --assetIndex, 5, --assetsDir, C:\Users\Администратор\.gradle\caches\forge_gradle\assets, --gameDir, ., --fml.forgeVersion, 47.4.6, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412, --mod, hbm_m, --all, --output, C:\Users\Администратор\Desktop\Smogline\src\generated\resources, --existing, C:\Users\Администратор\Desktop\Smogline\src\main\resources, --mixin.config, mixins.hbm_m.json]
-[09янв.2026 17:11:30.945] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.16 by Eclipse Adoptium; OS Windows 11 arch amd64 version 10.0
-[09янв.2026 17:11:31.075] [main/INFO] [net.minecraftforge.fml.loading.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forgedatauserdev
-[09янв.2026 17:11:31.131] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/Администратор/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23129!/ Service=ModLauncher Env=CLIENT
-[09янв.2026 17:11:31.459] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Администратор\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.20.1-47.4.6\9e86bf67e222253576e982856d9958695725adb5\javafmllanguage-1.20.1-47.4.6.jar is missing mods.toml file
-[09янв.2026 17:11:31.463] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Администратор\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.20.1-47.4.6\56100545804adc991cc48ab68b86ba46c5873246\lowcodelanguage-1.20.1-47.4.6.jar is missing mods.toml file
-[09янв.2026 17:11:31.465] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Администратор\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.20.1-47.4.6\fd228d7d879a9da774eda022ea3092cedb5178f1\mclanguage-1.20.1-47.4.6.jar is missing mods.toml file
-[09янв.2026 17:11:31.469] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Администратор\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.20.1-47.4.6\cefc55ada370ce2f23f92834530eb967c0de1fdd\fmlcore-1.20.1-47.4.6.jar is missing mods.toml file
-[09янв.2026 17:11:31.625] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: Found 1 dependencies adding them to mods collection
-[09янв.2026 17:11:34.068] [main/WARN] [mixin/]: Compatibility level JAVA_17 specified by mixins.hbm_m.json is higher than the maximum level supported by this version of mixin (JAVA_13).
-[09янв.2026 17:11:34.068] [main/INFO] [mixin/]: Compatibility level set to JAVA_17
-[09янв.2026 17:11:34.075] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgedatauserdev' with arguments [--gameDir, ., --assetsDir, C:\Users\Администратор\.gradle\caches\forge_gradle\assets, --assetIndex, 5, --mod, hbm_m, --all, --output, C:\Users\Администратор\Desktop\Smogline\src\generated\resources, --existing, C:\Users\Администратор\Desktop\Smogline\src\main\resources]
-[09янв.2026 17:11:34.141] [main/INFO] [mixin/]: Attempting to load Fernflower decompiler (Threaded mode)
-[09янв.2026 17:11:34.144] [main/INFO] [mixin/]: Fernflower could not be loaded, exported classes will not be decompiled. NoClassDefFoundError: org/jetbrains/java/decompiler/main/extern/IResultSaver
-[09янв.2026 17:11:34.148] [main/INFO] [mixin/]: Preparing mixins for MixinEnvironment[DEFAULT]
-[09янв.2026 17:11:34.149] [main/INFO] [mixin/]: Selecting config mixins.hbm_m.json
-[09янв.2026 17:11:34.152] [main/WARN] [mixin/]: Reference map 'hbm_m.refmap.json' for mixins.hbm_m.json could not be read. If this is a development environment you can ignore this message
-[09янв.2026 17:11:34.153] [main/INFO] [mixin/]: Selecting config geckolib.mixins.json
-[09янв.2026 17:11:34.328] [main/INFO] [mixin/]: Remapping refMap geckolib.refmap.json using C:\Users\Администратор\Desktop\Smogline\build\createSrgToMcp\output.srg
-[09янв.2026 17:11:34.329] [main/INFO] [mixin/]: Preparing mixins.hbm_m.json (2)
-[09янв.2026 17:11:34.360] [main/WARN] [mixin/]: Error loading class: net/irisshaders/iris/shadows/ShadowRenderer (java.lang.ClassNotFoundException: net.irisshaders.iris.shadows.ShadowRenderer)
-[09янв.2026 17:11:34.361] [main/INFO] [mixin/]: Preparing geckolib.mixins.json (1)
-[09янв.2026 17:11:34.611] [main/INFO] [net.minecraftforge.data.loading.DatagenModLoader/]: Initializing Data Gatherer for mods [hbm_m]
-[09янв.2026 17:11:38.073] [main/INFO] [mixin/]: Mixing SlotMixin from mixins.hbm_m.json into net.minecraft.world.inventory.Slot
-[09янв.2026 17:11:38.083] [main/WARN] [mixin/]: Write access to @Mutable @Final field x:I in mixins.hbm_m.json:SlotMixin::setPos
-[09янв.2026 17:11:38.083] [main/WARN] [mixin/]: Write access to @Mutable @Final field y:I in mixins.hbm_m.json:SlotMixin::setPos
-[09янв.2026 17:11:39.028] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 47.4.6, for MC 1.20.1 with MCP 20230612.114412
-[09янв.2026 17:11:39.029] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v47.4.6 Initialized
-[09янв.2026 17:11:39.077] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: Initializing Hbm's Nuclear Tech Mod Modernized
-[09янв.2026 17:11:39.087] [modloading-worker-0/WARN] [software.bernie.geckolib.GeckoLib/]: Minecraft.getInstance() was null, could not register reload listeners
-[09янв.2026 17:11:39.227] [modloading-worker-0/INFO] [mezz.jei.library.load.PluginCaller/]: Sending ConfigManager...
-[09янв.2026 17:11:39.232] [modloading-worker-0/INFO] [mezz.jei.library.load.PluginCaller/]: Sending ConfigManager took 2.887 ms
-[09янв.2026 17:11:39.335] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: Registered MobEffects for hbm_m
-[09янв.2026 17:11:39.372] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: Radiation handlers registered. Using ChunkRadiationHandlerSimple.
-[09янв.2026 17:11:39.372] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: Registered event listeners for Radiation System.
-[09янв.2026 17:11:39.372] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: !!! MainRegistry: ClientSetup instance created, its Forge listeners should now be registered !!!
-[09янв.2026 17:11:39.946] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/Администратор/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.4.6_mapped_parchment_2023.09.03-1.20.1/forge-1.20.1-47.4.6_mapped_parchment_2023.09.03-1.20.1.jar%23191!/assets/.mcassetsroot' uses unexpected schema
-[09янв.2026 17:11:39.948] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/Администратор/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.4.6_mapped_parchment_2023.09.03-1.20.1/forge-1.20.1-47.4.6_mapped_parchment_2023.09.03-1.20.1.jar%23191!/data/.mcassetsroot' uses unexpected schema
-[09янв.2026 17:11:40.114] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Tags for minecraft:block mod id hbm_m
-[09янв.2026 17:11:40.253] [main/INFO] [net.minecraft.data.DataGenerator/]: Tags for minecraft:block mod id hbm_m finished after 138 ms
-[09янв.2026 17:11:40.253] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Recipes
-[09янв.2026 17:11:40.376] [main/INFO] [net.minecraft.data.DataGenerator/]: Recipes finished after 123 ms
-[09янв.2026 17:11:40.377] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Tags for minecraft:item mod id hbm_m
-[09янв.2026 17:11:40.390] [main/INFO] [net.minecraft.data.DataGenerator/]: Tags for minecraft:item mod id hbm_m finished after 13 ms
-[09янв.2026 17:11:40.390] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Registries
-[09янв.2026 17:11:40.408] [main/INFO] [net.minecraft.data.DataGenerator/]: Registries finished after 17 ms
-[09янв.2026 17:11:40.409] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Tags for minecraft:damage_type mod id hbm_m
-[09янв.2026 17:11:40.410] [main/INFO] [net.minecraft.data.DataGenerator/]: Tags for minecraft:damage_type mod id hbm_m finished after 1 ms
-[09янв.2026 17:11:40.410] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Block States: hbm_m
-[09янв.2026 17:11:40.765] [main/INFO] [net.minecraft.data.DataGenerator/]: Block States: hbm_m finished after 354 ms
-[09янв.2026 17:11:40.765] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Item Models: hbm_m
-[09янв.2026 17:11:40.930] [main/INFO] [net.minecraft.data.DataGenerator/]: Item Models: hbm_m finished after 164 ms
-[09янв.2026 17:11:40.931] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Languages: ru_ru
-[09янв.2026 17:11:40.943] [main/INFO] [net.minecraft.data.DataGenerator/]: Languages: ru_ru finished after 11 ms
-[09янв.2026 17:11:40.943] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Languages: en_us
-[09янв.2026 17:11:40.949] [main/INFO] [net.minecraft.data.DataGenerator/]: Languages: en_us finished after 5 ms
-[09янв.2026 17:11:40.949] [main/INFO] [net.minecraft.data.DataGenerator/]: All providers took: 835 ms
-[09янв.2026 17:11:41.092] [main/INFO] [net.minecraft.data.HashCache/]: Caching: total files: 3351, old count: 3355, new count: 3352, removed stale: 0, written: 0
+[10янв.2026 18:26:52.857] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgedatauserdev, --assetIndex, 5, --assetsDir, C:\Users\Администратор\.gradle\caches\forge_gradle\assets, --gameDir, ., --fml.forgeVersion, 47.4.6, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412, --mod, hbm_m, --all, --output, C:\Users\Администратор\Desktop\Smogline\src\generated\resources, --existing, C:\Users\Администратор\Desktop\Smogline\src\main\resources, --mixin.config, mixins.hbm_m.json]
+[10янв.2026 18:26:52.865] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.16 by Eclipse Adoptium; OS Windows 11 arch amd64 version 10.0
+[10янв.2026 18:26:53.008] [main/INFO] [net.minecraftforge.fml.loading.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forgedatauserdev
+[10янв.2026 18:26:53.067] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/Администратор/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23129!/ Service=ModLauncher Env=CLIENT
+[10янв.2026 18:26:53.410] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Администратор\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.20.1-47.4.6\9e86bf67e222253576e982856d9958695725adb5\javafmllanguage-1.20.1-47.4.6.jar is missing mods.toml file
+[10янв.2026 18:26:53.414] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Администратор\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.20.1-47.4.6\56100545804adc991cc48ab68b86ba46c5873246\lowcodelanguage-1.20.1-47.4.6.jar is missing mods.toml file
+[10янв.2026 18:26:53.417] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Администратор\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.20.1-47.4.6\fd228d7d879a9da774eda022ea3092cedb5178f1\mclanguage-1.20.1-47.4.6.jar is missing mods.toml file
+[10янв.2026 18:26:53.420] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Администратор\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.20.1-47.4.6\cefc55ada370ce2f23f92834530eb967c0de1fdd\fmlcore-1.20.1-47.4.6.jar is missing mods.toml file
+[10янв.2026 18:26:53.592] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: Found 1 dependencies adding them to mods collection
+[10янв.2026 18:26:56.443] [main/WARN] [mixin/]: Compatibility level JAVA_17 specified by mixins.hbm_m.json is higher than the maximum level supported by this version of mixin (JAVA_13).
+[10янв.2026 18:26:56.443] [main/INFO] [mixin/]: Compatibility level set to JAVA_17
+[10янв.2026 18:26:56.451] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgedatauserdev' with arguments [--gameDir, ., --assetsDir, C:\Users\Администратор\.gradle\caches\forge_gradle\assets, --assetIndex, 5, --mod, hbm_m, --all, --output, C:\Users\Администратор\Desktop\Smogline\src\generated\resources, --existing, C:\Users\Администратор\Desktop\Smogline\src\main\resources]
+[10янв.2026 18:26:56.515] [main/INFO] [mixin/]: Attempting to load Fernflower decompiler (Threaded mode)
+[10янв.2026 18:26:56.516] [main/INFO] [mixin/]: Fernflower could not be loaded, exported classes will not be decompiled. NoClassDefFoundError: org/jetbrains/java/decompiler/main/extern/IResultSaver
+[10янв.2026 18:26:56.523] [main/INFO] [mixin/]: Preparing mixins for MixinEnvironment[DEFAULT]
+[10янв.2026 18:26:56.524] [main/INFO] [mixin/]: Selecting config mixins.hbm_m.json
+[10янв.2026 18:26:56.527] [main/WARN] [mixin/]: Reference map 'hbm_m.refmap.json' for mixins.hbm_m.json could not be read. If this is a development environment you can ignore this message
+[10янв.2026 18:26:56.528] [main/INFO] [mixin/]: Selecting config geckolib.mixins.json
+[10янв.2026 18:26:56.771] [main/INFO] [mixin/]: Remapping refMap geckolib.refmap.json using C:\Users\Администратор\Desktop\Smogline\build\createSrgToMcp\output.srg
+[10янв.2026 18:26:56.772] [main/INFO] [mixin/]: Preparing mixins.hbm_m.json (2)
+[10янв.2026 18:26:56.805] [main/WARN] [mixin/]: Error loading class: net/irisshaders/iris/shadows/ShadowRenderer (java.lang.ClassNotFoundException: net.irisshaders.iris.shadows.ShadowRenderer)
+[10янв.2026 18:26:56.805] [main/INFO] [mixin/]: Preparing geckolib.mixins.json (1)
+[10янв.2026 18:26:56.833] [main/INFO] [mixin/]: Prepared 2 mixins in 0,310 sec (155,0ms avg) (0ms load, 0ms transform, 0ms plugin)
+[10янв.2026 18:26:57.086] [main/INFO] [net.minecraftforge.data.loading.DatagenModLoader/]: Initializing Data Gatherer for mods [hbm_m]
+[10янв.2026 18:27:00.405] [main/INFO] [mixin/]: Mixing SlotMixin from mixins.hbm_m.json into net.minecraft.world.inventory.Slot
+[10янв.2026 18:27:00.412] [main/WARN] [mixin/]: Write access to @Mutable @Final field x:I in mixins.hbm_m.json:SlotMixin::setPos
+[10янв.2026 18:27:00.412] [main/WARN] [mixin/]: Write access to @Mutable @Final field y:I in mixins.hbm_m.json:SlotMixin::setPos
+[10янв.2026 18:27:01.330] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 47.4.6, for MC 1.20.1 with MCP 20230612.114412
+[10янв.2026 18:27:01.331] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v47.4.6 Initialized
+[10янв.2026 18:27:01.377] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: Initializing Hbm's Nuclear Tech Mod Modernized
+[10янв.2026 18:27:01.408] [modloading-worker-0/WARN] [software.bernie.geckolib.GeckoLib/]: Minecraft.getInstance() was null, could not register reload listeners
+[10янв.2026 18:27:01.546] [modloading-worker-0/INFO] [mezz.jei.library.load.PluginCaller/]: Sending ConfigManager...
+[10янв.2026 18:27:01.552] [modloading-worker-0/INFO] [mezz.jei.library.load.PluginCaller/]: Sending ConfigManager took 3.187 ms
+[10янв.2026 18:27:01.654] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: Registered MobEffects for hbm_m
+[10янв.2026 18:27:01.693] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: Radiation handlers registered. Using ChunkRadiationHandlerSimple.
+[10янв.2026 18:27:01.693] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: Registered event listeners for Radiation System.
+[10янв.2026 18:27:01.693] [modloading-worker-0/INFO] [com.hbm_m.main.MainRegistry/]: !!! MainRegistry: ClientSetup instance created, its Forge listeners should now be registered !!!
+[10янв.2026 18:27:02.332] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/Администратор/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.4.6_mapped_parchment_2023.09.03-1.20.1/forge-1.20.1-47.4.6_mapped_parchment_2023.09.03-1.20.1.jar%23191!/assets/.mcassetsroot' uses unexpected schema
+[10янв.2026 18:27:02.332] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/Администратор/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.4.6_mapped_parchment_2023.09.03-1.20.1/forge-1.20.1-47.4.6_mapped_parchment_2023.09.03-1.20.1.jar%23191!/data/.mcassetsroot' uses unexpected schema
+[10янв.2026 18:27:02.554] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Tags for minecraft:block mod id hbm_m
+[10янв.2026 18:27:02.717] [main/INFO] [net.minecraft.data.DataGenerator/]: Tags for minecraft:block mod id hbm_m finished after 162 ms
+[10янв.2026 18:27:02.717] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Recipes
+[10янв.2026 18:27:02.842] [main/INFO] [net.minecraft.data.DataGenerator/]: Recipes finished after 124 ms
+[10янв.2026 18:27:02.842] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Tags for minecraft:item mod id hbm_m
+[10янв.2026 18:27:02.854] [main/INFO] [net.minecraft.data.DataGenerator/]: Tags for minecraft:item mod id hbm_m finished after 11 ms
+[10янв.2026 18:27:02.855] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Registries
+[10янв.2026 18:27:02.878] [main/INFO] [net.minecraft.data.DataGenerator/]: Registries finished after 23 ms
+[10янв.2026 18:27:02.878] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Tags for minecraft:damage_type mod id hbm_m
+[10янв.2026 18:27:02.881] [main/INFO] [net.minecraft.data.DataGenerator/]: Tags for minecraft:damage_type mod id hbm_m finished after 1 ms
+[10янв.2026 18:27:02.881] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Block States: hbm_m
+[10янв.2026 18:27:03.332] [main/INFO] [net.minecraft.data.DataGenerator/]: Block States: hbm_m finished after 450 ms
+[10янв.2026 18:27:03.332] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Item Models: hbm_m
+[10янв.2026 18:27:03.600] [main/INFO] [net.minecraft.data.DataGenerator/]: Item Models: hbm_m finished after 268 ms
+[10янв.2026 18:27:03.601] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Languages: ru_ru
+[10янв.2026 18:27:03.622] [main/INFO] [net.minecraft.data.DataGenerator/]: Languages: ru_ru finished after 21 ms
+[10янв.2026 18:27:03.623] [main/INFO] [net.minecraft.data.DataGenerator/]: Starting provider: Languages: en_us
+[10янв.2026 18:27:03.631] [main/INFO] [net.minecraft.data.DataGenerator/]: Languages: en_us finished after 7 ms
+[10янв.2026 18:27:03.631] [main/INFO] [net.minecraft.data.DataGenerator/]: All providers took: 1077 ms
+[10янв.2026 18:27:03.918] [main/INFO] [net.minecraft.data.HashCache/]: Caching: total files: 3351, old count: 3355, new count: 3352, removed stale: 0, written: 0

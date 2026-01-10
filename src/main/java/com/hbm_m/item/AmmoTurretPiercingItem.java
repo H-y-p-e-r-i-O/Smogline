@@ -1,6 +1,7 @@
 package com.hbm_m.item;
 
 import com.hbm_m.item.client.AmmoTurretPiercingRenderer;
+import com.hbm_m.item.tags_and_tiers.IAmmoItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.nbt.CompoundTag;
@@ -20,7 +21,8 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.function.Consumer;
 
-public class AmmoTurretPiercingItem extends Item implements GeoItem {
+public class AmmoTurretPiercingItem extends Item implements GeoItem, IAmmoItem {
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public AmmoTurretPiercingItem(Properties properties) {
@@ -28,7 +30,27 @@ public class AmmoTurretPiercingItem extends Item implements GeoItem {
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
 
-    // === GECKOLIB SETUP ===
+    // ✅ РЕАЛИЗАЦИЯ ИНТЕРФЕЙСА
+    @Override
+    public String getCaliber() {
+        return "20mm_turret";
+    }
+
+    @Override
+    public float getDamage() {
+        return 20.0f;
+    }
+
+    @Override
+    public float getSpeed() {
+        return 3.0f;
+    }
+
+    @Override
+    public boolean isPiercing() {
+        return true;
+    }
+
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.CONTINUE)
@@ -55,17 +77,11 @@ public class AmmoTurretPiercingItem extends Item implements GeoItem {
 
     @SubscribeEvent
     public static void onAmmoTurretClick(InputEvent.InteractionKeyMappingTriggered event) {
-        // Проверяем ЛКМ (Attack)
         if (event.isAttack()) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null && mc.player.getMainHandItem().getItem() instanceof AmmoTurretPiercingItem) {
-
                 ItemStack stack = mc.player.getMainHandItem();
-
-                // Проверяем кулдаун
                 if (!mc.player.getCooldowns().isOnCooldown(stack.getItem())) {
-
-                    // Генерируем ID для анимации
                     CompoundTag tag = stack.getOrCreateTag();
                     long instanceId;
                     if (tag.contains("GeckoLibID")) {
@@ -75,19 +91,13 @@ public class AmmoTurretPiercingItem extends Item implements GeoItem {
                         tag.putLong("GeckoLibID", instanceId);
                     }
 
-                    // Запускаем анимацию "flip"
                     ((AmmoTurretPiercingItem)stack.getItem()).triggerAnim(
                             mc.player, instanceId, "controller", "flip");
-
-                    // Ставим кулдаун (3 сек = 60 тиков)
                     mc.player.getCooldowns().addCooldown(stack.getItem(), 60);
                 }
-
-                // ВАЖНО: Отменяем удар рукой
                 event.setCanceled(true);
                 event.setSwingHand(false);
             }
         }
     }
 }
-

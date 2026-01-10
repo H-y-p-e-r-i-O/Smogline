@@ -10,6 +10,7 @@ import com.hbm_m.event.BombDefuser;
 import com.hbm_m.event.CrateBreaker;
 import com.hbm_m.handler.MobGearHandler;
 import com.hbm_m.item.custom.fekal_electric.ModBatteryItem;
+import com.hbm_m.item.tags_and_tiers.AmmoRegistry;
 import com.hbm_m.particle.ModExplosionParticles;
 import com.hbm_m.world.biome.ModBiomes;
 import net.minecraft.server.level.ServerLevel;
@@ -117,6 +118,11 @@ public class MainRegistry {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addCreative);
         ModFluids.register(modEventBus);
+
+        modEventBus.addListener((FMLCommonSetupEvent event) -> {
+            AmmoRegistry.init();
+            LOGGER.info("Ammo Registry initialized");
+        });
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(ChunkRadiationManager.INSTANCE);
