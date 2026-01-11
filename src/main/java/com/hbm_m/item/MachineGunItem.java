@@ -20,6 +20,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
@@ -292,7 +293,7 @@ public class MachineGunItem extends Item implements GeoItem {
         int ammo = getAmmo(stack);
         if (ammo <= 0) {
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.DISPENSER_FAIL, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 2.0F);
+                    SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 1.0F, 2.0F);
             return;
         }
 
@@ -300,6 +301,7 @@ public class MachineGunItem extends Item implements GeoItem {
             setAmmo(stack, ammo - 1);
             if (ammo - 1 <= 0) setLoadedAmmoID(stack, "");
         }
+
         syncHand(player, stack);
         setShootDelay(stack, SHOT_ANIM_TICKS);
 
@@ -307,38 +309,34 @@ public class MachineGunItem extends Item implements GeoItem {
         AmmoRegistry.AmmoType ammoInfo = null;
         String loadedID = getLoadedAmmoID(stack);
         if (loadedID != null && !loadedID.isEmpty()) {
-            net.minecraft.world.item.Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(loadedID));
+            net.minecraft.world.item.Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(loadedID));
             if (item != null) ammoInfo = AmmoRegistry.getAmmoTypeFromItem(item);
         }
         if (ammoInfo == null) ammoInfo = new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false);
 
-        // === СПАВН ЧЕРЕЗ ARROW ===
+        // === НОВАЯ БАЛЛИСТИКА ===
         TurretBulletEntity bullet = new TurretBulletEntity(level, player);
         bullet.setAmmoType(ammoInfo);
 
-        // shootFromRotation делает ВСЮ работу по векторам и синхронизации за нас
-        // Аргументы: player, xRot, yRot, roll (0), speed, divergence
+        // ✅ ТОЧНО КАК БЫЛО В ОРИГИНАЛЕ
         bullet.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, ammoInfo.speed, 0.8F);
 
-        // Сдвигаем позицию, чтобы вылетала не из головы (опционально, но красиво)
-        // Внимание: для AbstractArrow важно сначала задать вектор (выше), а потом двигать позицию,
-        // но если двигать сильно, может сбиться прицел. Для начала попробуй БЕЗ сдвига, или с минимальным.
-        // Если раскомментировать сдвиг, пуля полетит сбоку, но точно в цель.
-    /*
-    Vec3 look = player.getLookAngle();
-    Vec3 right = look.cross(new Vec3(0,1,0)).normalize();
-    bullet.setPos(bullet.getX() + right.x * 0.2, bullet.getY() - 0.1, bullet.getZ() + right.z * 0.2);
-    */
+        // ✅ СДВИГ ПОЗИЦИИ ИЗ ОРИГИНАЛА (раскомментируй этот блок)
+        Vec3 look = player.getLookAngle();
+        Vec3 right = look.cross(new Vec3(0,1,0)).normalize();
+        bullet.setPos(bullet.getX() + right.x * 0.2, bullet.getY() - 0.1, bullet.getZ() + right.z * 0.2);
 
         level.addFreshEntity(bullet);
+
 
         // Звуки
         float pitch = 0.9F + level.random.nextFloat() * 0.2F;
         SoundEvent shotSound = ModSounds.TURRET_FIRE.isPresent() ? ModSounds.TURRET_FIRE.get() : SoundEvents.GENERIC_EXPLODE;
-        level.playSound(null, player.getX(), player.getY(), player.getZ(), shotSound, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), shotSound, SoundSource.PLAYERS, 1.0F, pitch);
 
-        triggerAnim(player, software.bernie.geckolib.animatable.GeoItem.getOrAssignId(stack, (net.minecraft.server.level.ServerLevel) level), "controller", "shot");
+        triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level), "controller", "shot");
     }
+
 
 
 
