@@ -9,7 +9,7 @@ import com.hbm_m.network.ModPacketHandler;
 import com.hbm_m.network.PacketReloadGun;
 import com.hbm_m.network.PacketShoot;
 import com.hbm_m.sound.ModSounds;
-
+import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
@@ -402,22 +402,48 @@ public class MachineGunItem extends Item implements GeoItem {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        int totalAmmo = getAmmo(stack);
-        String displayString = (totalAmmo > MAG_CAPACITY)
-                ? MAG_CAPACITY + " + " + (totalAmmo - MAG_CAPACITY)
-                : String.valueOf(totalAmmo);
-        tooltip.add(Component.literal("Ammo: " + displayString + " / " + MAG_CAPACITY).withStyle(ChatFormatting.GRAY));
+        super.appendHoverText(stack, level, tooltip, flag);
 
-        String loadedID = getLoadedAmmoID(stack);
-        if (loadedID != null && !loadedID.isEmpty()) {
-            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(loadedID));
-            if (item != null) {
-                tooltip.add(Component.literal("Loaded: ").withStyle(ChatFormatting.YELLOW)
-                        .append(item.getDescription().copy().withStyle(ChatFormatting.WHITE)));
-            }
+        String ammoId = getLoadedAmmoID(stack);
+        if (ammoId == null || ammoId.isEmpty()) {
+            tooltip.add(Component.literal("Патроны: нет").withStyle(ChatFormatting.RED));
+            return;
         }
 
-        super.appendHoverText(stack, level, tooltip, flag);
+        AmmoRegistry.AmmoType ammoType = AmmoRegistry.getAmmoTypeById(ammoId); // твой реестр боеприпасов [file:3]
+        if (ammoType == null) {
+            tooltip.add(Component.literal("Патроны: неизвестно").withStyle(ChatFormatting.GRAY));
+            return;
+        }
+
+        // Базовые характеристики
+        float dmg = ammoType.damage;
+        float spd = ammoType.speed;
+        boolean piercing = ammoType.isPiercing;
+
+        // Определяем тип (для текста) по id
+        String typeText = "обычная";
+        if (ammoId.contains("piercing")) typeText = "пробивная";
+        else if (ammoId.contains("hollow")) typeText = "экспансивная";
+        else if (ammoId.contains("fire") || ammoId.contains("incendiary")) typeText = "зажигательная";
+
+        // Кратко: урон, скорость, тип
+        tooltip.add(Component.literal("Патрон: " + typeText).withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.literal(String.format("Урон: %.1f", dmg)).withStyle(ChatFormatting.DARK_RED));
+        tooltip.add(Component.literal(String.format("Скорость: %.1f", spd)).withStyle(ChatFormatting.DARK_AQUA));
+
+        // Особенности
+        if ("пробивная".equals(typeText)) {
+            tooltip.add(Component.literal("Частично игнорирует броню").withStyle(ChatFormatting.BLUE));
+        } else if ("экспансивная".equals(typeText)) {
+            tooltip.add(Component.literal("Х2 по без брони, слабее по тяжёлой броне").withStyle(ChatFormatting.BLUE));
+        } else if ("зажигательная".equals(typeText)) {
+            tooltip.add(Component.literal("Поджигает цель на 5 секунд").withStyle(ChatFormatting.BLUE));
+        }
+
+        if (piercing && !"пробивная".equals(typeText)) {
+            tooltip.add(Component.literal("Пробивная способность").withStyle(ChatFormatting.GRAY));
+        }
     }
 
     @Override

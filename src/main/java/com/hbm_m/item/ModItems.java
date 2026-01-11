@@ -671,11 +671,11 @@ public class ModItems {
 
     // Пробивной
     public static final RegistryObject<Item> AMMO_TURRET_PIERCING = ITEMS.register("ammo_turret_piercing",
-            () -> new AmmoTurretItem(new Item.Properties(), 4.0f, 5.0f, true));
+            () -> new AmmoTurretItem(new Item.Properties(), 4.0f, 3.0f, true));
 
     // Пробивной
     public static final RegistryObject<Item> AMMO_TURRET_HOLLOW = ITEMS.register("ammo_turret_hollow",
-            () -> new AmmoTurretItem(new Item.Properties(), 4.0f, 5.0f, false));
+            () -> new AmmoTurretItem(new Item.Properties(), 4.0f, 3.0f, false));
 
     // ОГНЕННЫЙ (убедись, что параметры правильные!)
     public static final RegistryObject<Item> AMMO_TURRET_FIRE = ITEMS.register("ammo_turret_fire",

@@ -417,6 +417,68 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         return targetPos.add(targetVel.scale(timeToTarget));
     }
 
+
+    /**
+     * Рассчитывает вектор скорости пули, чтобы попасть в цель.
+     * Учитывает движение цели (линейное упреждение) и гравитацию (баллистическая дуга).
+     * Возвращает null, если цель вне досягаемости.
+     */
+    private Vec3 getBallisticFlightPath(Vec3 startPos, LivingEntity target) {
+        // 1. Предсказываем позицию цели
+        double timeToTarget = startPos.distanceTo(target.position()) / BULLET_SPEED;
+
+        // Вектор скорости цели
+        Vec3 targetVelocity = target.getDeltaMovement();
+
+        // Предсказанная точка встречи (Target Position + Velocity * Time)
+        // Поднимаем точку прицеливания на половину роста цели (в грудь)
+        Vec3 aimPoint = target.position()
+                .add(0, target.getBbHeight() * 0.5, 0)
+                .add(targetVelocity.scale(timeToTarget));
+
+        // Разница координат
+        double dx = aimPoint.x - startPos.x;
+        double dy = aimPoint.y - startPos.y;
+        double dz = aimPoint.z - startPos.z;
+
+        // Горизонтальная дистанция
+        double groundDist = Math.sqrt(dx * dx + dz * dz);
+
+        // 2. Решаем уравнение баллистики для угла возвышения (alpha)
+        // y = x * tan(a) - (g * x^2) / (2 * v^2 * cos^2(a))
+        // Это сложно решать в реальном времени, используем упрощение для малых углов
+        // или стандартную формулу для "low trajectory" (навесом стрелять турели не нужно)
+
+        double v = BULLET_SPEED;
+        double g = BULLET_GRAVITY;
+
+        double v2 = v * v;
+        double v4 = v2 * v2;
+
+        // Дискриминант формулы траектории: D = v^4 - g * (g * x^2 + 2 * y * v^2)
+        double discriminant = v4 - g * (g * groundDist * groundDist + 2 * dy * v2);
+
+        if (discriminant < 0) {
+            // Цель недосягаема (слишком далеко или высоко)
+            return null;
+        }
+
+        // Два корня: навесом (+) и настильно (-). Нам нужна настильная (низкая) траектория.
+        double tanAlpha = (v2 - Math.sqrt(discriminant)) / (g * groundDist);
+        double pitchRad = Math.atan(tanAlpha);
+
+        // 3. Собираем итоговый вектор
+        // Горизонтальный угол (yaw) просто берем из dx/dz
+        double yawRad = Math.atan2(dz, dx);
+
+        // Переводим сферические координаты (скорость, yaw, pitch) обратно в вектор XYZ
+        double x = v * Math.cos(pitchRad) * Math.cos(yawRad);
+        double y = v * Math.sin(pitchRad);
+        double z = v * Math.cos(pitchRad) * Math.sin(yawRad);
+
+        return new Vec3(x, y, z);
+    }
+
     /**
      * УМНОЕ СКАНИРОВАНИЕ ХИТБОКСА.
      * Вместо того чтобы стрелять в центр (который может быть за стеной),
