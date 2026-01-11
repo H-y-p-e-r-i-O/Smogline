@@ -119,10 +119,6 @@ public class MainRegistry {
         modEventBus.addListener(this::addCreative);
         ModFluids.register(modEventBus);
 
-        modEventBus.addListener((FMLCommonSetupEvent event) -> {
-            AmmoRegistry.init();
-            LOGGER.info("Ammo Registry initialized");
-        });
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(ChunkRadiationManager.INSTANCE);
@@ -236,6 +232,7 @@ public class MainRegistry {
 
             event.accept(ModItems.MACHINEGUN);
             event.accept(ModItems.AMMO_TURRET);
+            event.accept(ModItems.AMMO_TURRET_HOLLOW);
             event.accept(ModItems.AMMO_TURRET_PIERCING);
             event.accept(ModItems.AMMO_TURRET_FIRE);
 

@@ -31,10 +31,10 @@ public class ModEntities {
     public static final RegistryObject<EntityType<TurretBulletEntity>> TURRET_BULLET =
             ENTITY_TYPES.register("turret_bullet",
                     () -> EntityType.Builder.<TurretBulletEntity>of(TurretBulletEntity::new, MobCategory.MISC)
-                            .sized(0.15f, 0.15f) // Маленький хитбокс
-                            .clientTrackingRange(4) // Дальность прорисовки (в чанках)
-                            .updateInterval(10)     // Частота обновлений пакетов (можно 2 или 1 для супер-плавности, но 10 ок)
-                            .setShouldReceiveVelocityUpdates(true) // Обязательно true для снарядов!
+                            .sized(0.05f, 0.05f)    // Советую 0.25f (0.05f слишком мало, может проходить сквозь стены)
+                            .clientTrackingRange(8) // Увеличь до 8-10 чанков (пулемет стреляет далеко)
+                            .updateInterval(1)      // ✅ КРИТИЧНО: Обновлять позицию КАЖДЫЙ тик (или хотя бы 2)
+                            .setShouldReceiveVelocityUpdates(true)
                             .build("turret_bullet"));
 
 

@@ -18,6 +18,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -53,7 +54,7 @@ public class MachineGunItem extends Item implements GeoItem {
 
     private static final int SHOT_ANIM_TICKS = 14;
     private static final float BULLET_SPEED = 3.0F;
-    private static final float BULLET_DIVERGENCE = 1.5F;
+    private static final float BULLET_DIVERGENCE = 0.8F;
     private static final int MAG_CAPACITY = 24;
     private static final int MAX_TOTAL_AMMO = MAG_CAPACITY + 1;
     private static final int RELOAD_ANIM_TICKS = 100;
@@ -286,8 +287,7 @@ public class MachineGunItem extends Item implements GeoItem {
     // === СТРЕЛЬБА ===
     public void performShooting(Level level, Player player, ItemStack stack) {
         if (level.isClientSide) return;
-        if (getReloadTimer(stack) > 0) return;
-        if (getShootDelay(stack) > 0) return;
+        if (getReloadTimer(stack) > 0 || getShootDelay(stack) > 0) return;
 
         int ammo = getAmmo(stack);
         if (ammo <= 0) {
@@ -298,64 +298,49 @@ public class MachineGunItem extends Item implements GeoItem {
 
         if (!player.isCreative()) {
             setAmmo(stack, ammo - 1);
-            if (ammo - 1 <= 0) {
-                setLoadedAmmoID(stack, "");
-            }
-            syncHand(player, stack);
+            if (ammo - 1 <= 0) setLoadedAmmoID(stack, "");
         }
-
+        syncHand(player, stack);
         setShootDelay(stack, SHOT_ANIM_TICKS);
 
-        // ✅ ПОЛУЧАЕМ ХАРАКТЕРИСТИКИ ПО ID ПРЕДМЕТА
-        String loadedID = getLoadedAmmoID(stack);
+        // Данные патрона
         AmmoRegistry.AmmoType ammoInfo = null;
-
+        String loadedID = getLoadedAmmoID(stack);
         if (loadedID != null && !loadedID.isEmpty()) {
-            ammoInfo = AmmoRegistry.getAmmoTypeById(loadedID);
+            net.minecraft.world.item.Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(loadedID));
+            if (item != null) ammoInfo = AmmoRegistry.getAmmoTypeFromItem(item);
         }
+        if (ammoInfo == null) ammoInfo = new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false);
 
-        if (ammoInfo == null) {
-            ammoInfo = new AmmoRegistry.AmmoType("default", "default", 6.0f, BULLET_SPEED, false);
-        }
-
-        // ✅ Создаём пулю и передаём всю информацию
+        // === СПАВН ЧЕРЕЗ ARROW ===
         TurretBulletEntity bullet = new TurretBulletEntity(level, player);
         bullet.setAmmoType(ammoInfo);
 
-        Vec3 look = player.getLookAngle();
-        Vec3 upGlobal = new Vec3(0, 1, 0);
-        Vec3 right = look.cross(upGlobal);
-        if (right.lengthSqr() < 1.0E-5) right = new Vec3(1, 0, 0);
-        right = right.normalize();
-        Vec3 upLocal = right.cross(look).normalize();
+        // shootFromRotation делает ВСЮ работу по векторам и синхронизации за нас
+        // Аргументы: player, xRot, yRot, roll (0), speed, divergence
+        bullet.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, ammoInfo.speed, 0.8F);
 
-        double forwardOffset = 1.9;
-        double rightOffset = 0.25;
-        double downOffset = 0.13;
-
-        Vec3 spawnPos = player.getEyePosition()
-                .add(look.scale(forwardOffset))
-                .add(right.scale(rightOffset))
-                .add(upLocal.scale(-downOffset));
-
-        bullet.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
-        bullet.shoot(look.x, look.y, look.z, ammoInfo.speed, BULLET_DIVERGENCE);
-        bullet.yRotO = bullet.getYRot();
-        bullet.xRotO = bullet.getXRot();
+        // Сдвигаем позицию, чтобы вылетала не из головы (опционально, но красиво)
+        // Внимание: для AbstractArrow важно сначала задать вектор (выше), а потом двигать позицию,
+        // но если двигать сильно, может сбиться прицел. Для начала попробуй БЕЗ сдвига, или с минимальным.
+        // Если раскомментировать сдвиг, пуля полетит сбоку, но точно в цель.
+    /*
+    Vec3 look = player.getLookAngle();
+    Vec3 right = look.cross(new Vec3(0,1,0)).normalize();
+    bullet.setPos(bullet.getX() + right.x * 0.2, bullet.getY() - 0.1, bullet.getZ() + right.z * 0.2);
+    */
 
         level.addFreshEntity(bullet);
 
+        // Звуки
         float pitch = 0.9F + level.random.nextFloat() * 0.2F;
-        if (ModSounds.TURRET_FIRE.isPresent()) {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    ModSounds.TURRET_FIRE.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
-        } else {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.GENERIC_EXPLODE, net.minecraft.sounds.SoundSource.PLAYERS, 0.5F, 2.0F);
-        }
+        SoundEvent shotSound = ModSounds.TURRET_FIRE.isPresent() ? ModSounds.TURRET_FIRE.get() : SoundEvents.GENERIC_EXPLODE;
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), shotSound, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
 
-        triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level), "controller", "shot");
+        triggerAnim(player, software.bernie.geckolib.animatable.GeoItem.getOrAssignId(stack, (net.minecraft.server.level.ServerLevel) level), "controller", "shot");
     }
+
+
 
     // === GECKOLIB КОНТРОЛЛЕР ===
     @Override

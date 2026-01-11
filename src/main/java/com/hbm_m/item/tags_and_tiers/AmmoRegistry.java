@@ -97,14 +97,4 @@ public class AmmoRegistry {
         return type != null ? type.caliber : null;
     }
 
-    public static void init() {
-        // ✅ ЯВНО регистрируем оба типа патронов
-        // (на случай если интерфейс не сработает)
-        if (ModItems.AMMO_TURRET.isPresent()) {
-            register(ModItems.AMMO_TURRET.get(), "20mm_turret", 6.0f, 3.0f, false);
-        }
-        if (ModItems.AMMO_TURRET_PIERCING.isPresent()) {
-            register(ModItems.AMMO_TURRET_PIERCING.get(), "20mm_turret", 20.0f, 3.0f, true);
-        }
-    }
 }
