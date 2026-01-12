@@ -7,7 +7,7 @@ gradle/
 .project
 .settings/
 bin/
-.idea/
+.idea
 *.iml
 *.ipr
 *.iws
