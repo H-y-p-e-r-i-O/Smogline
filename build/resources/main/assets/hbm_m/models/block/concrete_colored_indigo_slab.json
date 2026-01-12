@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab",
-  "textures": {
-    "bottom": "hbm_m:block/concrete_colored_indigo",
-    "side": "hbm_m:block/concrete_colored_indigo",
-    "top": "hbm_m:block/concrete_colored_indigo"
-  }
-}

@@ -1,40 +1,56 @@
 package com.hbm_m.entity.client;
 
 import com.hbm_m.entity.TurretBulletEntity;
-import com.hbm_m.main.MainRegistry;
+import com.hbm_m.lib.RefStrings;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
-import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
+import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
 public class TurretBulletRenderer extends GeoEntityRenderer<TurretBulletEntity> {
+
     public TurretBulletRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new TurretBulletModel());
-
-        // ЯВНОЕ указание текстуры свечения
-        addRenderLayer(new AutoGlowingGeoLayer<>(this) {
-            @Override
-            protected RenderType getRenderType(TurretBulletEntity animatable) {
-                // Указываем путь к glow-маске вручную
-                return RenderType.eyes(new ResourceLocation(MainRegistry.MOD_ID, "textures/entity/turret_bullet_glow.png"));
-            }
-        });
+        addRenderLayer(new TurretBulletGlowLayer(this));
     }
 
-    @Override
-    public void render(TurretBulletEntity entity, float entityYaw, float partialTick, PoseStack poseStack,
-                       MultiBufferSource bufferSource, int packedLight) {
-        poseStack.pushPose();
+    // AbstractArrow сам крутит модель. Нам не нужен preRender с математикой.
 
-        // Коррекция модели: если пуля летит "боком", этот поворот исправит её
-        // Если летит задом наперед - поменяй на 180, если левым боком - на -90
+    // Слой свечения (тот же самый)
+    public static class TurretBulletGlowLayer extends GeoRenderLayer<TurretBulletEntity> {
+        public TurretBulletGlowLayer(GeoEntityRenderer<TurretBulletEntity> entityRenderer) {
+            super(entityRenderer);
+        }
 
-        poseStack.mulPose(Axis.YP.rotationDegrees(90f));
-        super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
-        poseStack.popPose();
+        @Override
+        public void render(PoseStack poseStack, TurretBulletEntity entity, BakedGeoModel bakedModel,
+                           RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
+                           float partialTick, int packedLight, int packedOverlay) {
+
+            String ammoId = entity.getAmmoId(); // Берется из SynchedEntityData
+
+            String path = ammoId;
+            if (path.contains(":")) path = path.split(":")[1];
+            String textureName = "turret_bullet_glow";
+
+            if (path.startsWith("ammo_turret")) {
+                String suffix = path.replace("ammo_turret", "");
+                if (!suffix.isEmpty()) textureName = "turret_bullet" + suffix + "_glow";
+            } else if (path.contains("piercing")) {
+                textureName = "turret_bullet_piercing_glow";
+            }
+
+            ResourceLocation glowTexture = new ResourceLocation(RefStrings.MODID, "textures/entity/" + textureName + ".png");
+            RenderType glowRenderType = RenderType.eyes(glowTexture);
+
+            this.getRenderer().reRender(bakedModel, poseStack, bufferSource, entity,
+                    glowRenderType, bufferSource.getBuffer(glowRenderType),
+                    partialTick, 15728880, packedOverlay, 1.0f, 1.0f, 1.0f, 1.0f);
+        }
     }
 }

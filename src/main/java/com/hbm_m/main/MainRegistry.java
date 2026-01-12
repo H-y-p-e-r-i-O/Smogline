@@ -10,6 +10,7 @@ import com.hbm_m.event.BombDefuser;
 import com.hbm_m.event.CrateBreaker;
 import com.hbm_m.handler.MobGearHandler;
 import com.hbm_m.item.custom.fekal_electric.ModBatteryItem;
+import com.hbm_m.item.tags_and_tiers.AmmoRegistry;
 import com.hbm_m.particle.ModExplosionParticles;
 import com.hbm_m.world.biome.ModBiomes;
 import net.minecraft.server.level.ServerLevel;
@@ -117,6 +118,7 @@ public class MainRegistry {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addCreative);
         ModFluids.register(modEventBus);
+
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(ChunkRadiationManager.INSTANCE);
@@ -226,8 +228,13 @@ public class MainRegistry {
             event.accept(ModBlocks.DUD_SALTED);
 
             event.accept(ModItems.TURRET_REMOVER);
-            event.accept(ModBlocks.TURRET_LIGHT_PLACER);
             event.accept(ModBlocks.TURRET_LIGHT);
+
+            event.accept(ModItems.MACHINEGUN);
+            event.accept(ModItems.AMMO_TURRET);
+            event.accept(ModItems.AMMO_TURRET_HOLLOW);
+            event.accept(ModItems.AMMO_TURRET_PIERCING);
+            event.accept(ModItems.AMMO_TURRET_FIRE);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added Alloy Sword to NTM Weapons tab");

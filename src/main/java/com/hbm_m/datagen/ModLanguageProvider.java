@@ -313,6 +313,15 @@ public class ModLanguageProvider extends LanguageProvider {
 
                 add(ModItems.BATTERY_SCHRABIDIUM.get(), "Шрабидиевая батарейка");
 
+
+
+                add(ModItems.AMMO_TURRET_PIERCING.get(), "20мм турельный бронебойный снаряд");
+                add(ModItems.AMMO_TURRET_FIRE.get(), "20мм турельный зажигательный снаряд");
+                add(ModItems.AMMO_TURRET.get(), "20мм турельный снаряд");
+                add(ModItems.MACHINEGUN.get(), "А.П.-17");
+                add(ModBlocks.TURRET_LIGHT.get(), "Лёгкая десантная турель 'Нагваль'");
+
+
                 add(ModItems.STAMP_STONE_FLAT.get(), "Плоский каменный штамп");
                 add(ModItems.STAMP_STONE_PLATE.get(), "Каменный штамп пластины");
                 add(ModItems.STAMP_STONE_WIRE.get(), "Каменный штамп провода");
@@ -1822,6 +1831,11 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModBlocks.VINYL_TILE.get(), "Vinyl Tiles");
                 add(ModBlocks.VINYL_TILE_SMALL.get(), "Small Vinyl Tiles");
 
+                add(ModItems.AMMO_TURRET_PIERCING.get(), "20mm Turret AP Ammo");
+                add(ModItems.AMMO_TURRET_FIRE.get(), "20mm Turret Fire Ammo");
+                add(ModItems.AMMO_TURRET.get(), "20mm Turret Ammo");
+                add(ModItems.MACHINEGUN.get(), "A.P.-17");
+                add(ModBlocks.TURRET_LIGHT.get(), "Light Landing Turret 'Nagual'");
 
                 add(ModBlocks.CONCRETE_ASBESTOS_SLAB.get(), "Asbestos Concrete Slab");
                 add(ModBlocks.CONCRETE_BLACK_SLAB.get(), "Black Concrete Slab");

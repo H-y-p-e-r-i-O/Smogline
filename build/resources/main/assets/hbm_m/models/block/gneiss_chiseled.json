@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "bottom": "hbm_m:block/gneiss_stone",
-    "side": "hbm_m:block/gneiss_chiseled",
-    "top": "hbm_m:block/gneiss_stone"
-  }
-}
