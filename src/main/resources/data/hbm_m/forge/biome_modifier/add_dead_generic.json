@@ -1,0 +1,9 @@
+{
+  "type": "forge:add_features",
+  "biomes": [
+    "minecraft:savanna",
+    "minecraft:swamp"
+  ],
+  "features": "hbm_m:dead_tree_placed",
+  "step": "vegetal_decoration"
+}

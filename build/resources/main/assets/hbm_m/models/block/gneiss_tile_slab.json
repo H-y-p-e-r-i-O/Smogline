@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab",
-  "textures": {
-    "bottom": "hbm_m:block/gneiss_tile",
-    "side": "hbm_m:block/gneiss_tile",
-    "top": "hbm_m:block/gneiss_tile"
-  }
-}

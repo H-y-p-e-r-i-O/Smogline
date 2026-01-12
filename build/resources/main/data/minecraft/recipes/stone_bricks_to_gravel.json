@@ -1,9 +1,0 @@
-{
-  "type": "hbm_m:shredding",
-  "ingredient": {
-    "item": "minecraft:stone_bricks"
-  },
-  "result": {
-    "item": "minecraft:gravel"
-  }
-}
