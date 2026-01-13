@@ -285,7 +285,9 @@ public class MachineGunItem extends Item implements GeoItem {
 
     // === СТРЕЛЬБА ===
     public void performShooting(Level level, Player player, ItemStack stack) {
+        // ✅ ТОЛЬКО НА СЕРВЕРЕ!
         if (level.isClientSide) return;
+
         if (getReloadTimer(stack) > 0 || getShootDelay(stack) > 0) return;
 
         int ammo = getAmmo(stack);
@@ -303,58 +305,58 @@ public class MachineGunItem extends Item implements GeoItem {
         syncHand(player, stack);
         setShootDelay(stack, SHOT_ANIM_TICKS);
 
-        // Данные патрона
-        AmmoRegistry.AmmoType ammoInfo = null;
+        // ✅ СПАВН ПУЛИ НА СЕРВЕРЕ
+        if (!(level instanceof ServerLevel serverLevel)) return;
+
+        // 1. Создаем пулю
+        TurretBulletEntity bullet = new TurretBulletEntity(serverLevel, player);
+
+        // 2. Боеприпас - ✅ ИСПРАВЛЕНО
         String loadedID = getLoadedAmmoID(stack);
+        AmmoRegistry.AmmoType ammoInfo = null;
+
         if (loadedID != null && !loadedID.isEmpty()) {
+            // ✅ ПРАВИЛЬНО: ищем через ForgeRegistries
             net.minecraft.world.item.Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(loadedID));
-            if (item != null) ammoInfo = AmmoRegistry.getAmmoTypeFromItem(item);
+            if (item != null) {
+                ammoInfo = AmmoRegistry.getAmmoTypeFromItem(item);
+            }
         }
-        if (ammoInfo == null) ammoInfo = new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false);
 
+        if (ammoInfo == null) {
+            ammoInfo = new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false);
+        }
 
-
-
-        // === СПАВН ПУЛИ (MachineGunItem) ===
-        TurretBulletEntity bullet = new TurretBulletEntity(level, player);
         bullet.setAmmoType(ammoInfo);
 
-        // 1. Рассчитываем направление и скорость (с разбросом 1F)
-        float dispersion = 1F; // Разброс
+        // 3. Параметры выстрела
         Vec3 lookDir = player.getLookAngle();
-        // Добавляем разброс (стандартная формула Minecraft)
         Vec3 velocity = lookDir.normalize().add(
-                level.random.nextGaussian() * 0.0075 * dispersion,
-                level.random.nextGaussian() * 0.0075 * dispersion,
-                level.random.nextGaussian() * 0.0075 * dispersion
+                level.random.nextGaussian() * 0.0075 * 1.0F,
+                level.random.nextGaussian() * 0.0075 * 1.0F,
+                level.random.nextGaussian() * 0.0075 * 1.0F
         ).scale(ammoInfo.speed);
 
-        bullet.setDeltaMovement(velocity);
-
-        // 2. Сдвиг позиции (справа от игрока)
+        // 4. Смещение вправо
         Vec3 right = lookDir.cross(new Vec3(0, 1, 0)).normalize();
-        // Ставим пулю: позиция игрока + сдвиг вправо + чуть ниже глаз
-        bullet.setPos(
-                player.getX() + right.x * 0.2,
-                player.getEyeY() - 0.1,
-                player.getZ() + right.z * 0.2
-        );
+        Vec3 spawnPos = player.position().add(right.scale(0.2)).add(0, player.getEyeY() - player.getY() - 0.1, 0);
 
-        // 3. ✅ АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ПОВОРОТА
+        // 5. Устанавливаем
+        bullet.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+        bullet.setDeltaMovement(velocity);
         bullet.alignToVelocity();
 
-        level.addFreshEntity(bullet);
+        // ✅ ДОБАВЛЯЕМ В МИР
+        serverLevel.addFreshEntity(bullet);
 
-
-        // Звуки
+        // Звук
         float pitch = 0.9F + level.random.nextFloat() * 0.2F;
         SoundEvent shotSound = ModSounds.TURRET_FIRE.isPresent() ? ModSounds.TURRET_FIRE.get() : SoundEvents.GENERIC_EXPLODE;
         level.playSound(null, player.getX(), player.getY(), player.getZ(), shotSound, SoundSource.PLAYERS, 1.0F, pitch);
 
-        triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level), "controller", "shot");
+        // Анимация
+        triggerAnim(player, GeoItem.getOrAssignId(stack, serverLevel), "controller", "shot");
     }
-
-
 
 
     // === GECKOLIB КОНТРОЛЛЕР ===

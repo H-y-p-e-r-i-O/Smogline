@@ -4,10 +4,12 @@ import com.hbm_m.entity.TurretBulletEntity;
 import com.hbm_m.lib.RefStrings;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis; // НЕОБХОДИМЫЙ ИМПОРТ
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
@@ -19,9 +21,27 @@ public class TurretBulletRenderer extends GeoEntityRenderer<TurretBulletEntity> 
         addRenderLayer(new TurretBulletGlowLayer(this));
     }
 
-    // AbstractArrow сам крутит модель. Нам не нужен preRender с математикой.
+    // --- ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ ВРАЩЕНИЯ ---
+    @Override
+    protected void applyRotations(TurretBulletEntity animatable, PoseStack poseStack, float ageInTicks, float rotationYaw, float partialTick) {
+        // 1. Интерполируем углы, чтобы анимация была плавной (без рывков при 60+ FPS)
+        float yaw = Mth.rotLerp(partialTick, animatable.yRotO, animatable.getYRot());
+        float pitch = Mth.lerp(partialTick, animatable.xRotO, animatable.getXRot());
 
-    // Слой свечения (тот же самый)
+        // 2. Вращение по оси Y (Yaw / Горизонталь)
+        // Вычитаем 180, потому что стандартная модель в MC смотрит на Юг, а математика дает Север
+        poseStack.mulPose(Axis.YP.rotationDegrees(yaw - 180.0F));
+
+        // 3. Вращение по оси X (Pitch / Вертикаль)
+        // ВАЖНО: Применяем ПОСЛЕ поворота по Y, чтобы ось X уже была повернута правильно
+        poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
+
+        // 4. Вращение по оси Z (Roll / Вращение пули вокруг себя)
+        // Если хотите эффект сверла
+        poseStack.mulPose(Axis.ZP.rotationDegrees(animatable.spin));
+    }
+    // --------------------------------------
+
     public static class TurretBulletGlowLayer extends GeoRenderLayer<TurretBulletEntity> {
         public TurretBulletGlowLayer(GeoEntityRenderer<TurretBulletEntity> entityRenderer) {
             super(entityRenderer);
@@ -32,7 +52,7 @@ public class TurretBulletRenderer extends GeoEntityRenderer<TurretBulletEntity> 
                            RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
                            float partialTick, int packedLight, int packedOverlay) {
 
-            String ammoId = entity.getAmmoId(); // Берется из SynchedEntityData
+            String ammoId = entity.getAmmoId();
 
             String path = ammoId;
             if (path.contains(":")) path = path.split(":")[1];

@@ -8,6 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -679,62 +680,54 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         if (!this.isDeployed()) return;
         if (this.shotCooldown > 0) return;
 
-        // 1. Проверка видимости
+        // ✅ Проверка видимости
         if (!canShootSafe(target)) return;
 
-        // 2. Позиция дула
         Vec3 muzzlePos = getMuzzlePos();
 
-        // 3. Расчет баллистики
+        // ✅ Расчет баллистики
         Vec3 ballisticVelocity = calculateBallisticVelocity(target, muzzlePos, BULLET_SPEED, BULLET_GRAVITY);
 
-        if (ballisticVelocity == null) return; // Цель недосягаема
+        if (ballisticVelocity == null) return;
 
-        // 4. Дебаг для клиента
-        if (this.level().isClientSide) {
-            this.debugBallisticVelocity = ballisticVelocity;
-        }
-
-        // 5. Подготовка к выстрелу
         this.shotCooldown = SHOT_ANIMATION_LENGTH;
         this.setShooting(true);
         this.shootAnimTimer = 0;
 
+        // ✅ СПАВН ПУЛИ НА СЕРВЕРЕ
+        if (!this.level().isClientSide) {
+            ServerLevel serverLevel = (ServerLevel) this.level();
 
-        // СПАВН ПУЛИ
-        // 1. Создаем пулю
-        TurretBulletEntity bullet = new TurretBulletEntity(this.level(), this);
+            // 1. Создаем пулю
+            TurretBulletEntity bullet = new TurretBulletEntity(serverLevel, this);
 
-        // 2. Выбираем случайный патрон из реестра
-        // ВАЖНО: Убедись что в AmmoRegistry метод принимает RandomSource!
-        AmmoRegistry.AmmoType randomAmmo = AmmoRegistry.getRandomAmmoForCaliber("20mm_turret", this.level().random);
+            // 2. Устанавливаем боеприпас
+            AmmoRegistry.AmmoType randomAmmo = AmmoRegistry.getRandomAmmoForCaliber("20mm_turret", this.level().random);
+            if (randomAmmo != null) {
+                bullet.setAmmoType(randomAmmo);
+            } else {
+                bullet.setAmmoType(new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false));
+            }
 
-        if (randomAmmo != null) {
-            bullet.setAmmoType(randomAmmo);
-        } else {
-            // Фолбэк: создаем объект вручную, чтобы не было ошибки аргументов
-            bullet.setAmmoType(new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false));
+            // 3. Позиция
+            bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
+
+            // 4. Скорость
+            bullet.setDeltaMovement(ballisticVelocity);
+
+            // 5. Поворот
+            bullet.alignToVelocity();
+
+            // ✅ КРИТИЧНО: Добавляем в мир (автоматическая синхронизация на клиенты!)
+            serverLevel.addFreshEntity(bullet);
+
+            // Звук
+            if (ModSounds.TURRET_FIRE.isPresent()) {
+                this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
+            }
         }
-
-        // 3. Позиция
-        bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
-
-        // 4. Скорость
-        bullet.setDeltaMovement(ballisticVelocity);
-
-        // 5. Поворот
-        bullet.alignToVelocity();
-
-        // 6. Звук и спавн
-        if (ModSounds.TURRET_FIRE.isPresent()) {
-            this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
-        } else {
-            this.playSound(SoundEvents.GENERIC_EXPLODE, 0.5F, 2.0F);
-        }
-
-        this.level().addFreshEntity(bullet);
-
     }
+
 
     /**
      * Контроллеры анимаций GeckoLib.

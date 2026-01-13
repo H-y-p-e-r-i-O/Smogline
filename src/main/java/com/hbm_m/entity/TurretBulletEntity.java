@@ -3,17 +3,18 @@ package com.hbm_m.entity;
 import com.hbm_m.item.tags_and_tiers.AmmoRegistry;
 import com.hbm_m.sound.ModSounds;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
@@ -22,6 +23,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractGlassBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
+import net.minecraftforge.entity.IEntityAdditionalSpawnData;
+import net.minecraftforge.network.NetworkHooks;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
@@ -29,25 +32,25 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.Optional;
 
-public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
+public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEntityAdditionalSpawnData {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    // Синхронизируемые данные
     private static final EntityDataAccessor<String> AMMO_ID = SynchedEntityData.defineId(TurretBulletEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> AMMO_TYPE = SynchedEntityData.defineId(TurretBulletEntity.class, EntityDataSerializers.STRING);
 
-    // === БАЛЛИСТИКА ===
     public static final float BULLET_GRAVITY = 0.01F;
     public static final float AIR_RESISTANCE = 0.99F;
     public static final float MAX_FLIGHT_DISTANCE = 256.0F;
-    public static final float BULLET_DRAG = 0.02F; // Дополнительное сопротивление (если используется)
 
     private float baseDamage = 4.0f;
     private float baseSpeed = 3.0f;
     private AmmoType ammoType = AmmoType.NORMAL;
     private float initialSpeed = 0.0f;
     private Vec3 initialPosition = null;
+
+    // Вращение для визуального эффекта
+    public float spin = 0;
 
     public enum AmmoType {
         NORMAL("normal"), PIERCING("piercing"), HOLLOW("hollow"), INCENDIARY("incendiary");
@@ -65,9 +68,61 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
 
     public TurretBulletEntity(Level level, LivingEntity shooter) {
         super(ModEntities.TURRET_BULLET.get(), shooter, level);
-        this.noPhysics = true; // Отключаем ванильную физику, чтобы размер 0.05 не мешал
-        this.setNoGravity(true); // Гравитацию считаем сами
+        this.noPhysics = true;
+        this.setNoGravity(true);
     }
+
+    // --- СИНХРОНИЗАЦИЯ СПАВНА ---
+
+    @Override
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
+        return NetworkHooks.getEntitySpawningPacket(this);
+    }
+
+    @Override
+    public void writeSpawnData(FriendlyByteBuf buffer) {
+        Vec3 motion = this.getDeltaMovement();
+        buffer.writeDouble(motion.x);
+        buffer.writeDouble(motion.y);
+        buffer.writeDouble(motion.z);
+        buffer.writeDouble(this.getX());
+        buffer.writeDouble(this.getY());
+        buffer.writeDouble(this.getZ());
+        buffer.writeFloat(this.getYRot());
+        buffer.writeFloat(this.getXRot());
+    }
+
+    @Override
+    public void readSpawnData(FriendlyByteBuf additionalData) {
+        double vx = additionalData.readDouble();
+        double vy = additionalData.readDouble();
+        double vz = additionalData.readDouble();
+        double x = additionalData.readDouble();
+        double y = additionalData.readDouble();
+        double z = additionalData.readDouble();
+        float rotY = additionalData.readFloat();
+        float rotX = additionalData.readFloat();
+
+        this.setPos(x, y, z);
+        this.setDeltaMovement(vx, vy, vz);
+
+        // Принудительно устанавливаем поворот
+        this.setYRot(rotY);
+        this.setXRot(rotX);
+
+        // КЛЮЧЕВОЙ МОМЕНТ:
+        // Сбрасываем "предыдущие" значения поворота и позиции в текущие.
+        // Это отключает интерполяцию для первого кадра отрисовки.
+        this.yRotO = rotY;
+        this.xRotO = rotX;
+        this.xo = x;
+        this.yo = y;
+        this.zo = z;
+
+        // Дополнительный пересчет на случай рассинхрона
+        this.alignToVelocity();
+    }
+    // ----------------------------
 
     @Override
     protected void defineSynchedData() {
@@ -108,7 +163,7 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
         this.setDeltaMovement(velocity);
         this.initialSpeed = (float) velocity.length();
         this.initialPosition = startPos;
-        this.xo = this.getX(); this.yo = this.getY(); this.zo = this.getZ();
+        this.alignToVelocity();
     }
 
     public void shootBallisticFromRotation(LivingEntity shooter, float pitch, float yaw, float rollOffset, float speed, float divergence) {
@@ -120,7 +175,6 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
         double startY = shooter.getEyeY() - 0.1;
         double startZ = shooter.getZ();
 
-        // Смещение вперед, чтобы не задеть стрелка
         Vec3 offset = lookDir.normalize().scale(0.5);
         Vec3 startPos = new Vec3(startX, startY, startZ).add(offset);
 
@@ -143,124 +197,76 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
 
     @Override
     public void tick() {
-        // super.tick(); // Лучше отключить, чтобы не было конфликтов физики
-
         if (this.isRemoved() || this.inGround) {
             this.discard();
             return;
         }
 
-        // Проверка дальности и времени жизни
+        this.spin += 20.0F;
+
         if (initialPosition != null && this.position().distanceTo(initialPosition) > MAX_FLIGHT_DISTANCE) {
-            this.discard(); return;
+            this.discard();
+            return;
         }
+
         if (this.tickCount > 200) {
-            this.discard(); return;
+            this.discard();
+            return;
         }
 
         Vec3 start = this.position();
         Vec3 vel = this.getDeltaMovement();
         Vec3 end = start.add(vel);
 
-        // ✅ ИСПОЛЬЗУЕМ traceHit (он у тебя уже есть ниже в файле)
         HitResult hit = traceHit(start, end);
 
         if (hit.getType() != HitResult.Type.MISS) {
-            // Ставим пулю в точку удара
             this.setPos(hit.getLocation().x, hit.getLocation().y, hit.getLocation().z);
-            // Обрабатываем удар
             handleHitResult(hit);
-            return; // Пуля уничтожится в обработчике
+            return;
         }
 
-        // Если никуда не попали — двигаемся
         this.setPos(end.x, end.y, end.z);
 
-        // Обновляем скорость (как в рендерере: drag потом gravity)
         vel = vel.scale(AIR_RESISTANCE).add(0.0, -BULLET_GRAVITY, 0.0);
         this.setDeltaMovement(vel);
 
-        updateRotation();
+        this.alignToVelocity();
     }
 
-    /**
-     * Автоматически устанавливает поворот пули (Pitch/Yaw) по её вектору скорости.
-     * Вызывай это после setDeltaMovement().
-     */
+    // Исправленная математика выравнивания
     public void alignToVelocity() {
         Vec3 velocity = this.getDeltaMovement();
-        if (velocity.lengthSqr() < 1.0E-7D) return; // Защита от нулевого вектора
-
         double horizontalDist = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 
-        // YRot (Yaw) - поворот влево-вправо
-        float yRot = (float) (Math.atan2(velocity.x, velocity.z) * (180D / Math.PI));
+        // В Minecraft Yaw считается от оси Z (South), а atan2 возвращает от оси X.
+        // Поэтому atan2(x, z) - правильно для Minecraft.
+        this.setYRot((float) (Math.atan2(velocity.x, velocity.z) * (180D / Math.PI)));
 
-        // XRot (Pitch) - наклон вверх-вниз
-        float xRot = (float) (Math.atan2(velocity.y, horizontalDist) * (180D / Math.PI));
+        // Pitch (XRot) считается от горизонтали.
+        this.setXRot((float) (Math.atan2(velocity.y, horizontalDist) * (180D / Math.PI)));
 
-        this.setYRot(yRot);
-        this.setXRot(xRot);
-        this.yRotO = yRot;
-        this.xRotO = xRot;
+        // Принудительно обновляем prevRotation, чтобы не было дергания при тике
+        if (this.tickCount == 0) {
+            this.yRotO = this.getYRot();
+            this.xRotO = this.getXRot();
+        }
     }
 
+    @Override
+    public void lerpMotion(double x, double y, double z) {
+        super.lerpMotion(x, y, z);
+        // Обновляем поворот при обновлении вектора движения сервером
+        this.alignToVelocity();
+    }
 
     private void handleHitResult(HitResult hit) {
         if (hit.getType() == HitResult.Type.ENTITY) {
-            // У тебя уже есть метод onHitEntity, но он от AbstractArrow
-            // Лучше вызывать напрямую нашу логику:
             EntityHitResult entityHit = (EntityHitResult) hit;
             handleEntityHit(entityHit.getEntity());
         } else if (hit.getType() == HitResult.Type.BLOCK) {
             this.onHitBlock((BlockHitResult) hit);
         }
-    }
-
-
-    /**
-     * ✅ Трассировка луча для точного попадания маленькой пулей
-     */
-    private void checkEntityCollisionsRaycast(Vec3 start, Vec3 end) {
-        // Расширяем хитбокс вдоль пути пули + 1 блок запаса по ширине
-        AABB searchBox = this.getBoundingBox().expandTowards(end.subtract(start)).inflate(1.0);
-
-        Entity hitEntity = null;
-        Vec3 hitPos = null;
-        double minDistance = Double.MAX_VALUE;
-
-        // Ищем всех кандидатов
-        for (Entity candidate : this.level().getEntities(this, searchBox, Entity::isAlive)) {
-            if (candidate == this.getOwner() || candidate == this) continue;
-
-            // Проверяем точное пересечение луча с хитбоксом врага
-            // grow(0.3) делает хитбокс врага чуть больше для попадания (опционально)
-            Optional<Vec3> hit = candidate.getBoundingBox().inflate(0.1).clip(start, end);
-
-            if (hit.isPresent()) {
-                double distance = start.distanceToSqr(hit.get());
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    hitEntity = candidate;
-                    hitPos = hit.get();
-                }
-            }
-        }
-
-        // Если нашли кого-то на пути
-        if (hitEntity != null) {
-            this.setPos(hitPos); // Перемещаем пулю в точку удара
-            this.handleEntityHit(hitEntity);
-        }
-    }
-
-    public void updateRotation() {
-        Vec3 motion = this.getDeltaMovement();
-        double horizontalDist = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
-        this.setYRot((float) (Math.atan2(motion.x, motion.z) * (180F / Math.PI)));
-        this.setXRot((float) (Math.atan2(motion.y, horizontalDist) * (180F / Math.PI)));
-        this.yRotO = this.getYRot();
-        this.xRotO = this.getXRot();
     }
 
     private void handleEntityHit(Entity target) {
@@ -270,7 +276,6 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
         float finalDamage = calculateDamage(livingTarget, currentType);
         Entity owner = this.getOwner();
 
-        // Используем mobProjectile для корректного отображения смерти
         DamageSource source = this.damageSources().mobProjectile(this, (LivingEntity) owner);
 
         if (target.hurt(source, finalDamage)) {
@@ -281,7 +286,6 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
     }
 
     private HitResult traceHit(Vec3 start, Vec3 end) {
-        // 1) Raytrace блоков
         HitResult blockHit = this.level().clip(new ClipContext(
                 start, end,
                 ClipContext.Block.COLLIDER,
@@ -291,10 +295,9 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
 
         Vec3 endForEntities = end;
         if (blockHit.getType() != HitResult.Type.MISS) {
-            endForEntities = blockHit.getLocation(); // сущности ищем только до блока
+            endForEntities = blockHit.getLocation();
         }
 
-        // 2) Raytrace сущностей на пути
         AABB sweep = this.getBoundingBox().expandTowards(end.subtract(start)).inflate(0.5);
         EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(
                 this.level(), this,
@@ -303,13 +306,10 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
                 e -> e.isAlive() && e != this.getOwner() && e.isPickable()
         );
 
-        // 3) Ближайшее событие
         if (entityHit != null) return entityHit;
         return blockHit;
     }
 
-
-    // === БЛОК ОБРАБОТКИ СТОЛКНОВЕНИЙ С МИРОМ (если move() наткнулся на блок) ===
     @Override
     protected void onHitBlock(BlockHitResult result) {
         if (!this.level().isClientSide) {
@@ -322,7 +322,6 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
         }
     }
 
-    // === РАСЧЁТ УРОНА ===
     private float calculateDamage(LivingEntity target, AmmoType type) {
         float armor = (float) target.getArmorValue();
         switch (type) {
@@ -370,38 +369,32 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
     @Override
     protected ItemStack getPickupItem() { return ItemStack.EMPTY; }
 
-    // === СОХРАНЕНИЕ ===
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putString("AmmoID", (String) this.entityData.get(AMMO_ID));
-        tag.putString("AmmoType", (String) this.entityData.get(AMMO_TYPE));
-        tag.putFloat("BaseDamage", this.baseDamage);
-        tag.putFloat("BaseSpeed", this.baseSpeed);
+        if (this.initialPosition != null) {
+            tag.putDouble("InitialX", this.initialPosition.x);
+            tag.putDouble("InitialY", this.initialPosition.y);
+            tag.putDouble("InitialZ", this.initialPosition.z);
+        }
+        tag.putFloat("InitialSpeed", this.initialSpeed);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        if (tag.contains("AmmoID")) this.entityData.set(AMMO_ID, tag.getString("AmmoID"));
-        if (tag.contains("AmmoType")) this.entityData.set(AMMO_TYPE, tag.getString("AmmoType"));
-        if (tag.contains("BaseDamage")) this.baseDamage = tag.getFloat("BaseDamage");
-        if (tag.contains("BaseSpeed")) this.baseSpeed = tag.getFloat("BaseSpeed");
+        if (tag.contains("InitialX")) {
+            this.initialPosition = new Vec3(
+                    tag.getDouble("InitialX"),
+                    tag.getDouble("InitialY"),
+                    tag.getDouble("InitialZ")
+            );
+        }
+        this.initialSpeed = tag.getFloat("InitialSpeed");
     }
-
-    // В TurretBulletEntity.java
-
-    @Override
-    public void lerpMotion(double x, double y, double z) {
-        super.lerpMotion(x, y, z);
-        // При получении пакета движения от сервера — сразу обновляем поворот!
-        this.alignToVelocity();
-    }
-
-
-    // === GECKOLIB ===
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
 }
