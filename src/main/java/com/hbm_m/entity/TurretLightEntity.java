@@ -1,5 +1,7 @@
 package com.hbm_m.entity;
 
+import com.hbm_m.item.tags_and_tiers.AmmoRegistry;
+
 import com.hbm_m.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -698,30 +700,32 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         this.setShooting(true);
         this.shootAnimTimer = 0;
 
+
+        // СПАВН ПУЛИ
+        // 1. Создаем пулю
         TurretBulletEntity bullet = new TurretBulletEntity(this.level(), this);
+
+        // 2. Выбираем случайный патрон из реестра
+        // ВАЖНО: Убедись что в AmmoRegistry метод принимает RandomSource!
+        AmmoRegistry.AmmoType randomAmmo = AmmoRegistry.getRandomAmmoForCaliber("20mm_turret", this.level().random);
+
+        if (randomAmmo != null) {
+            bullet.setAmmoType(randomAmmo);
+        } else {
+            // Фолбэк: создаем объект вручную, чтобы не было ошибки аргументов
+            bullet.setAmmoType(new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false));
+        }
+
+        // 3. Позиция
         bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
 
-        // 6. Установка скорости
+        // 4. Скорость
         bullet.setDeltaMovement(ballisticVelocity);
 
-        // 7. СИНХРОНИЗАЦИЯ ПОВОРОТА
-        // Считаем угол поворота на основе вектора скорости
-        double hDist = Math.sqrt(ballisticVelocity.x * ballisticVelocity.x + ballisticVelocity.z * ballisticVelocity.z);
+        // 5. Поворот
+        bullet.alignToVelocity();
 
-        // Mth.atan2 возвращает радианы, переводим в градусы
-        float yRot = (float)(Mth.atan2(ballisticVelocity.x, ballisticVelocity.z) * (180D / Math.PI));
-        float xRot = (float)(Mth.atan2(ballisticVelocity.y, hDist) * (180D / Math.PI));
-
-        // Устанавливаем текущий поворот
-        bullet.setYRot(yRot);
-        bullet.setXRot(xRot);
-
-        // КРИТИЧЕСКИ ВАЖНО: Устанавливаем "предыдущий" поворот равным текущему
-        // Это гарантирует, что Lerp(tick, old, new) вернет правильный угол даже при tick=0
-        bullet.yRotO = yRot;
-        bullet.xRotO = xRot;
-
-        // 8. Звук и спавн
+        // 6. Звук и спавн
         if (ModSounds.TURRET_FIRE.isPresent()) {
             this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
         } else {
@@ -729,6 +733,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         }
 
         this.level().addFreshEntity(bullet);
+
     }
 
     /**

@@ -54,8 +54,6 @@ import java.util.function.Consumer;
 public class MachineGunItem extends Item implements GeoItem {
 
     private static final int SHOT_ANIM_TICKS = 14;
-    private static final float BULLET_SPEED = 3.0F;
-    private static final float BULLET_DIVERGENCE = 0.8F;
     private static final int MAG_CAPACITY = 24;
     private static final int MAX_TOTAL_AMMO = MAG_CAPACITY + 1;
     private static final int RELOAD_ANIM_TICKS = 100;
@@ -314,17 +312,36 @@ public class MachineGunItem extends Item implements GeoItem {
         }
         if (ammoInfo == null) ammoInfo = new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false);
 
-        // === НОВАЯ БАЛЛИСТИКА ===
+
+
+
+        // === СПАВН ПУЛИ (MachineGunItem) ===
         TurretBulletEntity bullet = new TurretBulletEntity(level, player);
         bullet.setAmmoType(ammoInfo);
 
-        // ✅ ТОЧНО КАК БЫЛО В ОРИГИНАЛЕ
-        bullet.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, ammoInfo.speed, 0.8F);
+        // 1. Рассчитываем направление и скорость (с разбросом 1F)
+        float dispersion = 1F; // Разброс
+        Vec3 lookDir = player.getLookAngle();
+        // Добавляем разброс (стандартная формула Minecraft)
+        Vec3 velocity = lookDir.normalize().add(
+                level.random.nextGaussian() * 0.0075 * dispersion,
+                level.random.nextGaussian() * 0.0075 * dispersion,
+                level.random.nextGaussian() * 0.0075 * dispersion
+        ).scale(ammoInfo.speed);
 
-        // ✅ СДВИГ ПОЗИЦИИ ИЗ ОРИГИНАЛА (раскомментируй этот блок)
-        Vec3 look = player.getLookAngle();
-        Vec3 right = look.cross(new Vec3(0,1,0)).normalize();
-        bullet.setPos(bullet.getX() + right.x * 0.2, bullet.getY() - 0.1, bullet.getZ() + right.z * 0.2);
+        bullet.setDeltaMovement(velocity);
+
+        // 2. Сдвиг позиции (справа от игрока)
+        Vec3 right = lookDir.cross(new Vec3(0, 1, 0)).normalize();
+        // Ставим пулю: позиция игрока + сдвиг вправо + чуть ниже глаз
+        bullet.setPos(
+                player.getX() + right.x * 0.2,
+                player.getEyeY() - 0.1,
+                player.getZ() + right.z * 0.2
+        );
+
+        // 3. ✅ АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ПОВОРОТА
+        bullet.alignToVelocity();
 
         level.addFreshEntity(bullet);
 

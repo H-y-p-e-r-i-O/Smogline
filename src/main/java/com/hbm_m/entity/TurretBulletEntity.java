@@ -183,6 +183,29 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
         updateRotation();
     }
 
+    /**
+     * Автоматически устанавливает поворот пули (Pitch/Yaw) по её вектору скорости.
+     * Вызывай это после setDeltaMovement().
+     */
+    public void alignToVelocity() {
+        Vec3 velocity = this.getDeltaMovement();
+        if (velocity.lengthSqr() < 1.0E-7D) return; // Защита от нулевого вектора
+
+        double horizontalDist = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+
+        // YRot (Yaw) - поворот влево-вправо
+        float yRot = (float) (Math.atan2(velocity.x, velocity.z) * (180D / Math.PI));
+
+        // XRot (Pitch) - наклон вверх-вниз
+        float xRot = (float) (Math.atan2(velocity.y, horizontalDist) * (180D / Math.PI));
+
+        this.setYRot(yRot);
+        this.setXRot(xRot);
+        this.yRotO = yRot;
+        this.xRotO = xRot;
+    }
+
+
     private void handleHitResult(HitResult hit) {
         if (hit.getType() == HitResult.Type.ENTITY) {
             // У тебя уже есть метод onHitEntity, но он от AbstractArrow
@@ -365,6 +388,16 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
         if (tag.contains("BaseDamage")) this.baseDamage = tag.getFloat("BaseDamage");
         if (tag.contains("BaseSpeed")) this.baseSpeed = tag.getFloat("BaseSpeed");
     }
+
+    // В TurretBulletEntity.java
+
+    @Override
+    public void lerpMotion(double x, double y, double z) {
+        super.lerpMotion(x, y, z);
+        // При получении пакета движения от сервера — сразу обновляем поворот!
+        this.alignToVelocity();
+    }
+
 
     // === GECKOLIB ===
     @Override

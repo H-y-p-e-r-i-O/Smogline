@@ -2,16 +2,17 @@ package com.hbm_m.item.tags_and_tiers;
 
 import com.hbm_m.item.ModItems;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class AmmoRegistry {
-
     private static final Map<String, AmmoType> AMMO_BY_ID = new HashMap<>();
-    private static final Map<String, AmmoType> AMMO_BY_CALIBER = new HashMap<>();
+
+    // ИЗМЕНЕНИЕ: Теперь храним СПИСОК патронов для калибра
+    private static final Map<String, List<AmmoType>> AMMO_LIST_BY_CALIBER = new HashMap<>();
 
     public static class AmmoType {
         public final String id;
@@ -33,53 +34,49 @@ public class AmmoRegistry {
         String itemId = ForgeRegistries.ITEMS.getKey(item).toString();
         AmmoType type = new AmmoType(itemId, caliber, damage, speed, isPiercing);
         AMMO_BY_ID.put(itemId, type);
-        AMMO_BY_CALIBER.putIfAbsent(caliber, type);
+
+        // Добавляем в список по калибру
+        AMMO_LIST_BY_CALIBER.computeIfAbsent(caliber, k -> new ArrayList<>()).add(type);
     }
 
+    /**
+     * Возвращает случайный патрон указанного калибра.
+     * Если калибра нет, возвращает null.
+     */
+    public static AmmoType getRandomAmmoForCaliber(String caliber, RandomSource random) { // <-- RandomSource
+        List<AmmoType> list = AMMO_LIST_BY_CALIBER.get(caliber);
+        if (list == null || list.isEmpty()) return null;
+        return list.get(random.nextInt(list.size()));
+    }
+
+    // ОСТАЛЬНЫЕ МЕТОДЫ (getAmmoTypeById, isValidAmmo и т.д.) ОСТАВЬ КАК ЕСТЬ
+    // (Но проверь, чтобы они использовали AMMO_BY_ID, что они и так делают)
 
     public static AmmoType getAmmoTypeById(String itemId) {
-        // 1. Ищем в карте (для старых регистраций)
         AmmoType cached = AMMO_BY_ID.get(itemId);
         if (cached != null) return cached;
-
-        // 2. Если нет, пробуем создать динамически через IAmmoItem
-        Item item = ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(itemId));
-        if (item != null) {
-            return getAmmoTypeFromItem(item);
-        }
-
+        Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(itemId));
+        if (item != null) return getAmmoTypeFromItem(item);
         return null;
     }
 
-
-    /**
-     * Создает AmmoType на основе предмета, реализующего IAmmoItem.
-     */
     public static AmmoType getAmmoTypeFromItem(Item item) {
         if (item instanceof IAmmoItem iAmmo) {
             return new AmmoType(
-                    ForgeRegistries.ITEMS.getKey(item).toString(), // ID
-                    iAmmo.getCaliber(),                            // Калибр
-                    iAmmo.getDamage(),                             // Урон
-                    iAmmo.getSpeed(),                              // Скорость
-                    iAmmo.isPiercing()                             // Пробивание
+                    ForgeRegistries.ITEMS.getKey(item).toString(),
+                    iAmmo.getCaliber(),
+                    iAmmo.getDamage(),
+                    iAmmo.getSpeed(),
+                    iAmmo.isPiercing()
             );
         }
         return null;
     }
 
-
-    public static AmmoType getAmmoTypeByCaliber(String caliber) {
-        return AMMO_BY_CALIBER.get(caliber);
-    }
-
     public static boolean isValidAmmo(ItemStack stack) {
         if (stack.isEmpty()) return false;
         Item item = stack.getItem();
-
-        // ✅ Проверяем интерфейс ИЛИ карту
         if (item instanceof IAmmoItem) return true;
-
         String itemId = ForgeRegistries.ITEMS.getKey(item).toString();
         return AMMO_BY_ID.containsKey(itemId);
     }
@@ -87,14 +84,11 @@ public class AmmoRegistry {
     public static String getCaliber(ItemStack stack) {
         if (stack.isEmpty()) return null;
         Item item = stack.getItem();
-
         if (item instanceof IAmmoItem iAmmo) {
             return iAmmo.getCaliber();
         }
-
         String itemId = ForgeRegistries.ITEMS.getKey(item).toString();
         AmmoType type = AMMO_BY_ID.get(itemId);
         return type != null ? type.caliber : null;
     }
-
 }
