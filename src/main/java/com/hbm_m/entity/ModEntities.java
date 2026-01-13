@@ -31,9 +31,9 @@ public class ModEntities {
     public static final RegistryObject<EntityType<TurretBulletEntity>> TURRET_BULLET =
             ENTITY_TYPES.register("turret_bullet",
                     () -> EntityType.Builder.<TurretBulletEntity>of(TurretBulletEntity::new, MobCategory.MISC)
-                            .sized(0.05f, 0.05f)    // Советую 0.25f (0.05f слишком мало, может проходить сквозь стены)
-                            .clientTrackingRange(8) // Увеличь до 8-10 чанков (пулемет стреляет далеко)
-                            .updateInterval(1)      // ✅ КРИТИЧНО: Обновлять позицию КАЖДЫЙ тик (или хотя бы 2)
+                            .sized(0.05f, 0.05f)
+                            .clientTrackingRange(16)
+                            .updateInterval(1)
                             .setShouldReceiveVelocityUpdates(true)
                             .build("turret_bullet"));
 

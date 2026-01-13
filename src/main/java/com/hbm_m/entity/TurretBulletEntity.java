@@ -15,62 +15,46 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractGlassBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.*;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+
+import java.util.Optional;
 
 public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     // Синхронизируемые данные
-    private static final EntityDataAccessor AMMO_ID = SynchedEntityData.defineId(TurretBulletEntity.class, EntityDataSerializers.STRING);
-    private static final EntityDataAccessor AMMO_TYPE = SynchedEntityData.defineId(TurretBulletEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> AMMO_ID = SynchedEntityData.defineId(TurretBulletEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> AMMO_TYPE = SynchedEntityData.defineId(TurretBulletEntity.class, EntityDataSerializers.STRING);
 
     // === БАЛЛИСТИКА ===
-    // Гравитация в блоках/тик² (примерно 9.8 м/с² переведено в Майнкрафт масштаб)
     public static final float BULLET_GRAVITY = 0.01F;
-
-    // Сопротивление воздуха (множитель скорости каждый тик, от 0 до 1)
     public static final float AIR_RESISTANCE = 0.99F;
-
-    // Максимальное расстояние полёта (в блоках)
     public static final float MAX_FLIGHT_DISTANCE = 256.0F;
-    // Константы из расчётов турели
-    // Из турели
-    public static final float BULLET_DRAG = 0.02F;         // Сопротивление воздуха из турели
-    // Локальные поля
+    public static final float BULLET_DRAG = 0.02F; // Дополнительное сопротивление (если используется)
+
     private float baseDamage = 4.0f;
     private float baseSpeed = 3.0f;
     private AmmoType ammoType = AmmoType.NORMAL;
-    private float initialSpeed = 0.0f; // Для расчёта расстояния
-    private Vec3 initialPosition = null; // Стартовая позиция для отслеживания дальности
+    private float initialSpeed = 0.0f;
+    private Vec3 initialPosition = null;
 
-    // === ENUM ДЛЯ ТИПОВ БОЕПРИПАСОВ ===
     public enum AmmoType {
-        NORMAL("normal"),
-        PIERCING("piercing"),
-        HOLLOW("hollow"),
-        INCENDIARY("incendiary");
-
+        NORMAL("normal"), PIERCING("piercing"), HOLLOW("hollow"), INCENDIARY("incendiary");
         public final String id;
-
-        AmmoType(String id) {
-            this.id = id;
-        }
-
+        AmmoType(String id) { this.id = id; }
         public static AmmoType fromString(String str) {
-            for (AmmoType type : AmmoType.values()) {
-                if (type.id.equals(str)) return type;
-            }
+            for (AmmoType type : AmmoType.values()) if (type.id.equals(str)) return type;
             return NORMAL;
         }
     }
@@ -81,9 +65,9 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
 
     public TurretBulletEntity(Level level, LivingEntity shooter) {
         super(ModEntities.TURRET_BULLET.get(), shooter, level);
-        this.noPhysics = true; // ✅ Нужен для баллистики 0.01
+        this.noPhysics = true; // Отключаем ванильную физику, чтобы размер 0.05 не мешал
+        this.setNoGravity(true); // Гравитацию считаем сами
     }
-
 
     @Override
     protected void defineSynchedData() {
@@ -92,7 +76,6 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
         this.entityData.define(AMMO_TYPE, "normal");
     }
 
-    // === НАСТРОЙКА БОЕПРИПАСА ===
     public void setAmmoType(AmmoRegistry.AmmoType ammoType) {
         if (ammoType == null) return;
         this.baseDamage = ammoType.damage;
@@ -112,238 +95,218 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
             this.ammoType = AmmoType.NORMAL;
             this.entityData.set(AMMO_TYPE, "normal");
         }
-        this.setPierceLevel((byte) 0); // ✅ Нет протыкания
-        this.setBaseDamage(baseDamage); // ✅ Базовый урон стрелы включён
+
+        this.setPierceLevel((byte) 0);
+        this.setBaseDamage(baseDamage);
     }
 
-    public String getAmmoId() {
-        return (String) this.entityData.get(AMMO_ID);
-    }
+    public String getAmmoId() { return this.entityData.get(AMMO_ID); }
+    public AmmoType getAmmoType() { return AmmoType.fromString(this.entityData.get(AMMO_TYPE)); }
 
-    public AmmoType getAmmoType() {
-        return AmmoType.fromString((String) this.entityData.get(AMMO_TYPE));
-    }
-
-    // === БАЛЛИСТИКА И ФИЗИКА ===
-
-    /**
-     * Инициализирует пулю с начальной позицией и вектором скорости.
-     * Используется вместо shootFromRotation() для полного контроля баллистики.
-     *
-     * @param startPos  Начальная позиция пули
-     * @param velocity  Вектор скорости (x, y, z)
-     */
     public void setBallisticTrajectory(Vec3 startPos, Vec3 velocity) {
         this.setPos(startPos.x, startPos.y, startPos.z);
         this.setDeltaMovement(velocity);
-
-        // Сохраняем начальную скорость для расчёта дальности
         this.initialSpeed = (float) velocity.length();
         this.initialPosition = startPos;
-
-        // Синхронизируем позицию на клиенте
-        this.xo = this.getX();
-        this.yo = this.getY();
-        this.zo = this.getZ();
+        this.xo = this.getX(); this.yo = this.getY(); this.zo = this.getZ();
     }
 
-    /**
-     * Альтернатива: инициализирует пулю от оружия с углами поворота.
-     * Более удобно использовать, если в MachineGunItem уже есть углы.
-     *
-     * @param shooter    Стрелок (для получения позиции)
-     * @param pitch      Угол наклона (ось X, вверх-вниз)
-     * @param yaw        Угол поворота (ось Y, влево-вправо)
-     * @param rollOffset Угол крена (обычно 0)
-     * @param speed      Начальная скорость
-     * @param divergence Разброс в радианах (обычно 0.05-0.1)
-     */
     public void shootBallisticFromRotation(LivingEntity shooter, float pitch, float yaw, float rollOffset, float speed, float divergence) {
         Vec3 lookDir = getLookDirFromRotation(pitch, yaw);
-
-        // Разброс как в турели (очень маленький)
-        if (divergence > 0) {
-            lookDir = addDispersion(lookDir, divergence);
-        }
-
+        if (divergence > 0) lookDir = addDispersion(lookDir, divergence);
         Vec3 velocity = lookDir.scale(speed);
 
-        // Точка вылета как у турели (из центра оружия)
-        double startX = shooter.getX() + 0.3;  // Справа от центра
-        double startY = shooter.getY() + 1.2;  // Грудь
+        double startX = shooter.getX();
+        double startY = shooter.getEyeY() - 0.1;
         double startZ = shooter.getZ();
 
-        Vec3 lookNorm = lookDir.normalize();
-        startX += lookNorm.x * 0.4;
-        startY += lookNorm.y * 0.4;
-        startZ += lookNorm.z * 0.4;
-
-        Vec3 startPos = new Vec3(startX, startY, startZ);
+        // Смещение вперед, чтобы не задеть стрелка
+        Vec3 offset = lookDir.normalize().scale(0.5);
+        Vec3 startPos = new Vec3(startX, startY, startZ).add(offset);
 
         setBallisticTrajectory(startPos, velocity);
     }
 
-
-    /**
-     * Вычисляет вектор направления из углов поворота.
-     */
     private static Vec3 getLookDirFromRotation(float pitch, float yaw) {
         float pitchRad = pitch * ((float) Math.PI / 180.0F);
         float yawRad = yaw * ((float) Math.PI / 180.0F);
-
-        float cosP = (float) Math.cos(pitchRad);
-        float sinP = (float) Math.sin(pitchRad);
-        float cosY = (float) Math.cos(yawRad);
-        float sinY = (float) Math.sin(yawRad);
-
-        return new Vec3(-sinY * cosP, -sinP, cosY * cosP);
+        return new Vec3(-Math.sin(yawRad) * Math.cos(pitchRad), -Math.sin(pitchRad), Math.cos(yawRad) * Math.cos(pitchRad));
     }
 
-    /**
-     * Добавляет случайный разброс к вектору направления.
-     */
     private Vec3 addDispersion(Vec3 baseDir, float divergence) {
-        // Нормализуем и создаём два перпендикулярных вектора
         Vec3 normalized = baseDir.normalize();
-
-        // Случайные углы в конусе с половинным углом divergence
-        float angle1 = (this.random.nextFloat() - 0.5f) * divergence;
-        float angle2 = (this.random.nextFloat() - 0.5f) * divergence;
-
-        // Простой способ: добавляем случайные компоненты
-        double dx = normalized.x + (this.random.nextGaussian() * 0.01);
-        double dy = normalized.y + (this.random.nextGaussian() * 0.01);
-        double dz = normalized.z + (this.random.nextGaussian() * 0.01);
-
+        double dx = normalized.x + (this.random.nextGaussian() * divergence * 0.1);
+        double dy = normalized.y + (this.random.nextGaussian() * divergence * 0.1);
+        double dz = normalized.z + (this.random.nextGaussian() * divergence * 0.1);
         return new Vec3(dx, dy, dz).normalize().scale(baseDir.length());
     }
 
     @Override
     public void tick() {
-        super.tick();
+        // super.tick(); // Лучше отключить, чтобы не было конфликтов физики
 
-        if (this.inGround || this.isRemoved()) {
+        if (this.isRemoved() || this.inGround) {
             this.discard();
             return;
         }
 
-        // === РУЧНАЯ ПРОВЕРКА СТОЛКНОВЕНИЙ (noPhysics её отключает) ===
-        this.checkInsideBlocks();
-
-        // ✅ Raycast мобов в радиусе 0.5 блока
-        this.level().getEntities(this,
-                        this.getBoundingBox().inflate(0.5),
-                        Entity::isAlive)
-                .stream()
-                .filter(e -> e != this.getOwner())
-                .forEach(this::handleEntityHit);
-
-        // === БАЛЛИСТИКА ТУРЕЛИ ===
-        Vec3 motion = this.getDeltaMovement();
-        motion = new Vec3(motion.x, motion.y - BULLET_GRAVITY, motion.z);
-        motion = motion.scale(1.0F - BULLET_DRAG);
-
-        this.setDeltaMovement(motion);
-        this.move(MoverType.SELF, motion);
-
-        // Проверки
+        // Проверка дальности и времени жизни
         if (initialPosition != null && this.position().distanceTo(initialPosition) > MAX_FLIGHT_DISTANCE) {
-            this.discard();
+            this.discard(); return;
         }
         if (this.tickCount > 200) {
-            this.discard();
+            this.discard(); return;
+        }
+
+        Vec3 start = this.position();
+        Vec3 vel = this.getDeltaMovement();
+        Vec3 end = start.add(vel);
+
+        // ✅ ИСПОЛЬЗУЕМ traceHit (он у тебя уже есть ниже в файле)
+        HitResult hit = traceHit(start, end);
+
+        if (hit.getType() != HitResult.Type.MISS) {
+            // Ставим пулю в точку удара
+            this.setPos(hit.getLocation().x, hit.getLocation().y, hit.getLocation().z);
+            // Обрабатываем удар
+            handleHitResult(hit);
+            return; // Пуля уничтожится в обработчике
+        }
+
+        // Если никуда не попали — двигаемся
+        this.setPos(end.x, end.y, end.z);
+
+        // Обновляем скорость (как в рендерере: drag потом gravity)
+        vel = vel.scale(AIR_RESISTANCE).add(0.0, -BULLET_GRAVITY, 0.0);
+        this.setDeltaMovement(vel);
+
+        updateRotation();
+    }
+
+    private void handleHitResult(HitResult hit) {
+        if (hit.getType() == HitResult.Type.ENTITY) {
+            // У тебя уже есть метод onHitEntity, но он от AbstractArrow
+            // Лучше вызывать напрямую нашу логику:
+            EntityHitResult entityHit = (EntityHitResult) hit;
+            handleEntityHit(entityHit.getEntity());
+        } else if (hit.getType() == HitResult.Type.BLOCK) {
+            this.onHitBlock((BlockHitResult) hit);
         }
     }
 
+
     /**
-     * Обрабатывает попадание по мобу (замена onHitEntity)
+     * ✅ Трассировка луча для точного попадания маленькой пулей
      */
+    private void checkEntityCollisionsRaycast(Vec3 start, Vec3 end) {
+        // Расширяем хитбокс вдоль пути пули + 1 блок запаса по ширине
+        AABB searchBox = this.getBoundingBox().expandTowards(end.subtract(start)).inflate(1.0);
+
+        Entity hitEntity = null;
+        Vec3 hitPos = null;
+        double minDistance = Double.MAX_VALUE;
+
+        // Ищем всех кандидатов
+        for (Entity candidate : this.level().getEntities(this, searchBox, Entity::isAlive)) {
+            if (candidate == this.getOwner() || candidate == this) continue;
+
+            // Проверяем точное пересечение луча с хитбоксом врага
+            // grow(0.3) делает хитбокс врага чуть больше для попадания (опционально)
+            Optional<Vec3> hit = candidate.getBoundingBox().inflate(0.1).clip(start, end);
+
+            if (hit.isPresent()) {
+                double distance = start.distanceToSqr(hit.get());
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    hitEntity = candidate;
+                    hitPos = hit.get();
+                }
+            }
+        }
+
+        // Если нашли кого-то на пути
+        if (hitEntity != null) {
+            this.setPos(hitPos); // Перемещаем пулю в точку удара
+            this.handleEntityHit(hitEntity);
+        }
+    }
+
+    public void updateRotation() {
+        Vec3 motion = this.getDeltaMovement();
+        double horizontalDist = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+        this.setYRot((float) (Math.atan2(motion.x, motion.z) * (180F / Math.PI)));
+        this.setXRot((float) (Math.atan2(motion.y, horizontalDist) * (180F / Math.PI)));
+        this.yRotO = this.getYRot();
+        this.xRotO = this.getXRot();
+    }
+
     private void handleEntityHit(Entity target) {
         if (!(target instanceof LivingEntity livingTarget)) return;
 
         AmmoType currentType = getAmmoType();
         float finalDamage = calculateDamage(livingTarget, currentType);
-
         Entity owner = this.getOwner();
-        DamageSource source = this.damageSources().arrow(this, owner);
+
+        // Используем mobProjectile для корректного отображения смерти
+        DamageSource source = this.damageSources().mobProjectile(this, (LivingEntity) owner);
 
         if (target.hurt(source, finalDamage)) {
             applySpecialEffect(livingTarget, currentType);
             playHitSound();
+            this.discard();
         }
-
-        this.discard(); // ✅ Удаляем пулю после попадания
     }
 
-    @Override
-    protected void onHitEntity(EntityHitResult result) {
-        // ✅ ВЫЗЫВАЕМ РОДИТЕЛЬСКИЙ МЕТОД ПЕРВЫМ!
-        super.onHitEntity(result);
+    private HitResult traceHit(Vec3 start, Vec3 end) {
+        // 1) Raytrace блоков
+        HitResult blockHit = this.level().clip(new ClipContext(
+                start, end,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
+                this
+        ));
 
-        Entity target = result.getEntity();
-        if (!(target instanceof LivingEntity livingTarget)) {
-            return;
+        Vec3 endForEntities = end;
+        if (blockHit.getType() != HitResult.Type.MISS) {
+            endForEntities = blockHit.getLocation(); // сущности ищем только до блока
         }
 
-        // ТВОЯ ДОПОЛНИТЕЛЬНАЯ ЛОГИКА (спецэффекты)
-        AmmoType currentType = getAmmoType();
-        float finalDamage = calculateDamage(livingTarget, currentType);
+        // 2) Raytrace сущностей на пути
+        AABB sweep = this.getBoundingBox().expandTowards(end.subtract(start)).inflate(0.5);
+        EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(
+                this.level(), this,
+                start, endForEntities,
+                sweep,
+                e -> e.isAlive() && e != this.getOwner() && e.isPickable()
+        );
 
-        // ✅ ПРОВЕРЯЕМ, жив ли target после стандартного урона
-        if (target.isAlive()) {
-            Entity owner = this.getOwner();
-            DamageSource source = this.damageSources().arrow(this, owner);
-
-            if (target.hurt(source, finalDamage)) {
-                applySpecialEffect(livingTarget, currentType);
-                playHitSound();
-            }
-        }
-
-        // ✅ НЕ discard здесь — let super.onHitEntity() обработать
+        // 3) Ближайшее событие
+        if (entityHit != null) return entityHit;
+        return blockHit;
     }
 
 
+    // === БЛОК ОБРАБОТКИ СТОЛКНОВЕНИЙ С МИРОМ (если move() наткнулся на блок) ===
     @Override
     protected void onHitBlock(BlockHitResult result) {
         if (!this.level().isClientSide) {
             BlockState state = this.level().getBlockState(result.getBlockPos());
-
-            // Стекло ломаем
             if (state.getBlock() instanceof AbstractGlassBlock) {
                 this.level().destroyBlock(result.getBlockPos(), true);
             }
-
-            // Звук удара
-            if (ModSounds.BULLET_HIT1.isPresent()) {
-                SoundEvent hit = ModSounds.BULLET_HIT1.get();
-                this.level().playSound(
-                        null,
-                        this.getX(), this.getY(), this.getZ(),
-                        hit,
-                        SoundSource.PLAYERS,
-                        0.6F,
-                        0.9F + this.random.nextFloat() * 0.2F
-                );
-            }
+            playHitSound();
+            this.discard();
         }
-
-        this.discard();
     }
 
     // === РАСЧЁТ УРОНА ===
-
     private float calculateDamage(LivingEntity target, AmmoType type) {
         float armor = (float) target.getArmorValue();
         switch (type) {
-            case PIERCING:
-                return calculatePiercingDamage(armor);
-            case HOLLOW:
-                return calculateHollowDamage(armor);
-            case INCENDIARY:
-                return calculateIncendiaryDamage(armor);
-            default:
-                return Math.max(baseDamage * (1.0f - armor * 0.02f), baseDamage * 0.4f);
+            case PIERCING: return calculatePiercingDamage(armor);
+            case HOLLOW: return calculateHollowDamage(armor);
+            case INCENDIARY: return calculateIncendiaryDamage(armor);
+            default: return Math.max(baseDamage * (1.0f - armor * 0.02f), baseDamage * 0.4f);
         }
     }
 
@@ -365,24 +328,12 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
     }
 
     private void applySpecialEffect(LivingEntity target, AmmoType type) {
-        switch (type) {
-            case INCENDIARY:
-                target.setSecondsOnFire(5);
-                break;
-            case PIERCING:
-            case HOLLOW:
-            default:
-                break;
-        }
+        if (type == AmmoType.INCENDIARY) target.setSecondsOnFire(5);
     }
 
     private void playHitSound() {
         if (ModSounds.BULLET_HIT1.isPresent()) {
-            this.playSound(
-                    ModSounds.BULLET_HIT1.get(),
-                    0.6F,
-                    0.9F + this.random.nextFloat() * 0.2F
-            );
+            this.playSound(ModSounds.BULLET_HIT1.get(), 0.6F, 0.9F + this.random.nextFloat() * 0.2F);
         } else {
             this.playSound(SoundEvents.GENERIC_HURT, 0.5F, 1.0F);
         }
@@ -390,13 +341,11 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
 
     @Override
     protected SoundEvent getDefaultHitGroundSoundEvent() {
-        return ModSounds.BULLET_HIT1.isPresent() ? ModSounds.BULLET_HIT1.get() : SoundEvents.EMPTY;
+        return ModSounds.BULLET_HIT1.isPresent() ? ModSounds.BULLET_HIT1.get() : SoundEvents.ARROW_HIT;
     }
 
     @Override
-    protected ItemStack getPickupItem() {
-        return ItemStack.EMPTY;
-    }
+    protected ItemStack getPickupItem() { return ItemStack.EMPTY; }
 
     // === СОХРАНЕНИЕ ===
     @Override
@@ -411,26 +360,15 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        if (tag.contains("AmmoID")) {
-            this.entityData.set(AMMO_ID, tag.getString("AmmoID"));
-        }
-        if (tag.contains("AmmoType")) {
-            this.entityData.set(AMMO_TYPE, tag.getString("AmmoType"));
-        }
-        if (tag.contains("BaseDamage")) {
-            this.baseDamage = tag.getFloat("BaseDamage");
-        }
-        if (tag.contains("BaseSpeed")) {
-            this.baseSpeed = tag.getFloat("BaseSpeed");
-        }
+        if (tag.contains("AmmoID")) this.entityData.set(AMMO_ID, tag.getString("AmmoID"));
+        if (tag.contains("AmmoType")) this.entityData.set(AMMO_TYPE, tag.getString("AmmoType"));
+        if (tag.contains("BaseDamage")) this.baseDamage = tag.getFloat("BaseDamage");
+        if (tag.contains("BaseSpeed")) this.baseSpeed = tag.getFloat("BaseSpeed");
     }
 
     // === GECKOLIB ===
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
-
     @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return cache;
-    }
+    public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
 }
