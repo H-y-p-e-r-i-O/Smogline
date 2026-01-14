@@ -347,9 +347,15 @@ public class MachineGunItem extends Item implements GeoItem {
             return;
         }
 
+        // Сначала получаем ID (пока он еще есть)
+        String loadedID = getLoadedAmmoID(stack);
+
+        // Тратим патрон
         if (!player.isCreative()) {
             setAmmo(stack, ammo - 1);
-            if (ammo - 1 <= 0) setLoadedAmmoID(stack, "");
+            // УДАЛИ ЭТУ СТРОКУ: if (ammo - 1 <= 0) setLoadedAmmoID(stack, "");
+            // Пусть ID остается даже при 0 патронов. Это решит проблему.
+            // А при перезарядке (reloadGun) ты все равно перезапишешь этот ID новым.
         }
 
         syncHand(player, stack);
@@ -362,7 +368,6 @@ public class MachineGunItem extends Item implements GeoItem {
         TurretBulletEntity bullet = new TurretBulletEntity(serverLevel, player);
 
         // 2. Боеприпас - ✅ ИСПРАВЛЕНО
-        String loadedID = getLoadedAmmoID(stack);
         AmmoRegistry.AmmoType ammoInfo = null;
 
         if (loadedID != null && !loadedID.isEmpty()) {
@@ -471,13 +476,24 @@ public class MachineGunItem extends Item implements GeoItem {
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
 
+        // 1. Проверяем реальное количество патронов
+        int ammoCount = getAmmo(stack);
         String ammoId = getLoadedAmmoID(stack);
-        if (ammoId == null || ammoId.isEmpty()) {
+
+        // Если патронов нет (0), показываем "нет", игнорируя сохраненный ID
+        if (ammoCount <= 0) {
             tooltip.add(Component.literal("Патроны: нет").withStyle(ChatFormatting.RED));
             return;
         }
 
-        AmmoRegistry.AmmoType ammoType = AmmoRegistry.getAmmoTypeById(ammoId); // твой реестр боеприпасов [file:3]
+        // 2. Если патроны есть, но ID пустой (не должно случиться, но на всякий случай)
+        if (ammoId == null || ammoId.isEmpty()) {
+            tooltip.add(Component.literal("Патроны: обычные").withStyle(ChatFormatting.GRAY));
+            return;
+        }
+
+        // 3. Получаем тип патрона из реестра
+        AmmoRegistry.AmmoType ammoType = AmmoRegistry.getAmmoTypeById(ammoId);
         if (ammoType == null) {
             tooltip.add(Component.literal("Патроны: неизвестно").withStyle(ChatFormatting.GRAY));
             return;
@@ -512,6 +528,7 @@ public class MachineGunItem extends Item implements GeoItem {
             tooltip.add(Component.literal("Пробивная способность").withStyle(ChatFormatting.GRAY));
         }
     }
+
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
