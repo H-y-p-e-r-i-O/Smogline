@@ -58,7 +58,7 @@ public class MachineGunItem extends Item implements GeoItem {
     private static final int MAX_TOTAL_AMMO = MAG_CAPACITY + 1;
     private static final int RELOAD_ANIM_TICKS = 100;
     private static final int FLIP_ANIM_TICKS = 80;
-    private static final int RELOAD_AMMO_ADD_TICK = 50;
+    private static final int RELOAD_AMMO_ADD_TICK = 95;
     private static final String LOADED_AMMO_ID_TAG = "LoadedAmmoID";
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -328,34 +328,34 @@ public class MachineGunItem extends Item implements GeoItem {
 
     // === СТРЕЛЬБА ===
     public void performShooting(Level level, Player player, ItemStack stack) {
-        // ✅ ТОЛЬКО НА СЕРВЕРЕ!
         if (level.isClientSide) return;
-
         if (getReloadTimer(stack) > 0 || getShootDelay(stack) > 0) return;
 
         int ammo = getAmmo(stack);
 
+        // ✅ НОВАЯ ЛОГИКА: Пустой выстрел (ammo == 0)
         if (ammo <= 0) {
-            // Логика DRY_FIRE (пустой магазин)
+            // Звук сухого выстрела
             SoundEvent drySound = ModSounds.DRY_FIRE.isPresent() ? ModSounds.DRY_FIRE.get() : SoundEvents.DISPENSER_FAIL;
-
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     drySound, SoundSource.PLAYERS, 1.0F, 1.0F);
 
-            // Небольшая задержка, чтобы не спамить звуком клика слишком часто
-            setShootDelay(stack, 14);
-            return;
+            // Задержка как при обычном выстреле
+            setShootDelay(stack, SHOT_ANIM_TICKS);
+
+            // Запускаем анимацию пустого выстрела
+            if (level instanceof ServerLevel serverLevel) {
+                triggerAnim(player, GeoItem.getOrAssignId(stack, serverLevel), "controller", "shot_empty");
+            }
+
+            return; // Пуля НЕ вылетает
         }
 
-        // Сначала получаем ID (пока он еще есть)
+        // Дальше идет обычная стрельба (твой старый код без изменений)
         String loadedID = getLoadedAmmoID(stack);
 
-        // Тратим патрон
         if (!player.isCreative()) {
             setAmmo(stack, ammo - 1);
-            // УДАЛИ ЭТУ СТРОКУ: if (ammo - 1 <= 0) setLoadedAmmoID(stack, "");
-            // Пусть ID остается даже при 0 патронов. Это решит проблему.
-            // А при перезарядке (reloadGun) ты все равно перезапишешь этот ID новым.
         }
 
         syncHand(player, stack);
@@ -427,10 +427,7 @@ public class MachineGunItem extends Item implements GeoItem {
             // 🔒 ЗАЩИТА: reload и flip НЕ прерываются
             if (event.getController().getAnimationState() == AnimationController.State.RUNNING) {
                 String currentAnim = event.getController().getCurrentAnimation().animation().name();
-                if ("reload".equals(currentAnim) || "flip".equals(currentAnim)) {
-                    return PlayState.CONTINUE;
-                }
-                if ("shot".equals(currentAnim)) {
+                if ("reload".equals(currentAnim) || "flip".equals(currentAnim) || "shot".equals(currentAnim) || "shot_empty".equals(currentAnim)) {
                     return PlayState.CONTINUE;
                 }
             }
@@ -448,7 +445,9 @@ public class MachineGunItem extends Item implements GeoItem {
         })
                 .triggerableAnim("reload", RawAnimation.begin().thenPlay("reload"))
                 .triggerableAnim("flip", RawAnimation.begin().thenPlay("flip"))
-                .triggerableAnim("shot", RawAnimation.begin().thenPlay("shot")));
+                .triggerableAnim("shot", RawAnimation.begin().thenPlay("shot"))
+                .triggerableAnim("shot_empty", RawAnimation.begin().thenPlay("shot_empty"))); // ✅ НОВОЕ
+
     }
 
     @Override
@@ -568,7 +567,8 @@ public class MachineGunItem extends Item implements GeoItem {
             if (item.getReloadTimer(stack) > 0) return;
 
             if (mc.options.keyAttack.isDown()) {
-                if (item.getAmmo(stack) <= 0) return;
+                // ✅ УБРАЛИ ПРОВЕРКУ "if (item.getAmmo(stack) <= 0) return;"
+                // Теперь пакет отправится даже с пустым магазином, а сервер решит, что делать.
                 if (clientShootTimer <= 0) {
                     ModPacketHandler.INSTANCE.sendToServer(new PacketShoot());
                     mc.player.attackAnim = 0;
@@ -580,6 +580,7 @@ public class MachineGunItem extends Item implements GeoItem {
                 if (clientShootTimer < SHOT_ANIM_TICKS - 2) clientShootTimer = 0;
             }
         }
+
 
         @SubscribeEvent
         public static void onInput(net.minecraftforge.client.event.InputEvent.InteractionKeyMappingTriggered event) {

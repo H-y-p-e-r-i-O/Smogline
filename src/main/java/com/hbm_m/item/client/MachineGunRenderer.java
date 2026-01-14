@@ -30,23 +30,17 @@ public class MachineGunRenderer extends GeoItemRenderer<MachineGunItem> {
             float blue,
             float alpha
     ) {
-        // Получаем текущее количество патронов из предмета
-        int ammo = animatable.getAmmo(this.currentItemStack);
+        ItemStack stack = this.getCurrentItemStack();
+        if (stack == null) {
+            super.renderRecursively(poseStack, animatable, bone, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
+            return;
+        }
 
-        // --- ЛОГИКА СКРЫТИЯ КОСТЕЙ ---
-        // Имя кости, которую сейчас рендерим
+        int ammo = animatable.getAmmo(stack);
         String boneName = bone.getName();
 
-        // Предположим, что в Blockbench у вас кости патронов называются:
-        // "ammo3" - самый дальний (исчезает первым, когда ammo < 3)
-        // "ammo2" - средний (исчезает, когда ammo < 2)
-        // "ammo1" - последний (исчезает, когда ammo < 1)
-
-        // ВАЖНО: Замените "ammoX" на реальные имена костей из вашей модели!
-
-        // Если патронов <= 1 (последний уже в стволе), то для ленты это "пусто" (0 визуально)
+        // Скрытие патронов в ленте
         int visibleAmmoInBelt = Math.max(0, ammo - 1);
-
         if (boneName.equals("ammo3")) {
             if (visibleAmmoInBelt < 3) return;
         }
@@ -57,13 +51,19 @@ public class MachineGunRenderer extends GeoItemRenderer<MachineGunItem> {
             if (visibleAmmoInBelt < 1) return;
         }
 
-        // Вызываем стандартный рендер для остальных костей (или если условия выше не сработали)
+        // ✅ НОВОЕ: Скрытие гильзы, если патронов нет вообще (включая казённик)
+        if (boneName.equals("gilse")) {
+            if (ammo <= 0) return; // Нет патронов = нет гильзы
+        }
+
+        // Рендерим остальные кости
         super.renderRecursively(
                 poseStack, animatable, bone, renderType, bufferSource,
                 buffer, isReRender, partialTick, packedLight, packedOverlay,
                 red, green, blue, alpha
         );
     }
+
     @Override
     public ResourceLocation getTextureLocation(MachineGunItem animatable) {
         ItemStack stack = this.getCurrentItemStack();
