@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_neptunium"
+      "item": "smogline:block_neptunium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:neptunium_ingot"
+    "item": "smogline:neptunium_ingot"
   }
 }

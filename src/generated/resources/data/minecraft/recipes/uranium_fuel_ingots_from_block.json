@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_uranium_fuel"
+      "item": "smogline:block_uranium_fuel"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:uranium_fuel_ingot"
+    "item": "smogline:uranium_fuel_ingot"
   }
 }

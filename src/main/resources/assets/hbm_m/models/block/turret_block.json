@@ -1,8 +1,0 @@
-{
-  "parent": "block/block",
-  "render_type": "cutout",
-  "textures": {
-    "particle": "hbm_m:entity/turret_light"
-  },
-  "elements": []
-}

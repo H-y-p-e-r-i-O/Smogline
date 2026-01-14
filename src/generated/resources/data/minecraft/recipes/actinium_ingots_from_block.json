@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_actinium"
+      "item": "smogline:block_actinium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:actinium_ingot"
+    "item": "smogline:actinium_ingot"
   }
 }

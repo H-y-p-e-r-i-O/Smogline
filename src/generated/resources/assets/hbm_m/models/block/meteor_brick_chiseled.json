@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "bottom": "hbm_m:block/meteor_brick",
-    "side": "hbm_m:block/meteor_brick_chiseled",
-    "top": "hbm_m:block/meteor_brick"
-  }
-}

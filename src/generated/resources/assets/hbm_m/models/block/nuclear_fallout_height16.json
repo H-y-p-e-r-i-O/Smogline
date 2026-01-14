@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "hbm_m:block/nuclear_fallout",
-    "particle": "hbm_m:block/nuclear_fallout"
-  }
-}

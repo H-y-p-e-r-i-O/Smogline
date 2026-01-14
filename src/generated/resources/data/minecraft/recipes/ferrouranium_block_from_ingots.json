@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "hbm_m:ferrouranium_ingot"
+      "item": "smogline:ferrouranium_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "hbm_m:block_ferrouranium"
+    "item": "smogline:block_ferrouranium"
   },
   "show_notification": true
 }

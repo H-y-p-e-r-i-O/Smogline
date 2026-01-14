@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_thorium"
+      "item": "smogline:block_thorium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:thorium_ingot"
+    "item": "smogline:thorium_ingot"
   }
 }

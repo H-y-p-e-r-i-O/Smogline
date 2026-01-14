@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "smogline:block/airbomb",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "smogline:block/airbomb",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "smogline:block/airbomb",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "smogline:block/airbomb",
+      "y": 270
+    }
+  }
+}

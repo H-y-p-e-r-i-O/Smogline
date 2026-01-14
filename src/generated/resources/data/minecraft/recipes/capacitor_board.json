@@ -1,22 +1,22 @@
 {
-  "type": "hbm_m:assembler",
+  "type": "smogline:assembler",
   "duration": 80,
   "ingredients": [
     {
       "count": 3,
-      "item": "hbm_m:capacitor"
+      "item": "smogline:capacitor"
     },
     {
       "count": 3,
-      "item": "hbm_m:wire_carbon"
+      "item": "smogline:wire_carbon"
     },
     {
       "count": 1,
-      "item": "hbm_m:pcb"
+      "item": "smogline:pcb"
     }
   ],
   "output": {
-    "item": "hbm_m:capacitor_board"
+    "item": "smogline:capacitor_board"
   },
   "power": 150
 }

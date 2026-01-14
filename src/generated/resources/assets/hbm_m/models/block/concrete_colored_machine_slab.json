@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab",
-  "textures": {
-    "bottom": "hbm_m:block/concrete_colored_machine",
-    "side": "hbm_m:block/concrete_colored_machine",
-    "top": "hbm_m:block/concrete_colored_machine"
-  }
-}

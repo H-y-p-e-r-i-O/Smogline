@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_niobium"
+      "item": "smogline:block_niobium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:niobium_ingot"
+    "item": "smogline:niobium_ingot"
   }
 }

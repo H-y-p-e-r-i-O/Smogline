@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "hbm_m:plutonium_ingot"
+      "item": "smogline:plutonium_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "hbm_m:block_plutonium"
+    "item": "smogline:block_plutonium"
   },
   "show_notification": true
 }

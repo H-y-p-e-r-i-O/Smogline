@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "hbm_m:advanced_alloy_ingot"
+      "item": "smogline:advanced_alloy_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "hbm_m:block_advanced_alloy"
+    "item": "smogline:block_advanced_alloy"
   },
   "show_notification": true
 }

@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab_top",
-  "textures": {
-    "bottom": "hbm_m:block/meteor_brick_cracked",
-    "side": "hbm_m:block/meteor_brick_cracked",
-    "top": "hbm_m:block/meteor_brick_cracked"
-  }
-}

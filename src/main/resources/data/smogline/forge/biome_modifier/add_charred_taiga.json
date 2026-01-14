@@ -1,0 +1,10 @@
+{
+  "type": "forge:add_features",
+  "biomes": [
+    "minecraft:taiga",
+    "minecraft:snowy_taiga",
+    "minecraft:old_growth_spruce_taiga"
+  ],
+  "features": "smogline:charred_pine_tree_placed",
+  "step": "vegetal_decoration"
+}

@@ -1,8 +1,8 @@
 {
   "values": [
-    "hbm_m:revolver_bullet",
-    "hbm_m:chopper_bullet",
-    "hbm_m:shrapnel",
-    "hbm_m:rubble"
+    "smogline:revolver_bullet",
+    "smogline:chopper_bullet",
+    "smogline:shrapnel",
+    "smogline:rubble"
   ]
 }

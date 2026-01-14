@@ -1,0 +1,15 @@
+{
+  "name": "smogline:multiclasteralt_pool",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "projection": "rigid",
+        "location": "smogline:multiclasteralt",
+        "processors": "smogline:retain_non_air_blocks"
+      }
+    }
+  ]
+}

@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_aluminum"
+      "item": "smogline:block_aluminum"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:aluminum_ingot"
+    "item": "smogline:aluminum_ingot"
   }
 }

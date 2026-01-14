@@ -1,15 +1,15 @@
 {
-  "type": "hbm_m:assembler",
+  "type": "smogline:assembler",
   "blueprint_pool": "plates",
   "duration": 200,
   "ingredients": [
     {
       "count": 2,
-      "item": "hbm_m:dineutronium_ingot"
+      "item": "smogline:dineutronium_ingot"
     }
   ],
   "output": {
-    "item": "hbm_m:plate_dineutronium"
+    "item": "smogline:plate_dineutronium"
   },
   "power": 500
 }
