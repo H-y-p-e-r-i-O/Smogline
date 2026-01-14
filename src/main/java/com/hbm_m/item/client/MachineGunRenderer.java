@@ -53,7 +53,7 @@ public class MachineGunRenderer extends GeoItemRenderer<MachineGunItem> {
         if (boneName.equals("ammo2")) {
             if (visibleAmmoInBelt < 2) return;
         }
-        if (boneName.equals("ammo1")) {
+        if (boneName.equals("ammo")) {
             if (visibleAmmoInBelt < 1) return;
         }
 

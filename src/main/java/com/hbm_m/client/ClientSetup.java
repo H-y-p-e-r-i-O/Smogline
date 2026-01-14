@@ -237,6 +237,7 @@ public class ClientSetup {
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(ModKeyBindings.RELOAD_KEY);
+        event.register(ModKeyBindings.UNLOAD_KEY);
         ModConfigKeybindHandler.onRegisterKeyMappings(event);
         MainRegistry.LOGGER.info("Registered key mappings.");
     }
@@ -313,7 +314,8 @@ public class ClientSetup {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "geiger_counter_hud", OverlayGeiger.GEIGER_HUD_OVERLAY);
 
         event.registerAbove(VanillaGuiOverlay.PORTAL.id(), "radiation_pixels", OverlayRadiationVisuals.RADIATION_PIXELS_OVERLAY);
-        
+        // ✅ ДОБАВЛЯЕМ ВОТ ЭТО:
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "ammo_hud", OverlayAmmoHud.HUD_AMMO);
         MainRegistry.LOGGER.info("GUI overlays registered.");
     }
     

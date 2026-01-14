@@ -186,6 +186,49 @@ public class MachineGunItem extends Item implements GeoItem {
         }
     }
 
+    // === ЛОГИКА РАЗРЯДКИ ===
+    public void unloadGun(ServerPlayer player, ItemStack stack) {
+        // 1. Проверяем, есть ли патроны и не идет ли перезарядка
+        int currentAmmo = getAmmo(stack);
+        if (currentAmmo <= 0) return;
+        if (getReloadTimer(stack) > 0) return; // Нельзя разрядить во время перезарядки
+
+        String loadedID = getLoadedAmmoID(stack);
+        if (loadedID == null || loadedID.isEmpty()) return;
+
+        // 2. Определяем предмет патрона
+        net.minecraft.world.item.Item ammoItem = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(loadedID));
+        if (ammoItem == null) return;
+
+        // 3. Рассчитываем, сколько вернуть
+        int amountToReturn;
+        if (player.isCreative()) {
+            amountToReturn = 1; // В креативе возвращаем 1 шт просто чтобы взять в руку
+        } else {
+            amountToReturn = currentAmmo; // В выживании всё, что было в магазине
+        }
+
+        // 4. Создаем стак для выдачи
+        ItemStack returnedStack = new ItemStack(ammoItem, amountToReturn);
+
+        // 5. Пытаемся добавить в инвентарь, если не влезает - кидаем под ноги
+        if (!player.getInventory().add(returnedStack)) {
+            player.drop(returnedStack, false);
+        }
+
+        // 6. Очищаем оружие
+        setAmmo(stack, 0);
+        setLoadedAmmoID(stack, "");
+
+        // 7. Звук разрядки (можно добавить свой, пока возьмем щелчок)
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.LEVER_CLICK, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+
+        // (Опционально) Анимация разрядки, если есть
+        // triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel)player.level()), "controller", "unload");
+    }
+
+
     /** Ищет первый подходящий ID патрона в инвентаре. Если requiredId != null, ищет строго его. */
     @Nullable
     private String findAmmoIdForReload(Player player, @Nullable String requiredId) {

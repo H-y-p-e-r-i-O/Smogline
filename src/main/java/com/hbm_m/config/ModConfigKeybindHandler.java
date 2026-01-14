@@ -2,11 +2,16 @@ package com.hbm_m.config;
 // Обработчик привязки клавиш для открытия экрана конфигурации мода.
 // Использует AutoConfig для получения экрана настроек и регистрирует сочетание клавиш
 
+import com.hbm_m.client.ModKeyBindings;
 import com.hbm_m.lib.RefStrings;
 
+import com.hbm_m.network.ModPacketHandler;
+import com.hbm_m.network.PacketReloadGun;
+import com.hbm_m.network.PacketUnloadGun;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
@@ -47,6 +52,15 @@ public class ModConfigKeybindHandler {
             }
         }
     }
+    @SubscribeEvent
+    public static void onKeyInput(InputEvent.Key event) {
+        // Добавляем ТОЛЬКО разрядку.
+        // Если перезарядка уже работает где-то еще, мы ее не трогаем.
+        if (ModKeyBindings.UNLOAD_KEY.consumeClick()) {
+            ModPacketHandler.INSTANCE.sendToServer(new PacketUnloadGun());
+        }
+    }
+
 }
         
     

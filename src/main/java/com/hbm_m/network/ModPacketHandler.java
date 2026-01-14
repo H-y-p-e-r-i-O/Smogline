@@ -53,5 +53,12 @@ public class ModPacketHandler {
                 PacketShoot::new,
                 PacketShoot::handle
         );
+
+        INSTANCE.registerMessage(id++,
+                PacketUnloadGun.class,
+                PacketUnloadGun::toBytes,
+                PacketUnloadGun::new,
+                PacketUnloadGun::handle
+        );
     }
 }
