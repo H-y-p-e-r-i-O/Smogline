@@ -25,11 +25,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
 import net.minecraftforge.entity.IEntityAdditionalSpawnData;
 import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.registries.RegistryObject;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEntityAdditionalSpawnData {
@@ -314,10 +317,15 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
     protected void onHitBlock(BlockHitResult result) {
         if (!this.level().isClientSide) {
             BlockState state = this.level().getBlockState(result.getBlockPos());
+
+            // Логика разбивания стекла
             if (state.getBlock() instanceof AbstractGlassBlock) {
                 this.level().destroyBlock(result.getBlockPos(), true);
             }
-            playHitSound();
+
+            // ВЫЗЫВАЕМ ЗВУК УДАРА О БЛОК (вместо playHitSound)
+            playGroundSound();
+
             this.discard();
         }
     }
@@ -354,12 +362,66 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
     }
 
     private void playHitSound() {
-        if (ModSounds.BULLET_HIT1.isPresent()) {
-            this.playSound(ModSounds.BULLET_HIT1.get(), 0.6F, 0.9F + this.random.nextFloat() * 0.2F);
+        RegistryObject<SoundEvent>[] candidates = new RegistryObject[] {
+                ModSounds.BULLET_IMPACT1,
+                ModSounds.BULLET_IMPACT2,
+                ModSounds.BULLET_IMPACT3,
+                ModSounds.BULLET_IMPACT4,
+                ModSounds.BULLET_IMPACT5,
+                ModSounds.BULLET_IMPACT6,
+                ModSounds.BULLET_IMPACT7,
+                ModSounds.BULLET_IMPACT8,
+                ModSounds.BULLET_IMPACT9
+        };
+
+        List<SoundEvent> available = Arrays.stream(candidates)
+                .filter(RegistryObject::isPresent)
+                .map(RegistryObject::get)
+                .toList();
+
+        if (!available.isEmpty()) {
+            SoundEvent sound = available.get(this.random.nextInt(available.size()));
+            this.playSound(sound, 0.5F, 0.9F + this.random.nextFloat() * 0.2F);
         } else {
+            // Фоллбэк, если звуки не зарегистрировались или массив пуст
             this.playSound(SoundEvents.GENERIC_HURT, 0.5F, 1.0F);
         }
     }
+
+    private void playGroundSound() {
+        RegistryObject<SoundEvent>[] candidates = new RegistryObject[] {
+                ModSounds.BULLET_GROUND1,
+                ModSounds.BULLET_GROUND2,
+                ModSounds.BULLET_GROUND3,
+                ModSounds.BULLET_GROUND4,
+                ModSounds.BULLET_GROUND5,
+                ModSounds.BULLET_GROUND6,
+                ModSounds.BULLET_GROUND7,
+                ModSounds.BULLET_GROUND8,
+                ModSounds.BULLET_GROUND9
+        };
+
+        List<SoundEvent> available = Arrays.stream(candidates)
+                .filter(RegistryObject::isPresent)
+                .map(RegistryObject::get)
+                .toList();
+
+        if (!available.isEmpty()) {
+            SoundEvent sound = available.get(this.random.nextInt(available.size()));
+
+            // ВАЖНО: Используем level().playSound с координатами.
+            // null первым аргументом означает "играть для всех" (кроме null-игрока)
+            this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
+                    sound, net.minecraft.sounds.SoundSource.PLAYERS,
+                    0.5F, 0.9F + this.random.nextFloat() * 0.2F);
+        } else {
+            // Фоллбэк
+            this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
+                    SoundEvents.STONE_HIT, net.minecraft.sounds.SoundSource.PLAYERS,
+                    0.5F, 1.0F);
+        }
+    }
+
 
     @Override
     protected SoundEvent getDefaultHitGroundSoundEvent() {

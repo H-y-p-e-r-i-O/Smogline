@@ -1,7 +1,9 @@
 package com.hbm_m.item.client;
 
 import com.hbm_m.item.MachineGunItem;
+import com.hbm_m.lib.RefStrings;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 
@@ -62,4 +64,45 @@ public class MachineGunRenderer extends GeoItemRenderer<MachineGunItem> {
                 red, green, blue, alpha
         );
     }
+    @Override
+    public ResourceLocation getTextureLocation(MachineGunItem animatable) {
+        ItemStack stack = this.getCurrentItemStack();
+
+        // 1. Дефолтная текстура, если что-то пошло не так или стак пуст
+        if (stack == null || stack.isEmpty()) {
+            return new ResourceLocation(RefStrings.MODID, "textures/item/machinegun.png");
+        }
+
+        // 2. Определяем ID заряженного патрона
+        String loadedId = animatable.getLoadedAmmoID(stack);
+
+        // Если патронов нет или ID не записан — возвращаем стандартную
+        if (loadedId == null || loadedId.isEmpty()) {
+            return new ResourceLocation(RefStrings.MODID, "textures/item/machinegun.png");
+        }
+
+        // 3. Убираем префикс мода (hbm_m:), если он есть
+        if (loadedId.contains(":")) {
+            loadedId = loadedId.split(":")[1];
+        }
+
+        // 4. Подбираем имя файла на основе ключевых слов в ID патрона
+        String textureName = "machinegun"; // Базовая
+
+        if (loadedId.contains("piercing")) {
+            textureName = "machinegun_piercing";
+        }
+        else if (loadedId.contains("hollow")) {
+            textureName = "machinegun_hollow";
+        }
+        else if (loadedId.contains("fire")) {
+            textureName = "machinegun_fire";
+        }
+
+        // Можно добавить другие типы (gold, uranium и т.д.) по аналогии
+
+        return new ResourceLocation(RefStrings.MODID, "textures/item/" + textureName + ".png");
+    }
+
+
 }

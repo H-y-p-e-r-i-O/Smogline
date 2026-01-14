@@ -291,9 +291,16 @@ public class MachineGunItem extends Item implements GeoItem {
         if (getReloadTimer(stack) > 0 || getShootDelay(stack) > 0) return;
 
         int ammo = getAmmo(stack);
+
         if (ammo <= 0) {
+            // Логика DRY_FIRE (пустой магазин)
+            SoundEvent drySound = ModSounds.DRY_FIRE.isPresent() ? ModSounds.DRY_FIRE.get() : SoundEvents.DISPENSER_FAIL;
+
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 1.0F, 2.0F);
+                    drySound, SoundSource.PLAYERS, 1.0F, 1.0F);
+
+            // Небольшая задержка, чтобы не спамить звуком клика слишком часто
+            setShootDelay(stack, 14);
             return;
         }
 

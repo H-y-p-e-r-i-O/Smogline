@@ -22,6 +22,28 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> GEIGER_5 = registerSoundEvents("item.geiger5");
     public static final RegistryObject<SoundEvent> GEIGER_6 = registerSoundEvents("item.geiger6");
 
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT1 = registerSoundEvents("bullet_impact1");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT2 = registerSoundEvents("bullet_impact2");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT3 = registerSoundEvents("bullet_impact3");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT4 = registerSoundEvents("bullet_impact4");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT5 = registerSoundEvents("bullet_impact5");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT6 = registerSoundEvents("bullet_impact6");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT7 = registerSoundEvents("bullet_impact7");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT8 = registerSoundEvents("bullet_impact8");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT9 = registerSoundEvents("bullet_impact9");
+
+    public static final RegistryObject<SoundEvent> BULLET_GROUND1 = registerSoundEvents("bullet_ground1");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND2 = registerSoundEvents("bullet_ground2");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND3 = registerSoundEvents("bullet_ground3");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND4 = registerSoundEvents("bullet_ground4");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND5 = registerSoundEvents("bullet_ground5");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND6 = registerSoundEvents("bullet_ground6");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND7 = registerSoundEvents("bullet_ground7");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND8 = registerSoundEvents("bullet_ground8");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND9 = registerSoundEvents("bullet_ground9");
+
+
+    public static final RegistryObject<SoundEvent> DRY_FIRE = registerSoundEvents("dry_fire");
     public static final RegistryObject<SoundEvent> BULLET_HIT2 = registerSoundEvents("bullet_hit2");
     public static final RegistryObject<SoundEvent> BULLET_HIT1 = registerSoundEvents("bullet_hit1");
     public static final RegistryObject<SoundEvent> TURRET_LOCK = registerSoundEvents("turret_lock");

@@ -69,6 +69,139 @@
       "hbm_m:bullet_hit1"
     ]
   },
+  "bullet_impact1": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact1"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact1"
+  },
+  "bullet_impact2": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact2"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact2"
+  },
+  "bullet_impact3": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact3"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact3"
+  },
+  "bullet_impact4": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact4"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact4"
+  },
+  "bullet_impact5": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact5"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact5"
+  },
+  "bullet_impact6": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact6"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact6"
+  },
+  "bullet_impact7": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact7"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact7"
+  },
+  "bullet_impact8": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact8"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact8"
+  },
+  "bullet_impact9": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_impact9"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_impact9"
+  },
+  "bullet_ground1": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground1"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground1"
+  },
+  "bullet_ground2": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground2"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground2"
+  },
+  "bullet_ground3": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground3"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground3"
+  },
+  "bullet_ground4": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground4"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground4"
+  },
+  "bullet_ground5": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground5"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground5"
+  },
+  "bullet_ground6": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground6"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground6"
+  },
+  "bullet_ground7": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground7"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground7"
+  },
+  "bullet_ground8": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground8"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground8"
+  },
+  "bullet_ground9": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:impact/bullet_ground9"
+    ],
+    "subtitle": "sounds.hbm_m.bullet_ground9"
+  },
+  "dry_fire": {
+    "category": "player",
+    "sounds": [
+      "hbm_m:dry_fire"
+    ],
+    "subtitle": "sounds.hbm_m.dry_fire"
+  },
   "bullet_hit2": {
     "category": "player",
     "subtitle": "sounds.hbm_m.bullet_hit2",
