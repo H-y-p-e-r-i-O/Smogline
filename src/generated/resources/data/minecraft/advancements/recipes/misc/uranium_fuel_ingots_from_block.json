@@ -12,7 +12,7 @@
         "items": [
           {
             "items": [
-              "hbm_m:block_uranium_fuel"
+              "smogline:block_uranium_fuel"
             ]
           }
         ]

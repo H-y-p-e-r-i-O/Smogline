@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "hbm_m:thorium_fuel_ingot"
+      "item": "smogline:thorium_fuel_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "hbm_m:block_thorium_fuel"
+    "item": "smogline:block_thorium_fuel"
   },
   "show_notification": true
 }

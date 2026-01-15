@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "smogline:item/assembly_template"
+  },
+  "loader": "smogline:template_loader"
+}

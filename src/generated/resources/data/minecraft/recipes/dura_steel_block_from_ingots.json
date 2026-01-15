@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "hbm_m:dura_steel_ingot"
+      "item": "smogline:dura_steel_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "hbm_m:block_dura_steel"
+    "item": "smogline:block_dura_steel"
   },
   "show_notification": true
 }

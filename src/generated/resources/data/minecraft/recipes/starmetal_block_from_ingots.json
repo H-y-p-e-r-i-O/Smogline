@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "hbm_m:starmetal_ingot"
+      "item": "smogline:starmetal_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "hbm_m:block_starmetal"
+    "item": "smogline:block_starmetal"
   },
   "show_notification": true
 }

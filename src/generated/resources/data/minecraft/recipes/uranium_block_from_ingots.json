@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "hbm_m:uranium_ingot"
+      "item": "smogline:uranium_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "hbm_m:block_uranium"
+    "item": "smogline:block_uranium"
   },
   "show_notification": true
 }

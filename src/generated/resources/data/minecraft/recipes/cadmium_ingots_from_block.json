@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_cadmium"
+      "item": "smogline:block_cadmium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:cadmium_ingot"
+    "item": "smogline:cadmium_ingot"
   }
 }

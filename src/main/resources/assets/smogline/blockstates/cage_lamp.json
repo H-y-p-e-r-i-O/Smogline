@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": { "model": "smogline:block/cage_lamp", "y": 270 },
+    "facing=east": { "model": "smogline:block/cage_lamp", "y": 0 },
+    "facing=south": { "model": "smogline:block/cage_lamp", "y": 90 },
+    "facing=west": { "model": "smogline:block/cage_lamp", "y": 180 },
+    "facing=up": { "model": "smogline:block/cage_lamp_top"},
+    "facing=down": { "model": "smogline:block/cage_lamp_bottom"}
+  }
+}

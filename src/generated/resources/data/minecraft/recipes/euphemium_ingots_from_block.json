@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_euphemium"
+      "item": "smogline:block_euphemium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:euphemium_ingot"
+    "item": "smogline:euphemium_ingot"
   }
 }

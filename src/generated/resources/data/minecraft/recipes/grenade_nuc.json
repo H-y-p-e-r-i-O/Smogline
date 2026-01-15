@@ -1,27 +1,27 @@
 {
-  "type": "hbm_m:assembler",
+  "type": "smogline:assembler",
   "duration": 160,
   "ingredients": [
     {
       "count": 1,
-      "item": "hbm_m:billet_plutonium"
+      "item": "smogline:billet_plutonium"
     },
     {
       "count": 6,
-      "item": "hbm_m:wire_red_copper"
+      "item": "smogline:wire_red_copper"
     },
     {
       "count": 3,
-      "item": "hbm_m:plate_steel"
+      "item": "smogline:plate_steel"
     },
     {
       "count": 3,
-      "item": "hbm_m:plate_titanium"
+      "item": "smogline:plate_titanium"
     }
   ],
   "output": {
     "count": 3,
-    "item": "hbm_m:grenade_nuc"
+    "item": "smogline:grenade_nuc"
   },
   "power": 250
 }

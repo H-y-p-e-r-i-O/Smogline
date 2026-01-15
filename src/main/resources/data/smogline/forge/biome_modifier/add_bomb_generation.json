@@ -1,0 +1,11 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": [
+    "smogline:mine_ap",
+    "smogline:dud_fugas_tong",
+    "smogline:dud_salted",
+    "smogline:dud_nuke"
+  ],
+  "step": "surface_structures"
+}

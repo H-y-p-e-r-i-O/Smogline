@@ -6,7 +6,7 @@
         "items": [
           {
             "items": [
-              "hbm_m:block_plutonium_fuel"
+              "smogline:block_plutonium_fuel"
             ]
           }
         ]

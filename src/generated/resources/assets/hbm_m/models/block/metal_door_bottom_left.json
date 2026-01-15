@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/door_bottom_left",
-  "render_type": "minecraft:cutout",
-  "textures": {
-    "bottom": "hbm_m:block/metal_door_bottom",
-    "top": "hbm_m:block/metal_door_top"
-  }
-}

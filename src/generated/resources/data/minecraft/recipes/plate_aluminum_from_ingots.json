@@ -1,16 +1,16 @@
 {
-  "type": "hbm_m:assembler",
+  "type": "smogline:assembler",
   "blueprint_pool": "plates",
   "duration": 60,
   "ingredients": [
     {
       "count": 3,
-      "item": "hbm_m:aluminum_ingot"
+      "item": "smogline:aluminum_ingot"
     }
   ],
   "output": {
     "count": 2,
-    "item": "hbm_m:plate_aluminum"
+    "item": "smogline:plate_aluminum"
   },
   "power": 100
 }

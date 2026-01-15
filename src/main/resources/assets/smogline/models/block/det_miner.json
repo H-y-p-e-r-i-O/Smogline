@@ -1,0 +1,9 @@
+{
+	"parent": "block/orientable",
+	"textures": {
+		"top": "smogline:block/det_miner_top",
+		"front": "smogline:block/det_miner_side",
+		"side": "smogline:block/det_miner_side",
+		"bottom": "smogline:block/det_miner_top"
+	}
+}

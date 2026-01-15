@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_ra226"
+      "item": "smogline:block_ra226"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:ra226_ingot"
+    "item": "smogline:ra226_ingot"
   }
 }

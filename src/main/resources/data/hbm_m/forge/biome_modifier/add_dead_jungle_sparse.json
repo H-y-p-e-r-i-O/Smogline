@@ -1,6 +1,0 @@
-{
-  "type": "forge:add_features",
-  "biomes": "minecraft:sparse_jungle",
-  "features": "hbm_m:dead_jungle_tree_sparse_placed",
-  "step": "vegetal_decoration"
-}
