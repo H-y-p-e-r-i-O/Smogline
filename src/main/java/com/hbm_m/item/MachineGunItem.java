@@ -90,7 +90,23 @@ public class MachineGunItem extends Item implements GeoItem {
     @Override
     public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected) {
         super.inventoryTick(stack, level, entity, slotId, isSelected);
+
         if (!level.isClientSide && entity instanceof Player player) {
+
+            // 1. СНАЧАЛА проверяем, держит ли игрок предмет
+            if (!isSelected) {
+                // Если таймер был запущен, мы его сбрасываем
+                if (getReloadTimer(stack) > 0) {
+                    setReloadTimer(stack, 0);
+                    setPendingAmmo(stack, 0);
+                    // Важно: помечаем инвентарь как "грязный", чтобы сервер переслал его клиенту
+                    player.getInventory().setChanged();
+                }
+                // ВАЖНО: Выходим сразу, не даем выполняться коду ниже
+                return;
+            }
+
+            // 2. Только если предмет в руках — выполняем остальную логику
             int delay = getShootDelay(stack);
             if (delay > 0) setShootDelay(stack, delay - 1);
 
@@ -124,6 +140,7 @@ public class MachineGunItem extends Item implements GeoItem {
             }
         }
     }
+
 
     /** Подсчитывает количество патронов конкретного ID в инвентаре (не изымая). */
     private int countAmmoById(Player player, String ammoId) {
