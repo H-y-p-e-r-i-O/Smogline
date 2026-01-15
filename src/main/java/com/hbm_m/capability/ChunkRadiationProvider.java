@@ -56,10 +56,7 @@ public class ChunkRadiationProvider implements ICapabilitySerializable<CompoundT
             if (radiation.getAmbientRadiation() > 1e-6F) {
                 tag.putFloat(NBT_KEY_AMBIENT, radiation.getAmbientRadiation());
             }
-            
-            if (ModClothConfig.get().enableDebugLogging) {
-                MainRegistry.LOGGER.debug("Serializing ChunkRadiation: {}", tag);
-            }
+
             return tag;
         }
         

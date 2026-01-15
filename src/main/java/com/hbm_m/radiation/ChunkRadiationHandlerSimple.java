@@ -197,19 +197,14 @@ public class ChunkRadiationHandlerSimple extends ChunkRadiationHandler {
                         cap.setAmbientRadiation(finalAmbientRad);
                         chunk.setUnsaved(true);
                         
-                        if (ModClothConfig.get().enableDebugLogging) {
-                        MainRegistry.LOGGER.debug("[RadSim] Tick update for chunk [{}, {}]: OldAmb: {}, SpreadIn: {}, Gen: {}, NewAmb: {}",
-                            pos.x, pos.z, oldAmbient, writeBuffer.getOrDefault(pos, 0f), generation, finalAmbientRad);
-                        }
+
                     }
 
                     // Чанк остается активным, если в нем есть хоть какая-то радиация (фоновая или от блоков)
                     if (finalAmbientRad > 1e-6f || cap.getBlockRadiation() > 1e-6f) {
                         nextActiveChunks.add(pos);
                     } else if (currentActiveChunks.contains(pos)) {
-                        if (ModClothConfig.get().enableDebugLogging) {
-                            MainRegistry.LOGGER.debug("[RadSim] Chunk {} REMOVED from active list (all radiation gone)", pos);
-                        }
+
                     }
                 });
                 // Проверяем, включены ли эффекты и достаточно ли радиации
@@ -328,9 +323,6 @@ public class ChunkRadiationHandlerSimple extends ChunkRadiationHandler {
             
             cap.setBlockRadiation(newBlockRad);
             chunk.setUnsaved(true);
-            if (ModClothConfig.get().enableDebugLogging) {
-                MainRegistry.LOGGER.debug("[RadSim] Updated block radiation for chunk {}: {} -> {} (diff: {})", chunkPos, oldBlockRad, newBlockRad, diff);
-            }
             // "Пробуждаем" симуляцию для этого чанка, если он еще не активен
             if (newBlockRad > 1e-6f || cap.getAmbientRadiation() > 1e-6f) {
                 activeChunksByDimension.computeIfAbsent(level.dimension().location(), k -> ConcurrentHashMap.newKeySet())

@@ -1,5 +1,6 @@
 package com.hbm_m.item;
 
+import com.hbm_m.main.MainRegistry;
 import com.hbm_m.client.ModKeyBindings;
 import com.hbm_m.entity.TurretBulletEntity;
 import com.hbm_m.item.client.MachineGunRenderer;
@@ -356,9 +357,9 @@ public class MachineGunItem extends Item implements GeoItem {
         return gathered;
     }
 
+    // Сделали метод пустым, чтобы не ломать код в местах вызова,
     private void playSound(Player player, float pitch) {
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.IRON_DOOR_OPEN, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, pitch);
+        // Ничего не делаем, звуки теперь управляются через GeckoLib
     }
 
     // === СТРЕЛЬБА ===
@@ -469,7 +470,7 @@ public class MachineGunItem extends Item implements GeoItem {
                     return PlayState.CONTINUE;
                 }
                 // ВАЖНО: Если "shot" уже играет, мы тоже даем ему доиграть!
-                // Это решает проблему рывков при зажиме. Анимация будет играть ровно свою длину, потом начнется заново.
+                // Это решает проблему рывков при зажиме.
                 if ("shot".equals(currentAnim)) {
                     return PlayState.CONTINUE;
                 }
@@ -484,7 +485,6 @@ public class MachineGunItem extends Item implements GeoItem {
             if (isKeyDown && !isReloading) {
                 if (hasAmmo || shootDelay > 10) {
                     // Запускаем shot БЕЗ forceAnimationReset.
-                    // setAndContinue сам переключит анимацию.
                     return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
                 }
                 // Патронов нет, но кнопка нажата -> ждем shot_empty от сервера
@@ -497,7 +497,32 @@ public class MachineGunItem extends Item implements GeoItem {
                 .triggerableAnim("reload", RawAnimation.begin().thenPlay("reload"))
                 .triggerableAnim("flip", RawAnimation.begin().thenPlay("flip"))
                 .triggerableAnim("shot", RawAnimation.begin().thenPlay("shot"))
-                .triggerableAnim("shot_empty", RawAnimation.begin().thenPlay("shot_empty")));
+                .triggerableAnim("shot_empty", RawAnimation.begin().thenPlay("shot_empty"))
+
+                // ✅ ДОБАВЛЕН ОБРАБОТЧИК ЗВУКОВ
+                .setSoundKeyframeHandler(event -> {
+                    String soundName = event.getKeyframeData().getSound();
+                    if (soundName == null || soundName.isEmpty()) return;
+
+                    // Пытаемся найти звук по полному ID
+                    SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(soundName));
+
+                    // Если не нашли по полному, пробуем добавить modid (RefStrings.MODID)
+                    if (sound == null && !soundName.contains(":")) {
+                        sound = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(MainRegistry.MOD_ID, soundName));
+                    }
+
+                    if (sound != null) {
+                        Player player = Minecraft.getInstance().player;
+                        if (player != null) {
+                            // Играем звук только для клиента владельца
+                            player.playSound(sound, 1.0F, 1.0F);
+                        }
+                    } else {
+                        // Раскомментируй для отладки, если звуки не играют
+                        // System.out.println("GeckoLib sound not found: " + soundName);
+                    }
+                }));
     }
 
 

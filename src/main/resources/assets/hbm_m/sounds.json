@@ -181,7 +181,28 @@
     ],
     "subtitle": "sounds.hbm_m.dry_fire"
   },
-  "bullet_hit2": {
+  "gunpull": {
+    "category": "player",
+    "subtitle": "subtitles.hbm_m.gunpull",
+    "sounds": [
+      "hbm_m:reload/gunpull"
+    ]
+  },
+  "heavy_gunclick": {
+    "category": "player",
+    "subtitle": "subtitles.hbm_m.heavy_gunclick",
+    "sounds": [
+      "hbm_m:reload/heavy_gunclick"
+    ]
+  },
+  "gunclick": {
+    "category": "player",
+    "subtitle": "subtitles.hbm_m.gunclick",
+    "sounds": [
+      "hbm_m:reload/gunclick"
+    ]
+  },
+"bullet_hit2": {
     "category": "player",
     "subtitle": "sounds.hbm_m.bullet_hit2",
     "sounds": [
