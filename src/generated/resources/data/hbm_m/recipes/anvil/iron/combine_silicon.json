@@ -1,0 +1,17 @@
+{
+  "type": "hbm_m:anvil",
+  "input_a": {
+    "item": "hbm_m:cinnabar"
+  },
+  "input_b": {
+    "item": "hbm_m:borax"
+  },
+  "outputs": [
+    {
+      "count": 3,
+      "item": "hbm_m:billet_silicon"
+    }
+  ],
+  "overlay": "smithing",
+  "tier": "iron"
+}

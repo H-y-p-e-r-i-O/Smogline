@@ -1,18 +1,18 @@
 {
-  "type": "smogline:assembler",
+  "type": "hbm_m:assembler",
   "duration": 160,
   "ingredients": [
     {
       "count": 16,
-      "item": "smogline:billet_plutonium"
+      "item": "hbm_m:billet_plutonium"
     },
     {
       "count": 4,
-      "item": "smogline:beryllium_ingot"
+      "item": "hbm_m:beryllium_ingot"
     }
   ],
   "output": {
-    "item": "smogline:man_core"
+    "item": "hbm_m:man_core"
   },
   "power": 250
 }

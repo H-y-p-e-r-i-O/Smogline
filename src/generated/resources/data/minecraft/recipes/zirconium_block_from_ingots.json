@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "smogline:zirconium_ingot"
+      "item": "hbm_m:zirconium_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "smogline:block_zirconium"
+    "item": "hbm_m:block_zirconium"
   },
   "show_notification": true
 }

@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_plutonium_fuel"
+      "item": "hbm_m:block_plutonium_fuel"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:plutonium_fuel_ingot"
+    "item": "hbm_m:plutonium_fuel_ingot"
   }
 }

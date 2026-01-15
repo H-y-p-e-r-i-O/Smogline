@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:plate_lead"
+    },
+    "$": {
+      "item": "hbm_m:plate_steel"
+    }
+  },
+  "pattern": [
+    "$$$",
+    "###",
+    "$$$"
+  ],
+  "result": {
+    "item": "hbm_m:door_bunker"
+  },
+  "show_notification": true
+}

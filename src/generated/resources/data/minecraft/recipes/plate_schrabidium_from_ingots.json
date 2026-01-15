@@ -1,16 +1,16 @@
 {
-  "type": "smogline:assembler",
+  "type": "hbm_m:assembler",
   "blueprint_pool": "plates",
   "duration": 60,
   "ingredients": [
     {
       "count": 3,
-      "item": "smogline:schrabidium_ingot"
+      "item": "hbm_m:schrabidium_ingot"
     }
   ],
   "output": {
     "count": 2,
-    "item": "smogline:plate_schrabidium"
+    "item": "hbm_m:plate_schrabidium"
   },
   "power": 100
 }

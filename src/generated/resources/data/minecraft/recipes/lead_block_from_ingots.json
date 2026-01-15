@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "smogline:lead_ingot"
+      "item": "hbm_m:lead_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "smogline:block_lead"
+    "item": "hbm_m:block_lead"
   },
   "show_notification": true
 }

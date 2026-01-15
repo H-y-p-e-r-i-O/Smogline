@@ -1,0 +1,17 @@
+{
+  "type": "hbm_m:anvil",
+  "input_a": {
+    "item": "hbm_m:anvil_iron"
+  },
+  "input_b": {
+    "count": 10,
+    "item": "hbm_m:bismuth_bronze_ingot"
+  },
+  "outputs": [
+    {
+      "item": "hbm_m:anvil_bismuth_bronze"
+    }
+  ],
+  "overlay": "smithing",
+  "tier": "iron"
+}

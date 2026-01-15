@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:motor"
+    },
+    "$": {
+      "item": "hbm_m:coil_gold_torus"
+    },
+    "%": {
+      "item": "hbm_m:desh_ingot"
+    },
+    "@": [
+      {
+        "item": "hbm_m:bakelite_ingot"
+      },
+      {
+        "item": "hbm_m:polymer_ingot"
+      }
+    ]
+  },
+  "pattern": [
+    "@$@",
+    "%#%",
+    "@$@"
+  ],
+  "result": {
+    "count": 2,
+    "item": "hbm_m:motor_desh"
+  },
+  "show_notification": true
+}

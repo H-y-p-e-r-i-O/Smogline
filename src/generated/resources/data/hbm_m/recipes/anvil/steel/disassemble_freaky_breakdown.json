@@ -1,0 +1,19 @@
+{
+  "type": "hbm_m:anvil",
+  "outputs": [
+    {
+      "item": "hbm_m:canned_jizz"
+    },
+    {
+      "chance": 0.5,
+      "item": "hbm_m:canned_asbestos"
+    }
+  ],
+  "overlay": "recycling",
+  "required_items": [
+    {
+      "item": "hbm_m:freaky_alien_block"
+    }
+  ],
+  "tier": "steel"
+}

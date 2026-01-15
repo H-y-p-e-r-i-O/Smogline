@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "smogline:pu240_ingot"
+      "item": "hbm_m:pu240_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "smogline:block_pu240"
+    "item": "hbm_m:block_pu240"
   },
   "show_notification": true
 }

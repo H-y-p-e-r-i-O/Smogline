@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "smogline:mox_fuel_ingot"
+      "item": "hbm_m:mox_fuel_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "smogline:block_mox_fuel"
+    "item": "hbm_m:block_mox_fuel"
   },
   "show_notification": true
 }

@@ -1,16 +1,16 @@
 {
-  "type": "smogline:assembler",
+  "type": "hbm_m:assembler",
   "blueprint_pool": "plates",
   "duration": 60,
   "ingredients": [
     {
       "count": 3,
-      "item": "smogline:gunmetal_ingot"
+      "item": "hbm_m:gunmetal_ingot"
     }
   ],
   "output": {
     "count": 2,
-    "item": "smogline:plate_gunmetal"
+    "item": "hbm_m:plate_gunmetal"
   },
   "power": 100
 }

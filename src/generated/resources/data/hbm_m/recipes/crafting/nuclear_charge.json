@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:controller"
+    },
+    "$": {
+      "item": "hbm_m:insulator"
+    },
+    "%": {
+      "item": "hbm_m:plate_steel"
+    },
+    "@": {
+      "item": "hbm_m:man_core"
+    }
+  },
+  "pattern": [
+    "$$$",
+    "%@%",
+    "%#%"
+  ],
+  "result": {
+    "item": "hbm_m:nuclear_charge"
+  },
+  "show_notification": true
+}

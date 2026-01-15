@@ -1,8 +1,0 @@
-{
-  "parent": "block/block",
-  "render_type": "cutout",
-  "textures": {
-    "particle": "smogline:entity/turret_light"
-  },
-  "elements": []
-}

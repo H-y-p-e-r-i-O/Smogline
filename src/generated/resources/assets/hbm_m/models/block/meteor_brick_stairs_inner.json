@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "hbm_m:block/meteor_brick",
+    "side": "hbm_m:block/meteor_brick",
+    "top": "hbm_m:block/meteor_brick"
+  }
+}

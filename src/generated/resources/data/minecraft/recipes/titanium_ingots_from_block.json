@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_titanium"
+      "item": "hbm_m:block_titanium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:titanium_ingot"
+    "item": "hbm_m:titanium_ingot"
   }
 }

@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "hbm_m:thorium_ore_deepslate_blasting"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_thorium_ore_deepslate": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "hbm_m:thorium_ore_deepslate"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_thorium_ore_deepslate",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "hbm_m:thorium_ore_deepslate_blasting"
+    ]
+  },
+  "sends_telemetry_event": false
+}

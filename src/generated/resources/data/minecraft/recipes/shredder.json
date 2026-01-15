@@ -1,22 +1,22 @@
 {
-  "type": "smogline:assembler",
+  "type": "hbm_m:assembler",
   "duration": 80,
   "ingredients": [
     {
       "count": 2,
-      "item": "smogline:motor"
+      "item": "hbm_m:motor"
     },
     {
       "count": 8,
-      "item": "smogline:plate_steel"
+      "item": "hbm_m:plate_steel"
     },
     {
       "count": 4,
-      "item": "smogline:plate_copper"
+      "item": "hbm_m:plate_copper"
     }
   ],
   "output": {
-    "item": "smogline:shredder"
+    "item": "hbm_m:shredder"
   },
   "power": 150
 }

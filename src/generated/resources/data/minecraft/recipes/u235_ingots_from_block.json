@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_u235"
+      "item": "hbm_m:block_u235"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:u235_ingot"
+    "item": "hbm_m:u235_ingot"
   }
 }

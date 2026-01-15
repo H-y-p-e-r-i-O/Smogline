@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:wire_coated"
+    },
+    "@": {
+      "item": "minecraft:lever"
+    }
+  },
+  "pattern": [
+    "#  ",
+    "@  ",
+    "   "
+  ],
+  "result": {
+    "item": "hbm_m:switch"
+  },
+  "show_notification": true
+}

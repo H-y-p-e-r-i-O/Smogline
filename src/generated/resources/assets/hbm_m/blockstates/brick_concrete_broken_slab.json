@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "hbm_m:block/brick_concrete_broken_slab"
+    },
+    "type=double": {
+      "model": "hbm_m:block/brick_concrete_broken"
+    },
+    "type=top": {
+      "model": "hbm_m:block/brick_concrete_broken_slab_top"
+    }
+  }
+}

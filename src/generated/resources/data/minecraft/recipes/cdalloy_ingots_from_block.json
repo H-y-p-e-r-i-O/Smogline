@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_cdalloy"
+      "item": "hbm_m:block_cdalloy"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:cdalloy_ingot"
+    "item": "hbm_m:cdalloy_ingot"
   }
 }

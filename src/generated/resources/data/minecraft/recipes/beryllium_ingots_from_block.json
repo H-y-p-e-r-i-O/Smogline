@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_beryllium"
+      "item": "hbm_m:block_beryllium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:beryllium_ingot"
+    "item": "hbm_m:beryllium_ingot"
   }
 }

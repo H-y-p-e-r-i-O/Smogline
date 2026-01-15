@@ -1,0 +1,10 @@
+{
+  "values": [
+    "hbm_m:stamp_stone_plate",
+    "hbm_m:stamp_iron_plate",
+    "hbm_m:stamp_steel_plate",
+    "hbm_m:stamp_titanium_plate",
+    "hbm_m:stamp_obsidian_plate",
+    "hbm_m:stamp_desh_plate"
+  ]
+}

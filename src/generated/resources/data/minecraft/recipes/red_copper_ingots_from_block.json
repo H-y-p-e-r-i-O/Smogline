@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_red_copper"
+      "item": "hbm_m:block_red_copper"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:red_copper_ingot"
+    "item": "hbm_m:red_copper_ingot"
   }
 }

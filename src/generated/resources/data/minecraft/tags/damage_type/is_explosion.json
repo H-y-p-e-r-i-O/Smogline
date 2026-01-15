@@ -1,7 +1,7 @@
 {
   "values": [
-    "smogline:nuclear_blast",
-    "smogline:blast",
-    "smogline:bang"
+    "hbm_m:nuclear_blast",
+    "hbm_m:blast",
+    "hbm_m:bang"
   ]
 }

@@ -1,9 +1,0 @@
-{
-	"parent": "block/orientable",
-	"textures": {
-		"top": "smogline:block/difurnace_top_off_alt",
-		"front": "smogline:block/difurnace_front_off_alt",
-		"side": "smogline:block/difurnace_side_alt",
-		"bottom": "smogline:block/difurnace_top_off_alt"
-	}
-}

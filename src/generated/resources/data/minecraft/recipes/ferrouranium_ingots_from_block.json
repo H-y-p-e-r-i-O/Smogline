@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_ferrouranium"
+      "item": "hbm_m:block_ferrouranium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:ferrouranium_ingot"
+    "item": "hbm_m:ferrouranium_ingot"
   }
 }

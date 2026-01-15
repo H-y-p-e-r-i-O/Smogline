@@ -1,9 +1,0 @@
-{
-	"parent": "block/orientable",
-	"textures": {
-		"top": "smogline:block/nuclear_charge_top",
-		"front": "smogline:block/nuclear_charge",
-		"side": "smogline:block/nuclear_charge",
-		"bottom": "smogline:block/nuclear_charge"
-	}
-}

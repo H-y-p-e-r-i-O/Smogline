@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_starmetal"
+      "item": "hbm_m:block_starmetal"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:starmetal_ingot"
+    "item": "hbm_m:starmetal_ingot"
   }
 }

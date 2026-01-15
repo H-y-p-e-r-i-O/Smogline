@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_dura_steel"
+      "item": "hbm_m:block_dura_steel"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:dura_steel_ingot"
+    "item": "hbm_m:dura_steel_ingot"
   }
 }

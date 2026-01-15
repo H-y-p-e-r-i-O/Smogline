@@ -1,16 +1,16 @@
 {
-  "type": "smogline:assembler",
+  "type": "hbm_m:assembler",
   "blueprint_pool": "plates",
   "duration": 80,
   "ingredients": [
     {
       "count": 3,
-      "item": "smogline:dura_steel_ingot"
+      "item": "hbm_m:dura_steel_ingot"
     }
   ],
   "output": {
     "count": 2,
-    "item": "smogline:plate_dura_steel"
+    "item": "hbm_m:plate_dura_steel"
   },
   "power": 150
 }

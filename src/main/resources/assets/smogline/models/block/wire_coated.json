@@ -1,6 +1,0 @@
-{
-    "loader": "smogline:procedural_wire",
-    "textures": {
-        "particle": "smogline:block/wire_coated"
-    }
-}

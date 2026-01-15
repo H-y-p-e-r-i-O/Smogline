@@ -1,9 +1,0 @@
-{
-	"parent": "block/orientable",
-	"textures": {
-		"top": "smogline:block/shredder_top",
-		"front": "smogline:block/shredder_front",
-		"side": "smogline:block/shredder_side",
-		"bottom": "smogline:block/shredder_bottom"
-	}
-}

@@ -1,9 +1,0 @@
-{
-  "parent": "block/orientable",
-  "textures": {
-    "top": "smogline:block/c4",
-    "front": "smogline:block/c4block_front",
-    "side": "smogline:block/c4",
-    "bottom": "smogline:block/c4"
-  }
-}

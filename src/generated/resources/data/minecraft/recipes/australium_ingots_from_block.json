@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_australium"
+      "item": "hbm_m:block_australium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:australium_ingot"
+    "item": "hbm_m:australium_ingot"
   }
 }

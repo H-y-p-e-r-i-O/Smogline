@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_schrabidium_fuel"
+      "item": "hbm_m:block_schrabidium_fuel"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:schrabidium_fuel_ingot"
+    "item": "hbm_m:schrabidium_fuel_ingot"
   }
 }

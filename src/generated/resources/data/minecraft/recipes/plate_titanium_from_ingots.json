@@ -1,16 +1,16 @@
 {
-  "type": "smogline:assembler",
+  "type": "hbm_m:assembler",
   "blueprint_pool": "plates",
   "duration": 60,
   "ingredients": [
     {
       "count": 3,
-      "item": "smogline:titanium_ingot"
+      "item": "hbm_m:titanium_ingot"
     }
   ],
   "output": {
     "count": 2,
-    "item": "smogline:plate_titanium"
+    "item": "hbm_m:plate_titanium"
   },
   "power": 100
 }

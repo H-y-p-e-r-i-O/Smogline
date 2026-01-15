@@ -1,0 +1,16 @@
+{
+  "type": "hbm_m:anvil",
+  "outputs": [
+    {
+      "item": "hbm_m:coil_copper_torus"
+    }
+  ],
+  "overlay": "construction",
+  "required_items": [
+    {
+      "count": 2,
+      "item": "hbm_m:coil_copper"
+    }
+  ],
+  "tier": "steel"
+}

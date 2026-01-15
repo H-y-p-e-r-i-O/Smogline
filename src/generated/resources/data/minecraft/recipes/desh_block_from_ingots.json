@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "smogline:desh_ingot"
+      "item": "hbm_m:desh_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "smogline:block_desh"
+    "item": "hbm_m:block_desh"
   },
   "show_notification": true
 }

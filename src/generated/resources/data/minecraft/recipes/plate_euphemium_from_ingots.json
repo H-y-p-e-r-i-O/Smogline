@@ -1,16 +1,16 @@
 {
-  "type": "smogline:assembler",
+  "type": "hbm_m:assembler",
   "blueprint_pool": "plates",
   "duration": 120,
   "ingredients": [
     {
       "count": 3,
-      "item": "smogline:euphemium_ingot"
+      "item": "hbm_m:euphemium_ingot"
     }
   ],
   "output": {
     "count": 2,
-    "item": "smogline:plate_euphemium"
+    "item": "hbm_m:plate_euphemium"
   },
   "power": 250
 }

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 0.35,
+  "ingredient": {
+    "item": "hbm_m:magnetized_tungsten_powder"
+  },
+  "result": "hbm_m:magnetized_tungsten_ingot"
+}

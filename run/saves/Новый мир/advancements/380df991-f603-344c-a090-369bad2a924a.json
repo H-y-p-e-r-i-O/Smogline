@@ -89,7 +89,7 @@
     },
     "done": true
   },
-  "smogline:recipes/misc/crafting/switch": {
+  "hbm_m:recipes/misc/crafting/switch": {
     "criteria": {
       "has_wire_coated": "2026-01-05 11:29:17 +0100"
     },

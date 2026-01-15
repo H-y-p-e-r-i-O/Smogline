@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_zirconium"
+      "item": "hbm_m:block_zirconium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:zirconium_ingot"
+    "item": "hbm_m:zirconium_ingot"
   }
 }

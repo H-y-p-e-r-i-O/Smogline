@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:capacitor"
+    },
+    "$": {
+      "item": "hbm_m:steel_ingot"
+    },
+    "@": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "###",
+    "@@@",
+    "$$$"
+  ],
+  "result": {
+    "item": "hbm_m:converter_block"
+  },
+  "show_notification": true
+}

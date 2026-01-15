@@ -1,0 +1,38 @@
+{
+  "type": "hbm_m:anvil",
+  "outputs": [
+    {
+      "count": 4,
+      "item": "hbm_m:plate_steel"
+    },
+    {
+      "item": "hbm_m:plate_lead"
+    },
+    {
+      "chance": 0.4,
+      "item": "hbm_m:capacitor_board"
+    },
+    {
+      "item": "hbm_m:pcb"
+    },
+    {
+      "chance": 0.4,
+      "item": "hbm_m:analog_circuit"
+    },
+    {
+      "chance": 0.4,
+      "item": "hbm_m:capacitor_board"
+    },
+    {
+      "chance": 0.5,
+      "item": "hbm_m:microchip"
+    }
+  ],
+  "overlay": "recycling",
+  "required_items": [
+    {
+      "item": "hbm_m:crt_clean"
+    }
+  ],
+  "tier": "steel"
+}

@@ -14,8 +14,8 @@ base {
 }
 
 mixin {
-    add sourceSets.main, "mixins.smogline.refmap.json"
-    config "mixins.smogline.json"
+    add sourceSets.main, "mixins.hbm_m.refmap.json"
+    config "mixins.hbm_m.json"
 
     debug.verbose = true
     debug.export = true

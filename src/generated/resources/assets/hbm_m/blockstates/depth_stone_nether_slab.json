@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "hbm_m:block/depth_stone_nether_slab"
+    },
+    "type=double": {
+      "model": "hbm_m:block/depth_stone_nether"
+    },
+    "type=top": {
+      "model": "hbm_m:block/depth_stone_nether_slab_top"
+    }
+  }
+}

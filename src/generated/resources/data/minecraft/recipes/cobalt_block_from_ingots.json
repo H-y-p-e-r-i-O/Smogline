@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "smogline:cobalt_ingot"
+      "item": "hbm_m:cobalt_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "smogline:block_cobalt"
+    "item": "hbm_m:block_cobalt"
   },
   "show_notification": true
 }

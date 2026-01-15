@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "smogline:block_tungsten"
+      "item": "hbm_m:block_tungsten"
     }
   ],
   "result": {
     "count": 9,
-    "item": "smogline:tungsten_ingot"
+    "item": "hbm_m:tungsten_ingot"
   }
 }

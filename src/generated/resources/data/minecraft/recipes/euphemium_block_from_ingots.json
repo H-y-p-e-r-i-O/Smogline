@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "smogline:euphemium_ingot"
+      "item": "hbm_m:euphemium_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "smogline:block_euphemium"
+    "item": "hbm_m:block_euphemium"
   },
   "show_notification": true
 }

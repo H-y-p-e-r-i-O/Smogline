@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "hbm_m:insulator"
+    },
+    "%": [
+      {
+        "item": "hbm_m:wire_copper"
+      },
+      {
+        "item": "hbm_m:wire_gold"
+      }
+    ],
+    "@": {
+      "item": "hbm_m:silicon_circuit"
+    }
+  },
+  "pattern": [
+    "#  ",
+    "@  ",
+    "%  "
+  ],
+  "result": {
+    "item": "hbm_m:microchip"
+  },
+  "show_notification": true
+}

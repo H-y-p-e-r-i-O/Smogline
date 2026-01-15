@@ -44,7 +44,7 @@ Stacktrace:
 -- NO MOD INFO AVAILABLE --
 Details:
 	Mod File: NO FILE INFO
-	Failure message: mods.toml missing metadata for modid smogline
+	Failure message: mods.toml missing metadata for modid hbm_m
 	Mod Version: NO MOD INFO AVAILABLE
 	Mod Issue URL: NOT PROVIDED
 	Exception message: MISSING EXCEPTION MESSAGE
