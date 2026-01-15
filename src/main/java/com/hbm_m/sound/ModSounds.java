@@ -38,10 +38,6 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> BULLET_GROUND4 = registerSoundEvents("bullet_ground4");
     public static final RegistryObject<SoundEvent> BULLET_GROUND5 = registerSoundEvents("bullet_ground5");
     public static final RegistryObject<SoundEvent> BULLET_GROUND6 = registerSoundEvents("bullet_ground6");
-    public static final RegistryObject<SoundEvent> BULLET_GROUND7 = registerSoundEvents("bullet_ground7");
-    public static final RegistryObject<SoundEvent> BULLET_GROUND8 = registerSoundEvents("bullet_ground8");
-    public static final RegistryObject<SoundEvent> BULLET_GROUND9 = registerSoundEvents("bullet_ground9");
-
 
     public static final RegistryObject<SoundEvent> DRY_FIRE = registerSoundEvents("dry_fire");
     public static final RegistryObject<SoundEvent> BULLET_HIT2 = registerSoundEvents("bullet_hit2");

@@ -395,10 +395,7 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
                 ModSounds.BULLET_GROUND3,
                 ModSounds.BULLET_GROUND4,
                 ModSounds.BULLET_GROUND5,
-                ModSounds.BULLET_GROUND6,
-                ModSounds.BULLET_GROUND7,
-                ModSounds.BULLET_GROUND8,
-                ModSounds.BULLET_GROUND9
+                ModSounds.BULLET_GROUND6
         };
 
         List<SoundEvent> available = Arrays.stream(candidates)

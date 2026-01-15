@@ -96,6 +96,21 @@ public class MachineGunItem extends Item implements GeoItem {
             int reloadTimer = getReloadTimer(stack);
             if (reloadTimer > 0) {
                 setReloadTimer(stack, reloadTimer - 1);
+
+                // ✅ НОВОЕ: Изъятие патронов на 50 тике (2.5 сек)
+                if (reloadTimer == (RELOAD_ANIM_TICKS - 50) || reloadTimer == (FLIP_ANIM_TICKS - 50)) {
+                    // Забираем патроны из инвентаря ЗДЕСЬ
+                    int pending = getPendingAmmo(stack);
+                    if (pending > 0 && !player.isCreative()) {
+                        String loadedId = getLoadedAmmoID(stack);
+                        if (loadedId != null && !loadedId.isEmpty()) {
+                            consumeAmmoById(player, loadedId, pending);
+                            player.getInventory().setChanged();
+                        }
+                    }
+                }
+
+                // Добавление патронов в оружие на 10 тике (конец анимации)
                 if (reloadTimer == (RELOAD_ANIM_TICKS - RELOAD_AMMO_ADD_TICK) ||
                         reloadTimer == (FLIP_ANIM_TICKS - RELOAD_AMMO_ADD_TICK)) {
                     int pending = getPendingAmmo(stack);
@@ -108,6 +123,21 @@ public class MachineGunItem extends Item implements GeoItem {
             }
         }
     }
+
+    /** Подсчитывает количество патронов конкретного ID в инвентаре (не изымая). */
+    private int countAmmoById(Player player, String ammoId) {
+        int count = 0;
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack slot = player.getInventory().getItem(i);
+            if (slot.isEmpty()) continue;
+            if (!AmmoRegistry.isValidAmmo(slot)) continue;
+            String id = ForgeRegistries.ITEMS.getKey(slot.getItem()).toString();
+            if (!ammoId.equals(id)) continue;
+            count += slot.getCount();
+        }
+        return count;
+    }
+
 
     private void syncHand(Player player, ItemStack stack) {
         if (player instanceof ServerPlayer serverPlayer) {
@@ -166,10 +196,15 @@ public class MachineGunItem extends Item implements GeoItem {
         }
 
         // ВЫЖИВАНИЕ:
+        // ВЫЖИВАНИЕ:
         int needed = MAX_TOTAL_AMMO - currentAmmo;
-        int taken = consumeAmmoById(player, targetAmmoId, needed);
-
+        // ✅ Теперь просто ПРОВЕРЯЕМ, есть ли патроны, но НЕ изымаем их сразу
+        int available = countAmmoById(player, targetAmmoId);
+        int taken = Math.min(needed, available);
         if (taken > 0) {
+        }
+
+            if (taken > 0) {
             if (currentAmmo == 0) {
                 setLoadedAmmoID(stack, targetAmmoId);
             }
@@ -422,12 +457,20 @@ public class MachineGunItem extends Item implements GeoItem {
             if (mc.player == null) return PlayState.CONTINUE;
 
             ItemStack mainHandStack = mc.player.getMainHandItem();
-            if (mainHandStack.getItem() != this) return event.setAndContinue(RawAnimation.begin().thenLoop("idle"));
+            if (mainHandStack.getItem() != this) {
+                // Мягкий сброс, если убрали предмет
+                return PlayState.STOP;
+            }
 
-            // 🔒 ЗАЩИТА: reload и flip НЕ прерываются
+            // 1. ЗАЩИТА: Если играют приоритетные анимации — не трогаем
             if (event.getController().getAnimationState() == AnimationController.State.RUNNING) {
                 String currentAnim = event.getController().getCurrentAnimation().animation().name();
-                if ("reload".equals(currentAnim) || "flip".equals(currentAnim) || "shot".equals(currentAnim) || "shot_empty".equals(currentAnim)) {
+                if ("reload".equals(currentAnim) || "flip".equals(currentAnim) || "shot_empty".equals(currentAnim)) {
+                    return PlayState.CONTINUE;
+                }
+                // ВАЖНО: Если "shot" уже играет, мы тоже даем ему доиграть!
+                // Это решает проблему рывков при зажиме. Анимация будет играть ровно свою длину, потом начнется заново.
+                if ("shot".equals(currentAnim)) {
                     return PlayState.CONTINUE;
                 }
             }
@@ -435,20 +478,28 @@ public class MachineGunItem extends Item implements GeoItem {
             boolean isKeyDown = mc.options.keyAttack.isDown();
             boolean hasAmmo = getAmmo(mainHandStack) > 0;
             boolean isReloading = getReloadTimer(mainHandStack) > 0;
+            int shootDelay = getShootDelay(mainHandStack);
 
-            if (isKeyDown && hasAmmo && !isReloading) {
-                event.getController().forceAnimationReset();
-                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
+            // 2. Логика запуска стрельбы
+            if (isKeyDown && !isReloading) {
+                if (hasAmmo || shootDelay > 10) {
+                    // Запускаем shot БЕЗ forceAnimationReset.
+                    // setAndContinue сам переключит анимацию.
+                    return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
+                }
+                // Патронов нет, но кнопка нажата -> ждем shot_empty от сервера
+                return PlayState.CONTINUE;
             }
 
-            return event.setAndContinue(RawAnimation.begin().thenLoop("idle"));
+            // 3. Если ничего не нажато и ничего важного не играет -> стоп
+            return PlayState.STOP;
         })
                 .triggerableAnim("reload", RawAnimation.begin().thenPlay("reload"))
                 .triggerableAnim("flip", RawAnimation.begin().thenPlay("flip"))
                 .triggerableAnim("shot", RawAnimation.begin().thenPlay("shot"))
-                .triggerableAnim("shot_empty", RawAnimation.begin().thenPlay("shot_empty"))); // ✅ НОВОЕ
-
+                .triggerableAnim("shot_empty", RawAnimation.begin().thenPlay("shot_empty")));
     }
+
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
@@ -475,58 +526,42 @@ public class MachineGunItem extends Item implements GeoItem {
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
 
-        // 1. Проверяем реальное количество патронов
         int ammoCount = getAmmo(stack);
         String ammoId = getLoadedAmmoID(stack);
 
-        // Если патронов нет (0), показываем "нет", игнорируя сохраненный ID
-        if (ammoCount <= 0) {
+        // 1. Количество патронов
+        if (ammoCount > 0) {
+            int inMag = ammoCount - 1; // Патроны в ленте
+            tooltip.add(Component.literal("Патроны: " + inMag + " + 1 / " + MAX_TOTAL_AMMO).withStyle(ChatFormatting.GOLD));
+        } else {
             tooltip.add(Component.literal("Патроны: нет").withStyle(ChatFormatting.RED));
-            return;
+            return; // Если патронов нет, дальше не показываем
         }
 
-        // 2. Если патроны есть, но ID пустой (не должно случиться, но на всякий случай)
+        // 2. Если ID пустой
         if (ammoId == null || ammoId.isEmpty()) {
-            tooltip.add(Component.literal("Патроны: обычные").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal("Тип: обычный").withStyle(ChatFormatting.GRAY));
             return;
         }
 
-        // 3. Получаем тип патрона из реестра
+        // 3. Получаем тип патрона
         AmmoRegistry.AmmoType ammoType = AmmoRegistry.getAmmoTypeById(ammoId);
         if (ammoType == null) {
-            tooltip.add(Component.literal("Патроны: неизвестно").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal("Тип: неизвестный").withStyle(ChatFormatting.GRAY));
             return;
         }
 
-        // Базовые характеристики
-        float dmg = ammoType.damage;
-        float spd = ammoType.speed;
-        boolean piercing = ammoType.isPiercing;
+        // 4. Определяем название типа
+        String typeText = "обычный";
+        if (ammoId.contains("piercing")) typeText = "бронебойный";
+        else if (ammoId.contains("hollow")) typeText = "экспансивный";
+        else if (ammoId.contains("fire") || ammoId.contains("incendiary")) typeText = "зажигательный";
 
-        // Определяем тип (для текста) по id
-        String typeText = "обычная";
-        if (ammoId.contains("piercing")) typeText = "пробивная";
-        else if (ammoId.contains("hollow")) typeText = "экспансивная";
-        else if (ammoId.contains("fire") || ammoId.contains("incendiary")) typeText = "зажигательная";
-
-        // Кратко: урон, скорость, тип
-        tooltip.add(Component.literal("Патрон: " + typeText).withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal(String.format("Урон: %.1f", dmg)).withStyle(ChatFormatting.DARK_RED));
-        tooltip.add(Component.literal(String.format("Скорость: %.1f", spd)).withStyle(ChatFormatting.DARK_AQUA));
-
-        // Особенности
-        if ("пробивная".equals(typeText)) {
-            tooltip.add(Component.literal("Частично игнорирует броню").withStyle(ChatFormatting.BLUE));
-        } else if ("экспансивная".equals(typeText)) {
-            tooltip.add(Component.literal("Х2 по без брони, слабее по тяжёлой броне").withStyle(ChatFormatting.BLUE));
-        } else if ("зажигательная".equals(typeText)) {
-            tooltip.add(Component.literal("Поджигает цель на 5 секунд").withStyle(ChatFormatting.BLUE));
-        }
-
-        if (piercing && !"пробивная".equals(typeText)) {
-            tooltip.add(Component.literal("Пробивная способность").withStyle(ChatFormatting.GRAY));
-        }
+        // 5. Выводим тип и урон
+        tooltip.add(Component.literal("Тип: " + typeText).withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.literal(String.format("Урон: %.1f", ammoType.damage)).withStyle(ChatFormatting.DARK_RED));
     }
+
 
 
     @Override
@@ -553,7 +588,7 @@ public class MachineGunItem extends Item implements GeoItem {
 
             ItemStack stack = mc.player.getMainHandItem();
             if (!(stack.getItem() instanceof MachineGunItem item)) {
-                clientShootTimer = 0;
+                clientShootTimer = 15;
                 return;
             }
 

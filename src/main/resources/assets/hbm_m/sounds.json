@@ -174,27 +174,6 @@
     ],
     "subtitle": "sounds.hbm_m.bullet_ground6"
   },
-  "bullet_ground7": {
-    "category": "player",
-    "sounds": [
-      "hbm_m:impact/bullet_ground7"
-    ],
-    "subtitle": "sounds.hbm_m.bullet_ground7"
-  },
-  "bullet_ground8": {
-    "category": "player",
-    "sounds": [
-      "hbm_m:impact/bullet_ground8"
-    ],
-    "subtitle": "sounds.hbm_m.bullet_ground8"
-  },
-  "bullet_ground9": {
-    "category": "player",
-    "sounds": [
-      "hbm_m:impact/bullet_ground9"
-    ],
-    "subtitle": "sounds.hbm_m.bullet_ground9"
-  },
   "dry_fire": {
     "category": "player",
     "sounds": [
