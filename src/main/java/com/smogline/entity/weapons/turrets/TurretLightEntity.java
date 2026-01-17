@@ -1,8 +1,8 @@
 package com.smogline.entity.weapons.turrets;
 
-import com.smogline.entity.weapons.bullets_and_chels.TurretBulletEntity;
+import com.mojang.datafixers.util.Pair;
+import com.smogline.entity.weapons.bullets.TurretBulletEntity;
 import com.smogline.item.tags_and_tiers.AmmoRegistry;
-
 import com.smogline.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -28,10 +28,11 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import com.mojang.datafixers.util.Pair;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
@@ -40,67 +41,77 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Основной класс легкой турели.
- * Реализует логику монстра (Monster), анимации (GeoEntity) и дальнего боя (RangedAttackMob).
- */
 public class TurretLightEntity extends Monster implements GeoEntity, RangedAttackMob {
 
-    // Кэш анимаций GeckoLib
+    // GeckoLib
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    // --- СИНХРОНИЗИРУЕМЫЕ ДАННЫЕ (доступны и на сервере, и на клиенте) ---
-    // Стреляет ли турель прямо сейчас (для анимации отдачи)
-    private static final EntityDataAccessor<Boolean> SHOOTING = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.BOOLEAN);
-    // Развернута ли турель (готова к стрельбе)
-    private static final EntityDataAccessor<Boolean> DEPLOYED = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.BOOLEAN);
-    // UUID владельца (игрока, поставившего турель)
-    private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.OPTIONAL_UUID);
-    // Таймер процесса развертывания
-    private static final EntityDataAccessor<Integer> DEPLOY_TIMER = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.INT);
-    // ID текущей цели (нужен клиенту для отрисовки дебаг-линий к цели)
-    private static final EntityDataAccessor<Integer> TARGET_ID = SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.INT);
+    // Synched data
+    private static final EntityDataAccessor<Boolean> SHOOTING =
+            SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DEPLOYED =
+            SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID =
+            SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Integer> DEPLOY_TIMER =
+            SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> TARGET_ID =
+            SynchedEntityData.defineId(TurretLightEntity.class, EntityDataSerializers.INT);
 
-    // --- КОНСТАНТЫ БАЛАНСА ---
-    private static final int DEPLOY_DURATION = 80;        // Время развертывания (в тиках)
-    private static final int SHOT_ANIMATION_LENGTH = 14;  // Длительность анимации выстрела/перезарядки
-    private static final double TARGET_LOCK_DISTANCE = 5.0D; // Дистанция "захвата" цели (гистерезис)
-    private static final double CLOSE_COMBAT_RANGE = 5.0D;   // Дистанция ближней угрозы
-    private static final float BULLET_SPEED = 3.0F;       // Скорость полета пули
-    private static final float BULLET_GRAVITY = 0.01F;    // Гравитация пули (для расчетов)
+    // Balance
+    private static final int DEPLOY_DURATION = 80;
+    private static final int SHOT_ANIMATION_LENGTH = 14;
+    private static final double TARGET_LOCK_DISTANCE = 5.0D;
+    private static final double CLOSE_COMBAT_RANGE = 5.0D;
 
-    // --- ЛОКАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
-    private int shootAnimTimer = 0;       // Таймер проигрывания анимации выстрела
-    private int shotCooldown = 0;         // Кулдаун между выстрелами
-    private int lockSoundCooldown = 0;    // Чтобы звук захвата цели не спамил каждый тик
-    private LivingEntity currentTargetCache = null; // Запоминаем прошлую цель
-    private int currentTargetPriority = 999;        // Приоритет текущей цели (чем меньше число, тем важнее)
+    // Ballistics
+    private static final float BULLET_SPEED = 3.0F;
+    private static final float BULLET_GRAVITY = 0.01F;
+    private static final float AIR_RESISTANCE = 0.99F; // на всякий (если будешь усложнять solver)
 
-    // --- ПЕРЕМЕННЫЕ ДЛЯ ОТЛАДКИ (DEBUG) ---
-    // Точка, куда мы целимся (с упреждением)
+    // Adaptive lead (по размеру цели)
+    private static final double MIN_ENTITY_SIZE = 0.5D;
+    private static final double MAX_ENTITY_SIZE = 5.0D;
+    private static final double MIN_PREDICTION_LEAD = 0.35D;
+    private static final double MAX_PREDICTION_LEAD = 1.65D;
+    private double adaptiveLeadTime = 1.0D;
+
+    // Anti “Y impulse” filter (главный фикс под твой кейс)
+    // Сколько миллисекунд после нашего выстрела игнорировать Y-скорость цели
+    private static final long Y_IMPULSE_FILTER_MS = 220L;
+    private long lastShotTimeMs = 0L;
+
+    // Aim tuning
+    private static final double AIM_Y_BIAS = 0.05D; // если “в землю” — увеличь; если “в воздух” — уменьши
+
+    // Local state
+    private int shootAnimTimer = 0;
+    private int shotCooldown = 0;
+    private int lockSoundCooldown = 0;
+    private LivingEntity currentTargetCache = null;
+    private int currentTargetPriority = 999;
+
+    // Debug
     private Vec3 debugTargetPoint = null;
-    // Рассчитанный вектор скорости пули (для отрисовки дуги)
     private Vec3 debugBallisticVelocity = null;
-    // Список точек сканирования (зеленые/красные точки на хитбоксе врага)
     private final List<Pair<Vec3, Boolean>> debugScanPoints = new ArrayList<>();
 
-    // Геттеры для рендерера
     public Vec3 getDebugTargetPoint() { return debugTargetPoint; }
     public Vec3 getDebugBallisticVelocity() { return debugBallisticVelocity; }
     public List<Pair<Vec3, Boolean>> getDebugScanPoints() { return debugScanPoints; }
+    public double getAdaptiveLeadTime() { return adaptiveLeadTime; }
 
     public TurretLightEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.xpReward = 0; // Турель не дает опыт при убийстве
+        this.xpReward = 0;
     }
 
-    // Настройка базовых атрибутов (здоровье, скорость, дальность обзора)
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.0D) // Турель не ходит
-                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D) // Иммунитет к отбрасыванию
-                .add(Attributes.FOLLOW_RANGE, 35.0D); // Дальность обнаружения врагов
+                .add(Attributes.MOVEMENT_SPEED, 0.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D)
+                .add(Attributes.FOLLOW_RANGE, 35.0D);
     }
 
     @Override
@@ -114,77 +125,98 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     }
 
     @Override
-    public int getMaxHeadYRot() { return 360; } // Голова может крутиться на 360
+    public int getMaxHeadYRot() { return 360; }
 
     @Override
-    public int getMaxHeadXRot() { return 90; } // Вверх/вниз на 90 градусов
+    public int getMaxHeadXRot() { return 90; }
 
-    /**
-     * Вычисляет точные мировые координаты дула турели.
-     * Учитывает текущий поворот головы (yaw) и наклон ствола (pitch).
-     * Важно для спавна пули не внутри модели, а на конце ствола.
-     */
     public Vec3 getMuzzlePos() {
-        double offsetY = 10.49 / 16.0; // Высота оси вращения
-        double offsetZ = 14.86 / 16.0; // Смещение ствола вперед
-        float yRotRad = this.yHeadRot * ((float)Math.PI / 180F);
-        float xRotRad = -this.getXRot() * ((float)Math.PI / 180F);
+        double offsetY = 10.49 / 16.0;
+        double offsetZ = 14.86 / 16.0;
 
-        // Математика поворота точки в 3D
+        float yRotRad = this.yHeadRot * ((float) Math.PI / 180F);
+        float xRotRad = -this.getXRot() * ((float) Math.PI / 180F);
+
         double yShift = Math.sin(xRotRad) * offsetZ;
         double forwardShift = Math.cos(xRotRad) * offsetZ;
+
         double x = this.getX() - Math.sin(yRotRad) * forwardShift;
         double y = this.getY() + offsetY + yShift;
         double z = this.getZ() + Math.cos(yRotRad) * forwardShift;
+
         return new Vec3(x, y, z);
     }
 
+    // -------------------- Key fix: filter target velocity --------------------
+
     /**
-     * Проверяет, является ли сущность союзником.
-     * 1. Другие турели того же владельца.
-     * 2. Сам владелец.
+     * Возвращает скорость цели для упреждения.
+     * Главная идея: когда цель получила импульс по Y от попадания (подброс/падение),
+     * это НЕ “намеренное уклонение”, поэтому Y игнорируем краткое время после нашего выстрела.
      */
+    private Vec3 getFilteredTargetVelocity(LivingEntity target) {
+        Vec3 v = target.getDeltaMovement();
+
+        // Ванильные прыжки/ступеньки тоже часто ломают упреждение — на земле Y лучше игнорировать всегда.
+        if (target.onGround()) {
+            return new Vec3(v.x, 0.0D, v.z);
+        }
+
+        long now = System.currentTimeMillis();
+        if (now - lastShotTimeMs < Y_IMPULSE_FILTER_MS) {
+            return new Vec3(v.x, 0.0D, v.z);
+        }
+
+        // Летающие/прыгающие мобы (без “нашего” импульса) — можно учитывать Y.
+        return v;
+    }
+
+    private void updateAdaptiveLeadTime(LivingEntity target) {
+        // Если сейчас “окно импульса” — не трогаем leadTime (иначе турель начнет “дергаться”)
+        long now = System.currentTimeMillis();
+        if (now - lastShotTimeMs < Y_IMPULSE_FILTER_MS) return;
+
+        AABB bb = target.getBoundingBox();
+        double w = bb.maxX - bb.minX;
+        double h = bb.maxY - bb.minY;
+        double size = Math.max(w, h);
+
+        double t = (size - MIN_ENTITY_SIZE) / (MAX_ENTITY_SIZE - MIN_ENTITY_SIZE);
+        t = Math.max(0.0D, Math.min(1.0D, t));
+
+        this.adaptiveLeadTime = MIN_PREDICTION_LEAD + t * (MAX_PREDICTION_LEAD - MIN_PREDICTION_LEAD);
+    }
+
+    // -------------------- Allies --------------------
+
     @Override
     public boolean isAlliedTo(Entity entity) {
         if (super.isAlliedTo(entity)) return true;
 
-        // Проверка: другая турель того же хозяина
         if (entity instanceof TurretLightEntity otherTurret) {
             UUID myOwner = this.getOwnerUUID();
             UUID theirOwner = otherTurret.getOwnerUUID();
             if (myOwner != null && myOwner.equals(theirOwner)) return true;
         }
 
-        // Проверка: сам хозяин
         UUID ownerUUID = this.getOwnerUUID();
-        if (ownerUUID != null && entity.getUUID().equals(ownerUUID)) return true;
-
-        return false;
+        return ownerUUID != null && entity.getUUID().equals(ownerUUID);
     }
 
-    /**
-     * Система приоритетов целей.
-     * Возвращает число (меньше = важнее).
-     * 0: Враг в упор (ближний бой).
-     * 1: Тот, кто бьет хозяина.
-     * 2: Тот, кто бьет другую турель.
-     * 3: Тот, кто бьет эту турель.
-     * ...
-     */
     private int calculateTargetPriority(LivingEntity entity) {
         if (entity == null || !entity.isAlive() || this.isAlliedTo(entity)) return 999;
 
         double distance = this.distanceTo(entity);
-        if (distance < CLOSE_COMBAT_RANGE) return 0; // Наивысший приоритет
+        if (distance < CLOSE_COMBAT_RANGE) return 0;
 
         UUID ownerUUID = this.getOwnerUUID();
         Player owner = ownerUUID != null ? this.level().getPlayerByUUID(ownerUUID) : null;
+
         if (owner != null) {
             if (owner.getLastHurtByMob() == entity) return 1;
             if (entity instanceof net.minecraft.world.entity.Mob mob && mob.getTarget() == owner) return 1;
         }
 
-        // Защита других турелей рядом
         for (Entity e : this.level().getEntities(this, this.getBoundingBox().inflate(16.0D))) {
             if (e instanceof TurretLightEntity ally && ally != this && this.isAlliedTo(ally)) {
                 if (ally.getLastHurtByMob() == entity) return 2;
@@ -196,36 +228,33 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         if (owner != null && owner.getLastHurtMob() == entity) return 4;
         if (entity instanceof Monster) return 5;
         if (entity instanceof Player) return 6;
+
         return 999;
     }
 
-    /**
-     * Главный цикл обновления (вызывается 20 раз в секунду).
-     */
+    // -------------------- Tick --------------------
+
     @Override
     public void tick() {
         super.tick();
-        // Синхронизация вращения тела и головы (турель не имеет тела как такового)
+
         this.yBodyRot = this.getYRot();
         this.yBodyRotO = this.getYRot();
 
-        // === ЛОГИКА СЕРВЕРА ===
+        // Server: sync target id
         if (!this.level().isClientSide) {
-            // Синхронизируем ID цели для клиента (чтобы рисовать дебаг)
             LivingEntity currentTarget = this.getTarget();
-            int targetId = (currentTarget != null) ? currentTarget.getId() : -1;
+            int targetId = currentTarget != null ? currentTarget.getId() : -1;
             if (this.entityData.get(TARGET_ID) != targetId) {
                 this.entityData.set(TARGET_ID, targetId);
             }
-        }
-        // === ЛОГИКА КЛИЕНТА (DEBUG) ===
-        else {
+        } else {
+            // Client debug
             int targetId = this.entityData.get(TARGET_ID);
             if (targetId != -1) {
                 Entity targetEntity = this.level().getEntity(targetId);
                 if (targetEntity instanceof LivingEntity livingTarget && livingTarget.isAlive()) {
                     Vec3 muzzle = getMuzzlePos();
-                    // Рассчитываем данные для отрисовки траектории и упреждения в реальном времени
                     this.debugBallisticVelocity = calculateBallisticVelocity(livingTarget, muzzle, BULLET_SPEED, BULLET_GRAVITY);
                     this.debugTargetPoint = predictLeadPoint(livingTarget, muzzle);
                 } else {
@@ -238,20 +267,17 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             }
         }
 
-        // Дальнейшая логика только на сервере
+        // Server-only logic
         if (!this.level().isClientSide) {
-            // Процесс развертывания
             int currentTimer = this.entityData.get(DEPLOY_TIMER);
             if (currentTimer > 0) {
                 this.entityData.set(DEPLOY_TIMER, currentTimer - 1);
                 if (currentTimer - 1 == 0) this.entityData.set(DEPLOYED, true);
             }
 
-            // Уменьшение кулдаунов
             if (this.shotCooldown > 0) this.shotCooldown--;
             if (this.lockSoundCooldown > 0) this.lockSoundCooldown--;
 
-            // Сброс анимации стрельбы
             if (this.isShooting()) {
                 shootAnimTimer++;
                 if (shootAnimTimer >= SHOT_ANIMATION_LENGTH) {
@@ -260,15 +286,10 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 }
             }
 
-            // Управление приоритетами целей
             LivingEntity target = this.getTarget();
-            if (target != null) {
-                currentTargetPriority = calculateTargetPriority(target);
-            } else {
-                currentTargetPriority = 999;
-            }
+            currentTargetPriority = (target != null) ? calculateTargetPriority(target) : 999;
 
-            // Звук захвата цели
+            // Lock sound
             if (target != null && target != currentTargetCache && this.isDeployed()) {
                 if (this.lockSoundCooldown == 0) {
                     if (ModSounds.TURRET_LOCK.isPresent()) {
@@ -281,9 +302,10 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 currentTargetCache = null;
             }
 
-            // ПОВОРОТ ГОЛОВЫ К ЦЕЛИ
+            // Look control
             if (target != null && this.isDeployed()) {
-                // Пытаемся смотреть на упреждение, а не просто на цель
+                updateAdaptiveLeadTime(target);
+
                 Vec3 lead = predictLeadPoint(target, getMuzzlePos());
                 if (lead != null) {
                     this.getLookControl().setLookAt(lead.x, lead.y, lead.z, 30.0F, 30.0F);
@@ -292,7 +314,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 }
             }
 
-            // Периодический поиск более важных целей (каждые 10 тиков)
+            // Re-targeting each 10 ticks
             if (this.tickCount % 10 == 0) {
                 LivingEntity closeThreat = findClosestThreat();
                 if (closeThreat != null && closeThreat != this.getTarget()) {
@@ -302,96 +324,65 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                         currentTargetPriority = newPriority;
                     }
                 }
-            }
 
-            // Удерживание цели ("прилипание")
-            boolean canSwitchToFarTarget = true;
-            if (target != null && target.isAlive()) {
-                double distToCurrentTarget = this.distanceTo(target);
-                if (distToCurrentTarget < TARGET_LOCK_DISTANCE) {
-                    canSwitchToFarTarget = false; // Не меняем цель, если она слишком близко
+                boolean canSwitchToFarTarget = true;
+                if (target != null && target.isAlive()) {
+                    if (this.distanceTo(target) < TARGET_LOCK_DISTANCE) canSwitchToFarTarget = false;
                 }
-            }
 
-            // Переключение на обидчика хозяина
-            if (canSwitchToFarTarget) {
-                UUID ownerUUID = this.getOwnerUUID();
-                if (ownerUUID != null) {
-                    Player owner = this.level().getPlayerByUUID(ownerUUID);
-                    if (owner != null) {
-                        LivingEntity ownerAttacker = owner.getLastHurtByMob();
-                        if (ownerAttacker != null && ownerAttacker != this.getTarget()
-                                && ownerAttacker.isAlive() && !isAlliedTo(ownerAttacker)) {
-                            int newPriority = calculateTargetPriority(ownerAttacker);
-                            if (newPriority < currentTargetPriority) {
-                                this.setTarget(ownerAttacker);
-                                currentTargetPriority = newPriority;
+                if (canSwitchToFarTarget) {
+                    UUID ownerUUID = this.getOwnerUUID();
+                    if (ownerUUID != null) {
+                        Player owner = this.level().getPlayerByUUID(ownerUUID);
+                        if (owner != null) {
+                            LivingEntity ownerAttacker = owner.getLastHurtByMob();
+                            if (ownerAttacker != null && ownerAttacker != this.getTarget()
+                                    && ownerAttacker.isAlive() && !isAlliedTo(ownerAttacker)) {
+                                int newPriority = calculateTargetPriority(ownerAttacker);
+                                if (newPriority < currentTargetPriority) {
+                                    this.setTarget(ownerAttacker);
+                                    currentTargetPriority = newPriority;
+                                }
                             }
                         }
-                    }
-                }
-            }
-
-            // Защита союзных турелей
-            if (this.getTarget() == null || this.tickCount % 20 == 0) {
-                LivingEntity allyThreat = findAllyThreat();
-                if (allyThreat != null && allyThreat != this.getTarget()) {
-                    int newPriority = calculateTargetPriority(allyThreat);
-                    if (newPriority < currentTargetPriority) {
-                        this.setTarget(allyThreat);
-                        currentTargetPriority = newPriority;
                     }
                 }
             }
         }
     }
 
-    /**
-     * РАСЧЕТ БАЛЛИСТИКИ (Solver).
-     * Вычисляет вектор начальной скорости (vX, vY, vZ), чтобы попасть в цель
-     * с учетом навесной траектории, гравитации и движения цели.
-     *
-     * @return Вектор скорости или null, если цель вне досягаемости.
-     */
+    // -------------------- Ballistics + lead --------------------
+
     private Vec3 calculateBallisticVelocity(LivingEntity target, Vec3 muzzlePos, float speed, float gravity) {
-        // 1. Находим видимую точку на теле врага
         Vec3 targetPos = getSmartTargetPos(target);
         if (targetPos == null) return null;
 
-        // 2. Учет движения цели (Упреждение)
-        Vec3 targetVel = target.getDeltaMovement();
-        // Игнорируем вертикальную скорость, если цель на земле (избегаем ошибок предсказания при прыжках)
-        if (target.onGround()) targetVel = new Vec3(targetVel.x, 0, targetVel.z);
+        Vec3 targetVel = getFilteredTargetVelocity(target);
 
         double timeToTarget = targetPos.distanceTo(muzzlePos) / speed;
-        Vec3 impactPos = targetPos.add(targetVel.scale(timeToTarget)); // Где будет цель через время полета
+        Vec3 impactPos = targetPos.add(targetVel.scale(timeToTarget * this.adaptiveLeadTime));
 
         double dirX = impactPos.x - muzzlePos.x;
         double dirZ = impactPos.z - muzzlePos.z;
         double dirY = impactPos.y - muzzlePos.y;
 
-        double x = Math.sqrt(dirX * dirX + dirZ * dirZ); // Горизонтальная дистанция
-        double y = dirY;                                 // Разница высот
+        double x = Math.sqrt(dirX * dirX + dirZ * dirZ);
+        double y = dirY;
+
         double v = speed;
-
-        // Эффективная гравитация. Специально подобрана для компенсации сопротивления воздуха (drag).
-        // В Minecraft пули тормозят об воздух (x0.99 каждый тик), поэтому обычная парабола тут не работает.
-        double effectiveGravity = 0.01;
-
         double v2 = v * v;
         double v4 = v2 * v2;
 
-        // Квадратное уравнение баллистики
+        // Упрощенная “эффективная гравитация” (можно тюнить под твою пулю/drag)
+        double effectiveGravity = gravity;
+
         double discriminant = v4 - effectiveGravity * (effectiveGravity * x * x + 2 * y * v2);
+        if (discriminant < 0) return null;
 
-        if (discriminant < 0) return null; // Цель слишком далеко или высоко
-
-        // Вычисляем угол броска (берем низкую траекторию)
         double sqrtDisc = Math.sqrt(discriminant);
         double tanTheta = (v2 - sqrtDisc) / (effectiveGravity * x);
         double theta = Math.atan(tanTheta);
 
-        // Раскладываем скорость на компоненты
         double vx = v * Math.cos(theta);
         double vy = v * Math.sin(theta);
 
@@ -404,111 +395,42 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         return new Vec3(finalX, finalY, finalZ);
     }
 
-    /**
-     * Предсказывает точку встречи (для LookAt и дебага), но без учета навеса.
-     * Просто экстраполяция: Позиция + Скорость * Время.
-     */
     private Vec3 predictLeadPoint(LivingEntity target, Vec3 muzzlePos) {
         Vec3 targetPos = getSmartTargetPos(target);
         if (targetPos == null) return null;
 
-        Vec3 targetVel = target.getDeltaMovement();
-        if (target.onGround()) targetVel = new Vec3(targetVel.x, 0, targetVel.z);
-
+        Vec3 targetVel = getFilteredTargetVelocity(target);
         double timeToTarget = targetPos.distanceTo(muzzlePos) / BULLET_SPEED;
-        return targetPos.add(targetVel.scale(timeToTarget));
+
+        return targetPos.add(targetVel.scale(timeToTarget * this.adaptiveLeadTime));
     }
 
+    // -------------------- Smart hitbox scan --------------------
 
-    /**
-     * Рассчитывает вектор скорости пули, чтобы попасть в цель.
-     * Учитывает движение цели (линейное упреждение) и гравитацию (баллистическая дуга).
-     * Возвращает null, если цель вне досягаемости.
-     */
-    private Vec3 getBallisticFlightPath(Vec3 startPos, LivingEntity target) {
-        // 1. Предсказываем позицию цели
-        double timeToTarget = startPos.distanceTo(target.position()) / BULLET_SPEED;
-
-        // Вектор скорости цели
-        Vec3 targetVelocity = target.getDeltaMovement();
-
-        // Предсказанная точка встречи (Target Position + Velocity * Time)
-        // Поднимаем точку прицеливания на половину роста цели (в грудь)
-        Vec3 aimPoint = target.position()
-                .add(0, target.getBbHeight() * 0.5, 0)
-                .add(targetVelocity.scale(timeToTarget));
-
-        // Разница координат
-        double dx = aimPoint.x - startPos.x;
-        double dy = aimPoint.y - startPos.y;
-        double dz = aimPoint.z - startPos.z;
-
-        // Горизонтальная дистанция
-        double groundDist = Math.sqrt(dx * dx + dz * dz);
-
-        // 2. Решаем уравнение баллистики для угла возвышения (alpha)
-        // y = x * tan(a) - (g * x^2) / (2 * v^2 * cos^2(a))
-        // Это сложно решать в реальном времени, используем упрощение для малых углов
-        // или стандартную формулу для "low trajectory" (навесом стрелять турели не нужно)
-
-        double v = BULLET_SPEED;
-        double g = BULLET_GRAVITY;
-
-        double v2 = v * v;
-        double v4 = v2 * v2;
-
-        // Дискриминант формулы траектории: D = v^4 - g * (g * x^2 + 2 * y * v^2)
-        double discriminant = v4 - g * (g * groundDist * groundDist + 2 * dy * v2);
-
-        if (discriminant < 0) {
-            // Цель недосягаема (слишком далеко или высоко)
-            return null;
-        }
-
-        // Два корня: навесом (+) и настильно (-). Нам нужна настильная (низкая) траектория.
-        double tanAlpha = (v2 - Math.sqrt(discriminant)) / (g * groundDist);
-        double pitchRad = Math.atan(tanAlpha);
-
-        // 3. Собираем итоговый вектор
-        // Горизонтальный угол (yaw) просто берем из dx/dz
-        double yawRad = Math.atan2(dz, dx);
-
-        // Переводим сферические координаты (скорость, yaw, pitch) обратно в вектор XYZ
-        double x = v * Math.cos(pitchRad) * Math.cos(yawRad);
-        double y = v * Math.sin(pitchRad);
-        double z = v * Math.cos(pitchRad) * Math.sin(yawRad);
-
-        return new Vec3(x, y, z);
-    }
-
-    /**
-     * УМНОЕ СКАНИРОВАНИЕ ХИТБОКСА.
-     * Вместо того чтобы стрелять в центр (который может быть за стеной),
-     * турель сканирует точки от ног до головы.
-     */
     private Vec3 getSmartTargetPos(LivingEntity target) {
         Vec3 start = this.getMuzzlePos();
         AABB aabb = target.getBoundingBox();
-
         List<Vec3> visiblePoints = new ArrayList<>();
-        // Очищаем дебаг точки (только на клиенте)
+
         if (this.level().isClientSide) this.debugScanPoints.clear();
 
-        // Количество точек проверки по осям
-        int stepsX = 3;
-        int stepsY = 4; // Важно: сканируем 4 уровня высоты
-        int stepsZ = 3;
+        // фикс “точки на границах”: используем центры ячеек (x+0.5)/steps
+        int stepsX = 4;
+        int stepsY = 6;
+        int stepsZ = 4;
 
-        for (int x = 0; x <= stepsX; x++) {
-            for (int y = 0; y <= stepsY; y++) {
-                for (int z = 0; z <= stepsZ; z++) {
-                    // Интерполяция координат внутри хитбокса
-                    double lerpX = aabb.minX + (aabb.maxX - aabb.minX) * (x / (double)stepsX);
-                    double lerpY = aabb.minY + (aabb.maxY - aabb.minY) * (y / (double)stepsY);
-                    double lerpZ = aabb.minZ + (aabb.maxZ - aabb.minZ) * (z / (double)stepsZ);
+        for (int x = 0; x < stepsX; x++) {
+            for (int y = 0; y < stepsY; y++) {
+                for (int z = 0; z < stepsZ; z++) {
+                    double lx = (x + 0.5D) / stepsX;
+                    double ly = (y + 0.5D) / stepsY;
+                    double lz = (z + 0.5D) / stepsZ;
 
-                    Vec3 point = new Vec3(lerpX, lerpY, lerpZ);
-                    // Проверяем видимость рейкастом
+                    double px = aabb.minX + (aabb.maxX - aabb.minX) * lx;
+                    double py = aabb.minY + (aabb.maxY - aabb.minY) * ly;
+                    double pz = aabb.minZ + (aabb.maxZ - aabb.minZ) * lz;
+
+                    Vec3 point = new Vec3(px, py, pz);
                     boolean visible = canSeePoint(start, point);
 
                     if (visible) visiblePoints.add(point);
@@ -519,21 +441,29 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
         if (visiblePoints.isEmpty()) return null;
 
-        // Выбираем самую верхнюю видимую точку (стреляем в голову/грудь, а не в пятки)
+        // Стабильный вариант: “верхняя видимая” (часто лучше против укрытий/ступеней)
         Vec3 bestPoint = null;
-        double maxY = -99999;
+        double bestY = -1e9;
         for (Vec3 p : visiblePoints) {
-            if (bestPoint == null || p.y > maxY) {
-                maxY = p.y;
+            if (bestPoint == null || p.y > bestY) {
                 bestPoint = p;
+                bestY = p.y;
             }
         }
-        return bestPoint;
+
+        // маленький bias вверх (чтобы не “в землю” при краях AABB)
+        return bestPoint.add(0.0D, AIM_Y_BIAS, 0.0D);
     }
 
-    /**
-     * Проверяет, чистая ли линия огня (нет ли союзников на пути).
-     */
+    private boolean canSeePoint(Vec3 start, Vec3 end) {
+        BlockHitResult blockHit = this.level().clip(new ClipContext(
+                start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this
+        ));
+
+        return blockHit.getType() == HitResult.Type.MISS ||
+                start.distanceToSqr(blockHit.getLocation()) >= start.distanceToSqr(end) - 0.05;
+    }
+
     private boolean isLineOfFireSafe(LivingEntity target) {
         Vec3 start = this.getMuzzlePos();
         Vec3 end = getSmartTargetPos(target);
@@ -543,24 +473,31 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         double distance = vec3.length();
         vec3 = vec3.normalize();
 
-        // Проверяем каждые 0.5 блока вдоль траектории
         for (double d = 0; d < distance; d += 0.5) {
             Vec3 checkPos = start.add(vec3.scale(d));
-            AABB checkBox = new AABB(checkPos.subtract(0.5, 0.5, 0.5), checkPos.add(0.5, 0.5, 0.5));
+            AABB checkBox = new AABB(
+                    checkPos.subtract(0.5, 0.5, 0.5),
+                    checkPos.add(0.5, 0.5, 0.5)
+            );
+
             List<Entity> list = this.level().getEntities(this, checkBox);
             for (Entity e : list) {
                 if (e != this && e != target && e instanceof LivingEntity living) {
-                    if (this.isAlliedTo(living)) return false; // Нашли союзника на линии огня!
+                    if (this.isAlliedTo(living)) return false;
                 }
             }
         }
         return true;
     }
 
-    // Поиск ближайшей угрозы (для смены приоритета)
+    private boolean canShootSafe(LivingEntity target) {
+        return getSmartTargetPos(target) != null && isLineOfFireSafe(target);
+    }
+
     private LivingEntity findClosestThreat() {
         LivingEntity closest = null;
         double closestDist = CLOSE_COMBAT_RANGE;
+
         for (Entity entity : this.level().getEntities(this, this.getBoundingBox().inflate(CLOSE_COMBAT_RANGE))) {
             if (entity instanceof LivingEntity living && !this.isAlliedTo(living) && living.isAlive()) {
                 double dist = this.distanceTo(living);
@@ -573,38 +510,94 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         return closest;
     }
 
-    // Поиск того, кто атакует союзные турели
-    private LivingEntity findAllyThreat() {
-        for (Entity entity : this.level().getEntities(this, this.getBoundingBox().inflate(16.0D))) {
-            if (entity instanceof TurretLightEntity ally && ally != this && this.isAlliedTo(ally)) {
-                LivingEntity allyAttacker = ally.getLastHurtByMob();
-                if (allyAttacker != null && allyAttacker.isAlive() && !this.isAlliedTo(allyAttacker)) {
-                    return allyAttacker;
-                }
+    // -------------------- Attack --------------------
+
+    @Override
+    public void performRangedAttack(LivingEntity target, float pullProgress) {
+        if (!this.isDeployed()) return;
+        if (this.shotCooldown > 0) return;
+        if (!canShootSafe(target)) return;
+
+        // фикс “рывков”: отмечаем момент выстрела, чтобы ближайшие N мс игнорировать Y цели
+        this.lastShotTimeMs = System.currentTimeMillis();
+
+        updateAdaptiveLeadTime(target);
+
+        Vec3 muzzlePos = getMuzzlePos();
+        Vec3 ballisticVelocity = calculateBallisticVelocity(target, muzzlePos, BULLET_SPEED, BULLET_GRAVITY);
+        if (ballisticVelocity == null) return;
+
+        this.shotCooldown = SHOT_ANIMATION_LENGTH;
+        this.setShooting(true);
+        this.shootAnimTimer = 0;
+
+        if (!this.level().isClientSide) {
+            ServerLevel serverLevel = (ServerLevel) this.level();
+            TurretBulletEntity bullet = new TurretBulletEntity(serverLevel, this);
+
+            AmmoRegistry.AmmoType randomAmmo = AmmoRegistry.getRandomAmmoForCaliber("20mm_turret", this.level().random);
+            if (randomAmmo != null) {
+                bullet.setAmmoType(randomAmmo);
+            } else {
+                bullet.setAmmoType(new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false));
+            }
+
+            bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
+            bullet.setDeltaMovement(ballisticVelocity);
+
+            // ✅ синхра поворота пули
+            bullet.alignToVelocity();
+
+            serverLevel.addFreshEntity(bullet);
+
+            if (ModSounds.TURRET_FIRE.isPresent()) {
+                this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
             }
         }
-        return null;
     }
 
-    // Вспомогательный метод для рейкаста (проверка видимости)
-    private boolean canSeePoint(Vec3 start, Vec3 end) {
-        BlockHitResult blockHit = this.level().clip(new ClipContext(
-                start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this
-        ));
+    // -------------------- GeckoLib --------------------
 
-        // Видим, если луч не врезался ни во что, или врезался очень близко к цели
-        return blockHit.getType() == HitResult.Type.MISS ||
-                start.distanceToSqr(blockHit.getLocation()) >= start.distanceToSqr(end) - 0.05;
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> {
+            if (!this.isDeployed()) return event.setAndContinue(RawAnimation.begin().thenPlay("deploy"));
+            return PlayState.STOP;
+        }));
+
+        controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
+            if (this.isShooting()) {
+                if (event.getController().getAnimationState() == AnimationController.State.STOPPED) {
+                    event.getController().forceAnimationReset();
+                }
+                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
+            }
+            return PlayState.STOP;
+        }));
     }
 
-    // Можно ли безопасно стрелять? (Видим цель + линия огня чиста)
-    private boolean canShootSafe(LivingEntity target) {
-        return getSmartTargetPos(target) != null && isLineOfFireSafe(target);
+    // -------------------- NBT --------------------
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (this.getOwnerUUID() != null) tag.putUUID("Owner", this.getOwnerUUID());
+        tag.putBoolean("Deployed", this.isDeployed());
+        tag.putInt("DeployTimer", this.entityData.get(DEPLOY_TIMER));
     }
 
     @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.hasUUID("Owner")) this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("Owner")));
+        if (tag.contains("Deployed")) this.entityData.set(DEPLOYED, tag.getBoolean("Deployed"));
+        if (tag.contains("DeployTimer")) this.entityData.set(DEPLOY_TIMER, tag.getInt("DeployTimer"));
+    }
+
+    // -------------------- Goals --------------------
+
+    @Override
     protected void registerGoals() {
-        // Гол стрельбы
         this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.0D, SHOT_ANIMATION_LENGTH, 20.0F) {
             @Override
             public boolean canUse() { return TurretLightEntity.this.isDeployed() && super.canUse(); }
@@ -613,10 +606,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             public boolean canContinueToUse() { return TurretLightEntity.this.isDeployed() && super.canContinueToUse(); }
         });
 
-        // Голы выбора целей (TargetSelectors)
-
-        // 1. Атакуем того, кто ударил хозяина
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, (entity) -> {
+        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, entity -> {
             if (this.isAlliedTo(entity)) return false;
             UUID ownerUUID = this.getOwnerUUID();
             if (ownerUUID != null) {
@@ -629,8 +619,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             return false;
         }));
 
-        // 2. Атакуем того, кто ударил другую турель
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, (entity) -> {
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, entity -> {
             if (this.isAlliedTo(entity)) return false;
             for (Entity e : this.level().getEntities(this, this.getBoundingBox().inflate(16.0D))) {
                 if (e instanceof TurretLightEntity ally && ally != this && this.isAlliedTo(ally)) {
@@ -641,133 +630,26 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             return false;
         }));
 
-        // 3. Месть (кто ударил меня)
         this.targetSelector.addGoal(3, new HurtByTargetGoal(this).setAlertOthers(TurretLightEntity.class));
 
-        // 4. Добивание (кого бьет хозяин)
-        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, (entity) -> {
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, entity -> {
             if (this.isAlliedTo(entity)) return false;
             UUID ownerUUID = this.getOwnerUUID();
             if (ownerUUID != null) {
                 Player owner = this.level().getPlayerByUUID(ownerUUID);
-                if (owner != null) {
-                    return owner.getLastHurtMob() == entity;
-                }
+                if (owner != null) return owner.getLastHurtMob() == entity;
             }
             return false;
         }));
 
-        // 5. Обычная агрессия на монстров
-        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false, (entity) -> {
-            if (this.isAlliedTo(entity)) return false;
-            return TurretLightEntity.this.isDeployed();
-        }));
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false,
+                entity -> !this.isAlliedTo(entity) && TurretLightEntity.this.isDeployed()));
 
-        // 6. Агрессия на игроков (не владельца)
-        this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, (entity) -> {
-            if (this.isAlliedTo(entity)) return false;
-            return TurretLightEntity.this.isDeployed();
-        }));
+        this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
+                entity -> !this.isAlliedTo(entity) && TurretLightEntity.this.isDeployed()));
     }
 
-    /**
-     * ВЫСТРЕЛ
-     * Создает пулю и задает ей рассчитанную скорость.
-     */
-    @Override
-    public void performRangedAttack(LivingEntity target, float pullProgress) {
-        if (!this.isDeployed()) return;
-        if (this.shotCooldown > 0) return;
-
-        // ✅ Проверка видимости
-        if (!canShootSafe(target)) return;
-
-        Vec3 muzzlePos = getMuzzlePos();
-
-        // ✅ Расчет баллистики
-        Vec3 ballisticVelocity = calculateBallisticVelocity(target, muzzlePos, BULLET_SPEED, BULLET_GRAVITY);
-
-        if (ballisticVelocity == null) return;
-
-        this.shotCooldown = SHOT_ANIMATION_LENGTH;
-        this.setShooting(true);
-        this.shootAnimTimer = 0;
-
-        // ✅ СПАВН ПУЛИ НА СЕРВЕРЕ
-        if (!this.level().isClientSide) {
-            ServerLevel serverLevel = (ServerLevel) this.level();
-
-            // 1. Создаем пулю
-            TurretBulletEntity bullet = new TurretBulletEntity(serverLevel, this);
-
-            // 2. Устанавливаем боеприпас
-            AmmoRegistry.AmmoType randomAmmo = AmmoRegistry.getRandomAmmoForCaliber("20mm_turret", this.level().random);
-            if (randomAmmo != null) {
-                bullet.setAmmoType(randomAmmo);
-            } else {
-                bullet.setAmmoType(new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false));
-            }
-
-            // 3. Позиция
-            bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
-
-            // 4. Скорость
-            bullet.setDeltaMovement(ballisticVelocity);
-
-            // 5. Поворот
-            bullet.alignToVelocity();
-
-            // ✅ КРИТИЧНО: Добавляем в мир (автоматическая синхронизация на клиенты!)
-            serverLevel.addFreshEntity(bullet);
-
-            // Звук
-            if (ModSounds.TURRET_FIRE.isPresent()) {
-                this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
-            }
-        }
-    }
-
-
-    /**
-     * Контроллеры анимаций GeckoLib.
-     */
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        // Анимация развертывания (deploy)
-        controllers.add(new AnimationController<>(this, "deploy_ctrl", 0, event -> {
-            if (!this.isDeployed()) return event.setAndContinue(RawAnimation.begin().thenPlay("deploy"));
-            return PlayState.STOP;
-        }));
-
-        // Анимация стрельбы (shot)
-        controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
-            if (this.isShooting()) {
-                // Принудительный сброс, чтобы анимация проигрывалась с начала при быстром огне
-                if (event.getController().getAnimationState() == AnimationController.State.STOPPED)
-                    event.getController().forceAnimationReset();
-                return event.setAndContinue(RawAnimation.begin().thenPlay("shot"));
-            }
-            return PlayState.STOP;
-        }));
-    }
-
-    // Сохранение данных в NBT (при выходе из мира)
-    @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
-        if (this.getOwnerUUID() != null) tag.putUUID("Owner", this.getOwnerUUID());
-        tag.putBoolean("Deployed", this.isDeployed());
-        tag.putInt("DeployTimer", this.entityData.get(DEPLOY_TIMER));
-    }
-
-    // Загрузка данных из NBT
-    @Override
-    public void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
-        if (tag.hasUUID("Owner")) this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("Owner")));
-        if (tag.contains("Deployed")) this.entityData.set(DEPLOYED, tag.getBoolean("Deployed"));
-        if (tag.contains("DeployTimer")) this.entityData.set(DEPLOY_TIMER, tag.getInt("DeployTimer"));
-    }
+    // -------------------- Misc --------------------
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() { return this.cache; }
@@ -783,12 +665,11 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     public boolean isDeployed() { return this.entityData.get(DEPLOYED); }
 
     @Override
-    public boolean isPushable() { return false; } // Турель нельзя толкать
-    @Override
-    public double getBoneResetTime() {
-        return 0; // Отключает плавный возврат к дефолтной позе (в тиках)
-    }
+    public boolean isPushable() { return false; }
 
     @Override
-    protected void playStepSound(BlockPos pos, BlockState blockIn) {} // У турели нет звука шагов
+    public double getBoneResetTime() { return 0; }
+
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState blockIn) {}
 }

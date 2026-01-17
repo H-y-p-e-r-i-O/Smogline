@@ -1,4 +1,4 @@
-package com.smogline.entity.weapons.bullets_and_chels;
+package com.smogline.entity.weapons.bullets;
 
 import com.smogline.entity.ModEntities;
 import com.smogline.item.tags_and_tiers.AmmoRegistry;

@@ -1,6 +1,6 @@
 package com.smogline.entity.client.bullets;
 
-import com.smogline.entity.weapons.bullets_and_chels.TurretBulletEntity;
+import com.smogline.entity.weapons.bullets.TurretBulletEntity;
 import com.smogline.lib.RefStrings;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.GeoModel;

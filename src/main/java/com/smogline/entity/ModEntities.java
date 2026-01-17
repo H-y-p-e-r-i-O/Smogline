@@ -1,6 +1,6 @@
 package com.smogline.entity;
 
-import com.smogline.entity.weapons.bullets_and_chels.TurretBulletEntity;
+import com.smogline.entity.weapons.bullets.TurretBulletEntity;
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
 import com.smogline.entity.weapons.grenades.*;

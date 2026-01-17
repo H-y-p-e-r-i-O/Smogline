@@ -1,6 +1,6 @@
 package com.smogline.entity.client.bullets;
 
-import com.smogline.entity.weapons.bullets_and_chels.TurretBulletEntity;
+import com.smogline.entity.weapons.bullets.TurretBulletEntity;
 import com.smogline.lib.RefStrings;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
