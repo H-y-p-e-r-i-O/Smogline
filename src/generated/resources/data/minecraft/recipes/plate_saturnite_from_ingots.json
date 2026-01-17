@@ -1,16 +1,16 @@
 {
-  "type": "hbm_m:assembler",
+  "type": "smogline:assembler",
   "blueprint_pool": "plates",
   "duration": 60,
   "ingredients": [
     {
       "count": 3,
-      "item": "hbm_m:saturnite_ingot"
+      "item": "smogline:saturnite_ingot"
     }
   ],
   "output": {
     "count": 2,
-    "item": "hbm_m:plate_saturnite"
+    "item": "smogline:plate_saturnite"
   },
   "power": 100
 }

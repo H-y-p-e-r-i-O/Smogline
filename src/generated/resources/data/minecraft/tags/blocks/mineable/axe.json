@@ -1,10 +1,10 @@
 {
   "values": [
-    "hbm_m:wood_burner",
-    "hbm_m:crate",
-    "hbm_m:crate_weapon",
-    "hbm_m:door_office",
-    "hbm_m:waste_planks",
-    "hbm_m:waste_log"
+    "smogline:wood_burner",
+    "smogline:crate",
+    "smogline:crate_weapon",
+    "smogline:door_office",
+    "smogline:waste_planks",
+    "smogline:waste_log"
   ]
 }

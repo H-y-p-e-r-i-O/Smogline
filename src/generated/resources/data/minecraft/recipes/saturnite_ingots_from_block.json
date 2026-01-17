@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_saturnite"
+      "item": "smogline:block_saturnite"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:saturnite_ingot"
+    "item": "smogline:saturnite_ingot"
   }
 }

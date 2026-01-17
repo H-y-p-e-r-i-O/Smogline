@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:stone",
+    "smogline:polonium210_block",
+    "smogline:plutonium_block",
+    "smogline:plutonium_fuel_block"
+  ]
+}

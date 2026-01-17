@@ -1,26 +1,26 @@
 {
-  "type": "hbm_m:assembler",
+  "type": "smogline:assembler",
   "duration": 80,
   "ingredients": [
     {
       "count": 2,
-      "item": "hbm_m:capacitor"
+      "item": "smogline:capacitor"
     },
     {
       "count": 3,
-      "item": "hbm_m:vacuum_tube"
+      "item": "smogline:vacuum_tube"
     },
     {
       "count": 4,
-      "item": "hbm_m:wire_carbon"
+      "item": "smogline:wire_carbon"
     },
     {
       "count": 4,
-      "item": "hbm_m:pcb"
+      "item": "smogline:pcb"
     }
   ],
   "output": {
-    "item": "hbm_m:analog_circuit"
+    "item": "smogline:analog_circuit"
   },
   "power": 150
 }

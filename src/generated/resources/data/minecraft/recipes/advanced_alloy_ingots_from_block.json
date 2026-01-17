@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_advanced_alloy"
+      "item": "smogline:block_advanced_alloy"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:advanced_alloy_ingot"
+    "item": "smogline:advanced_alloy_ingot"
   }
 }

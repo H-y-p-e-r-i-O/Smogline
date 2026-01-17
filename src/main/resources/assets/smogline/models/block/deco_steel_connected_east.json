@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "smogline:block/deco_steel_connected_east"
+  }
+}

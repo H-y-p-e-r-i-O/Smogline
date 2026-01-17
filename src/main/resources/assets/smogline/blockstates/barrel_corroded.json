@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "smogline:block/barrel_corroded",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "smogline:block/barrel_corroded",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "smogline:block/barrel_corroded",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "smogline:block/barrel_corroded",
+      "y": 270
+    }
+  }
+}

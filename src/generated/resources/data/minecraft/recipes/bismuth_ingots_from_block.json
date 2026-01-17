@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_bismuth"
+      "item": "smogline:block_bismuth"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:bismuth_ingot"
+    "item": "smogline:bismuth_ingot"
   }
 }

@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_lanthanium"
+      "item": "smogline:block_lanthanium"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:lanthanium_ingot"
+    "item": "smogline:lanthanium_ingot"
   }
 }

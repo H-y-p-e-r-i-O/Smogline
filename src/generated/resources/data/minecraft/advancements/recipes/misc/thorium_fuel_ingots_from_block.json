@@ -12,7 +12,7 @@
         "items": [
           {
             "items": [
-              "hbm_m:block_thorium_fuel"
+              "smogline:block_thorium_fuel"
             ]
           }
         ]

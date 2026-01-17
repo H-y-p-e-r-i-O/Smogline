@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "hbm_m:block_tcalloy"
+      "item": "smogline:block_tcalloy"
     }
   ],
   "result": {
     "count": 9,
-    "item": "hbm_m:tcalloy_ingot"
+    "item": "smogline:tcalloy_ingot"
   }
 }

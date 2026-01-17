@@ -1,5 +1,5 @@
 {
-  "type": "hbm_m:shredding",
+  "type": "smogline:shredding",
   "ingredient": {
     "item": "minecraft:cobblestone"
   },

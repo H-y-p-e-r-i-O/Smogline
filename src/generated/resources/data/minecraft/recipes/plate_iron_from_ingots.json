@@ -1,5 +1,5 @@
 {
-  "type": "hbm_m:assembler",
+  "type": "smogline:assembler",
   "blueprint_pool": "plates",
   "duration": 60,
   "ingredients": [
@@ -10,7 +10,7 @@
   ],
   "output": {
     "count": 2,
-    "item": "hbm_m:plate_iron"
+    "item": "smogline:plate_iron"
   },
   "power": 100
 }

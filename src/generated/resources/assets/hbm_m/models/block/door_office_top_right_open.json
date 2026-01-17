@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/door_top_right_open",
-  "render_type": "minecraft:cutout",
-  "textures": {
-    "bottom": "hbm_m:block/door_office_bottom",
-    "top": "hbm_m:block/door_office_top"
-  }
-}

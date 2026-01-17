@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "hbm_m:cadmium_ingot"
+      "item": "smogline:cadmium_ingot"
     }
   },
   "pattern": [
@@ -12,7 +12,7 @@
     "III"
   ],
   "result": {
-    "item": "hbm_m:block_cadmium"
+    "item": "smogline:block_cadmium"
   },
   "show_notification": true
 }

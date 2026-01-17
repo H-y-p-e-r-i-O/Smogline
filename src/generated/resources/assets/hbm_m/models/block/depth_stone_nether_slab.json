@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab",
-  "textures": {
-    "bottom": "hbm_m:block/depth_stone_nether",
-    "side": "hbm_m:block/depth_stone_nether",
-    "top": "hbm_m:block/depth_stone_nether"
-  }
-}
