@@ -681,3 +681,4 @@ public class MachineGunItem extends Item implements GeoItem {
         }
     }
 }
+}
