@@ -1,4 +1,4 @@
-package com.smogline.entity.client.models.turrets;
+package com.smogline.entity.client.turrets;
 
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.smogline.main.MainRegistry;

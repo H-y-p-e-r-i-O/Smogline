@@ -5,6 +5,7 @@ import com.smogline.api.energy.SwitchBlockEntity;
 import com.smogline.api.energy.WireBlockEntity;
 import com.smogline.block.ModBlocks;
 import com.smogline.block.entity.custom.TurretBlockEntity;
+import com.smogline.block.entity.custom.TurretLightPlacerBlockEntity;
 import com.smogline.block.entity.custom.crates.*;
 import com.smogline.block.entity.custom.doors.DoorBlockEntity;
 import com.smogline.block.entity.custom.machines.*;
@@ -29,6 +30,11 @@ public class ModBlockEntities {
 		BLOCK_ENTITIES.register("geiger_counter_be", () ->
 			BlockEntityType.Builder.<GeigerCounterBlockEntity>of(GeigerCounterBlockEntity::new, ModBlocks.GEIGER_COUNTER_BLOCK.get())
 				.build(null));
+
+    public static final RegistryObject<BlockEntityType<TurretLightPlacerBlockEntity>> TURRET_LIGHT_PLACER_BE =
+            BLOCK_ENTITIES.register("turret_light_placer",
+                    () -> BlockEntityType.Builder.of(TurretLightPlacerBlockEntity::new, ModBlocks.TURRET_LIGHT_PLACER.get()).build(null));
+
 
     public static final RegistryObject<BlockEntityType<MachineAssemblerBlockEntity>> MACHINE_ASSEMBLER_BE =
 		BLOCK_ENTITIES.register("machine_assembler_be", () ->

@@ -1,4 +1,4 @@
-package com.smogline.entity.client.models.bullets;
+package com.smogline.entity.client.bullets;
 
 import com.smogline.entity.weapons.bullets_and_chels.TurretBulletEntity;
 import com.smogline.lib.RefStrings;

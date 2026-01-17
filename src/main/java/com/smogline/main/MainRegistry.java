@@ -228,6 +228,7 @@ public class MainRegistry {
 
             event.accept(ModItems.TURRET_REMOVER);
             event.accept(ModBlocks.TURRET_LIGHT);
+            event.accept(ModBlocks.TURRET_LIGHT_PLACER);
 
             event.accept(ModItems.MACHINEGUN);
             event.accept(ModItems.AMMO_TURRET);

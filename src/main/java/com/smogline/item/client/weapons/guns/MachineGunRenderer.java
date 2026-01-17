@@ -1,7 +1,6 @@
-package com.smogline.item.client.weapons.guns.renderers;
+package com.smogline.item.client.weapons.guns;
 
 import com.smogline.item.custom.weapons.guns.MachineGunItem;
-import com.smogline.item.client.weapons.guns.models.MachineGunModel;
 import com.smogline.lib.RefStrings;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;

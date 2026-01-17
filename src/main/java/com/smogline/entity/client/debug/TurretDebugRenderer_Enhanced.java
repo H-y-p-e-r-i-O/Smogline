@@ -1,4 +1,4 @@
-package com.smogline.entity.client.renderers.debug;
+package com.smogline.entity.client.debug;
 
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.mojang.blaze3d.vertex.PoseStack;

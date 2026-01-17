@@ -30,6 +30,7 @@ import com.smogline.item.custom.food.ItemConserve;
 import com.smogline.item.custom.food.ItemEnergyDrink;
 import com.smogline.item.custom.food.ModFoods;
 import com.smogline.item.custom.tools_and_armor.*;
+import com.smogline.item.custom.weapons.turrets.TurretLightPlacerBlockItem;
 import com.smogline.item.tags_and_tiers.*;
 import com.smogline.item.custom.scanners.DepthOresScannerItem;
 import com.smogline.item.custom.scanners.OilDetectorItem;
@@ -450,6 +451,14 @@ public class ModItems {
     public static final RegistryObject<Item> CRATE_STEEL = ITEMS.register("crate_steel",
             () -> new SteelCrateItem(ModBlocks.CRATE_STEEL.get(), new Item.Properties()));
 
+// Сначала убедись, что сам БЛОК уже зарегистрирован в ModBlocks
+// ModBlocks.TURRET_LIGHT_PLACER
+
+    public static final RegistryObject<Item> TURRET_LIGHT_PLACER_ITEM = ITEMS.register("turret_light_placer",
+            () -> new TurretLightPlacerBlockItem(
+                    ModBlocks.TURRET_LIGHT_PLACER.get(), // Ссылка на блок
+                    new Item.Properties() // Свойства предмета
+            ));
 
 
 

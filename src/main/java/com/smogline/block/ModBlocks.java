@@ -1,5 +1,6 @@
 package com.smogline.block;
 
+import com.smogline.block.custom.weapons.TurretLightPlacerBlock;
 import com.smogline.api.energy.ConverterBlock;
 import com.smogline.api.energy.MachineBatteryBlock;
 import com.smogline.api.energy.SwitchBlock;
@@ -274,8 +275,12 @@ public class ModBlocks {
     public static final RegistryObject<Block> TURRET_BLOCK = registerBlock("turret_block",
             () -> new TurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops().noOcclusion()));
 
-    public static final RegistryObject<Block> TURRET_LIGHT_PLACER = registerBlock("turret_light_placer",
-            () -> new TurretLightPlacerBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
+    // Регистрируем ТОЛЬКО блок, без предмета (предмет ты уже зарегал ниже вручную)
+    public static final RegistryObject<Block> TURRET_LIGHT_PLACER = BLOCKS.register("turret_light_placer",
+            () -> new TurretLightPlacerBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
+                    .strength(5.0f, 4.0f)
+                    .noOcclusion() // Важно для прозрачных моделей
+                    .requiresCorrectToolForDrops()));
 
 
     public static final RegistryObject<Block> TURRET_LIGHT = registerBlock("turret_light",

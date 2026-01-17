@@ -1,4 +1,4 @@
-package com.smogline.item.client.weapons.ammo.models;
+package com.smogline.item.client.weapons.ammo;
 
 import com.smogline.item.custom.weapons.ammo.AmmoTurretItem;
 import com.smogline.lib.RefStrings;

@@ -1,7 +1,7 @@
 package com.smogline.client;
 
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
-import com.smogline.entity.client.renderers.debug.TurretDebugRenderer_Enhanced;
+import com.smogline.entity.client.debug.TurretDebugRenderer_Enhanced;
 import com.smogline.main.MainRegistry;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;

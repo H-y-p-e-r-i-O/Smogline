@@ -1,6 +1,5 @@
-package com.smogline.entity.client.renderers.turrets;
+package com.smogline.entity.client.turrets;
 
-import com.smogline.entity.client.models.turrets.TurretLightLinkedModel;
 import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;

@@ -1,6 +1,6 @@
 package com.smogline.item.custom.weapons.ammo;
 
-import com.smogline.item.client.weapons.ammo.renderers.AmmoTurretRenderer;
+import com.smogline.item.client.weapons.ammo.AmmoTurretRenderer;
 import com.smogline.item.tags_and_tiers.IAmmoItem;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.world.item.Item;

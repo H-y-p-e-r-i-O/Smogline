@@ -2,7 +2,7 @@ package com.smogline.item.custom.weapons.guns;
 
 import com.smogline.client.ModKeyBindings;
 import com.smogline.entity.weapons.bullets_and_chels.TurretBulletEntity;
-import com.smogline.item.client.weapons.guns.renderers.MachineGunRenderer;
+import com.smogline.item.client.weapons.guns.MachineGunRenderer;
 import com.smogline.item.tags_and_tiers.AmmoRegistry;
 import com.smogline.lib.RefStrings;
 import com.smogline.main.MainRegistry;

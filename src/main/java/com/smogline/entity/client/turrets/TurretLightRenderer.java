@@ -1,6 +1,5 @@
-package com.smogline.entity.client.renderers.turrets;
+package com.smogline.entity.client.turrets;
 
-import com.smogline.entity.client.models.turrets.TurretLightModel;
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;

@@ -1,4 +1,4 @@
-package com.smogline.item.client.weapons.guns.models;
+package com.smogline.item.client.weapons.guns;
 
 import com.smogline.item.custom.weapons.guns.MachineGunItem;
 import com.smogline.main.MainRegistry;
