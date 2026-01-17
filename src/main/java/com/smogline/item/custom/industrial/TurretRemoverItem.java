@@ -1,8 +1,8 @@
 package com.smogline.item.custom.industrial;
 
 import com.smogline.block.ModBlocks;
-import com.smogline.entity.TurretLightEntity;
-import com.smogline.entity.TurretLightLinkedEntity;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
+import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;

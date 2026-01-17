@@ -13,13 +13,15 @@ import java.util.Set;
 
 import com.smogline.api.fluids.ModFluids;
 
+import com.smogline.item.custom.weapons.ammo.AmmoTurretItem;
+import com.smogline.item.custom.weapons.grenades_and_activators.*;
+import com.smogline.item.custom.weapons.guns.MachineGunItem;
 import com.smogline.item.custom.industrial.TurretRemoverItem;
 import com.smogline.item.custom.fekal_electric.ItemCreativeBattery;
 import com.smogline.item.custom.fekal_electric.ModBatteryItem;
 import com.smogline.item.custom.crates.IronCrateItem;
 import com.smogline.item.custom.crates.SteelCrateItem;
 import com.smogline.item.custom.industrial.*;
-import com.smogline.item.custom.industrial.TurretRemoverItem;
 import com.smogline.item.custom.liquids.InfiniteWaterItem;
 import com.smogline.item.custom.liquids.ItemFluidIdentifier;
 import com.smogline.item.custom.radiation_meter.ItemDosimeter;
@@ -27,7 +29,6 @@ import com.smogline.item.custom.radiation_meter.ItemGeigerCounter;
 import com.smogline.item.custom.food.ItemConserve;
 import com.smogline.item.custom.food.ItemEnergyDrink;
 import com.smogline.item.custom.food.ModFoods;
-import com.smogline.item.custom.grenades_and_activators.*;
 import com.smogline.item.custom.tools_and_armor.*;
 import com.smogline.item.tags_and_tiers.*;
 import com.smogline.item.custom.scanners.DepthOresScannerItem;
@@ -44,8 +45,8 @@ import com.smogline.block.custom.machines.armormod.item.ItemModRadProtection;
 import com.smogline.block.ModBlocks;
 import com.smogline.effect.ModEffects;
 import com.smogline.entity.ModEntities;
-import com.smogline.entity.grenades.GrenadeIfType;
-import com.smogline.entity.grenades.GrenadeType;
+import com.smogline.entity.weapons.grenades.GrenadeIfType;
+import com.smogline.entity.weapons.grenades.GrenadeType;
 import com.smogline.multiblock.MultiblockBlockItem;
 import com.smogline.sound.ModSounds;
 

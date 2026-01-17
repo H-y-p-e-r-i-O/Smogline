@@ -11,8 +11,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import com.smogline.item.custom.grenades_and_activators.MultiDetonatorItem;
-import com.smogline.item.custom.grenades_and_activators.MultiDetonatorItem.PointData;
+import com.smogline.item.custom.weapons.grenades_and_activators.MultiDetonatorItem;
+import com.smogline.item.custom.weapons.grenades_and_activators.MultiDetonatorItem.PointData;
 import com.smogline.block.custom.explosives.IDetonatable;
 import java.util.function.Supplier;
 

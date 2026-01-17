@@ -1,10 +1,11 @@
 package com.smogline.entity;
 
-import com.smogline.entity.grenades.*;
-import com.smogline.lib.RefStrings;
+import com.smogline.entity.weapons.bullets_and_chels.TurretBulletEntity;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
+import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
+import com.smogline.entity.weapons.grenades.*;
 import com.smogline.main.MainRegistry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.item.FallingBlockEntity;

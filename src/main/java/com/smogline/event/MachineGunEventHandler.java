@@ -1,6 +1,6 @@
 package com.smogline.event;
 
-import com.smogline.item.MachineGunItem;
+import com.smogline.item.custom.weapons.guns.MachineGunItem;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 

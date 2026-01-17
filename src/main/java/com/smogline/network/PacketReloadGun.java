@@ -1,7 +1,7 @@
 // PacketReloadGun.java
 package com.smogline.network;
 
-import com.smogline.item.MachineGunItem;
+import com.smogline.item.custom.weapons.guns.MachineGunItem;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;

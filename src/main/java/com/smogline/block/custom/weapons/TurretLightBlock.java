@@ -1,7 +1,7 @@
 package com.smogline.block.custom.weapons;
 
 import com.smogline.entity.ModEntities;
-import com.smogline.entity.TurretLightEntity;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;

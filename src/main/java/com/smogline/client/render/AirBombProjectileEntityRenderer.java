@@ -1,6 +1,6 @@
 package com.smogline.client.render;
 
-import com.smogline.entity.grenades.AirBombProjectileEntity;
+import com.smogline.entity.weapons.grenades.AirBombProjectileEntity;
 import com.smogline.block.ModBlocks;
 
 import com.mojang.blaze3d.vertex.PoseStack;
