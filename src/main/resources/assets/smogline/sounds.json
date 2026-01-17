@@ -62,6 +62,27 @@
       "smogline:turret_lock"
     ]
   },
+  "gunpull": {
+    "category": "player",
+    "subtitle": "subtitles.smogline.gunpull",
+    "sounds": [
+      "smogline:reload/gunpull"
+    ]
+  },
+  "heavy_gunclick": {
+    "category": "player",
+    "subtitle": "subtitles.smogline.heavy_gunclick",
+    "sounds": [
+      "smogline:reload/heavy_gunclick"
+    ]
+  },
+  "gunclick": {
+    "category": "player",
+    "subtitle": "subtitles.smogline.gunclick",
+    "sounds": [
+      "smogline:reload/gunclick"
+    ]
+  },
   "bullet_hit1": {
     "category": "player",
     "subtitle": "sounds.smogline.bullet_hit1",
@@ -307,17 +328,6 @@
       "smogline:mukeexplosion"
     ]
   },
-
-
-
-
-
-
-
-
-
-
-
 
   "techboop": {
     "category": "player",

@@ -11,9 +11,9 @@ import com.smogline.main.MainRegistry;
 
 public class ModSounds {
     // Создаем регистр для звуков
-    public static final DeferredRegister<SoundEvent> SOUND_EVENTS = 
+    public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, RefStrings.MODID);
-    
+
     // Регистрируем звуки счетчика Гейгера
     public static final RegistryObject<SoundEvent> GEIGER_1 = registerSoundEvents("item.geiger1");
     public static final RegistryObject<SoundEvent> GEIGER_2 = registerSoundEvents("item.geiger2");
@@ -39,6 +39,9 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> BULLET_GROUND5 = registerSoundEvents("bullet_ground5");
     public static final RegistryObject<SoundEvent> BULLET_GROUND6 = registerSoundEvents("bullet_ground6");
 
+    public static final RegistryObject<SoundEvent> GUNPULL = registerSoundEvents("gunpull");
+    public static final RegistryObject<SoundEvent> HEAVY_GUNCLICK = registerSoundEvents("heavy_gunclick");
+    public static final RegistryObject<SoundEvent> GUNCLICK = registerSoundEvents("gunclick");
     public static final RegistryObject<SoundEvent> DRY_FIRE = registerSoundEvents("dry_fire");
     public static final RegistryObject<SoundEvent> BULLET_HIT2 = registerSoundEvents("bullet_hit2");
     public static final RegistryObject<SoundEvent> BULLET_HIT1 = registerSoundEvents("bullet_hit1");
@@ -126,14 +129,14 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> EXTRACT_RANDOM = registerSoundEvents("tool.extract_random");
     public static final RegistryObject<SoundEvent> ASSEMBLER_STRIKE_RANDOM = registerSoundEvents("block.assembler_strike_random");
     public static final RegistryObject<SoundEvent> BOUNCE_RANDOM = registerSoundEvents("item.bounce_random");
-    
+
     // Вспомогательный метод для регистрации
     private static RegistryObject<SoundEvent> registerSoundEvents(String name) {
         // Создаем ResourceLocation, избегая устаревших методов
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, name);
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(id));
     }
-    
+
     // Метод для регистрации в Forge EventBus
     public static void register(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);
