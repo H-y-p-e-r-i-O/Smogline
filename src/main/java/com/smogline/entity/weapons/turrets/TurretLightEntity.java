@@ -64,25 +64,23 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     private static final double TARGET_LOCK_DISTANCE = 5.0D;
     private static final double CLOSE_COMBAT_RANGE = 5.0D;
 
-    // Ballistics
+    // Ballistics Constants
     private static final float BULLET_SPEED = 3.0F;
     private static final float BULLET_GRAVITY = 0.01F;
-    private static final float AIR_RESISTANCE = 0.99F; // на всякий (если будешь усложнять solver)
+    private static final double DRAG = 0.99; // Сопротивление воздуха (Standard MC Drag)
 
-    // Adaptive lead (по размеру цели)
-    private static final double MIN_ENTITY_SIZE = 0.5D;
-    private static final double MAX_ENTITY_SIZE = 5.0D;
-    private static final double MIN_PREDICTION_LEAD = 0.35D;
-    private static final double MAX_PREDICTION_LEAD = 1.65D;
-    private double adaptiveLeadTime = 1.0D;
+    // === WAR THUNDER STYLE TRACKING ===
+    private Vec3 lastTargetPos = Vec3.ZERO;       // Позиция цели в прошлом тике
+    private Vec3 avgTargetVelocity = Vec3.ZERO;   // Сглаженная скорость (Smoothed Velocity)
+    private Vec3 targetAcceleration = Vec3.ZERO;  // Ускорение цели
+    private int trackingTicks = 0;                // Время удержания цели
 
-    // Anti “Y impulse” filter (главный фикс под твой кейс)
-    // Сколько миллисекунд после нашего выстрела игнорировать Y-скорость цели
+    // Anti-Recoil Filter (сколько мс игнорировать Y после выстрела)
     private static final long Y_IMPULSE_FILTER_MS = 220L;
     private long lastShotTimeMs = 0L;
 
     // Aim tuning
-    private static final double AIM_Y_BIAS = 0.05D; // если “в землю” — увеличь; если “в воздух” — уменьши
+    private static final double AIM_Y_BIAS = 0.05D;
 
     // Local state
     private int shootAnimTimer = 0;
@@ -99,7 +97,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     public Vec3 getDebugTargetPoint() { return debugTargetPoint; }
     public Vec3 getDebugBallisticVelocity() { return debugBallisticVelocity; }
     public List<Pair<Vec3, Boolean>> getDebugScanPoints() { return debugScanPoints; }
-    public double getAdaptiveLeadTime() { return adaptiveLeadTime; }
 
     public TurretLightEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -126,7 +123,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
     @Override
     public int getMaxHeadYRot() { return 360; }
-
     @Override
     public int getMaxHeadXRot() { return 90; }
 
@@ -147,58 +143,16 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         return new Vec3(x, y, z);
     }
 
-    // -------------------- Key fix: filter target velocity --------------------
-
-    /**
-     * Возвращает скорость цели для упреждения.
-     * Главная идея: когда цель получила импульс по Y от попадания (подброс/падение),
-     * это НЕ “намеренное уклонение”, поэтому Y игнорируем краткое время после нашего выстрела.
-     */
-    private Vec3 getFilteredTargetVelocity(LivingEntity target) {
-        Vec3 v = target.getDeltaMovement();
-
-        // Ванильные прыжки/ступеньки тоже часто ломают упреждение — на земле Y лучше игнорировать всегда.
-        if (target.onGround()) {
-            return new Vec3(v.x, 0.0D, v.z);
-        }
-
-        long now = System.currentTimeMillis();
-        if (now - lastShotTimeMs < Y_IMPULSE_FILTER_MS) {
-            return new Vec3(v.x, 0.0D, v.z);
-        }
-
-        // Летающие/прыгающие мобы (без “нашего” импульса) — можно учитывать Y.
-        return v;
-    }
-
-    private void updateAdaptiveLeadTime(LivingEntity target) {
-        // Если сейчас “окно импульса” — не трогаем leadTime (иначе турель начнет “дергаться”)
-        long now = System.currentTimeMillis();
-        if (now - lastShotTimeMs < Y_IMPULSE_FILTER_MS) return;
-
-        AABB bb = target.getBoundingBox();
-        double w = bb.maxX - bb.minX;
-        double h = bb.maxY - bb.minY;
-        double size = Math.max(w, h);
-
-        double t = (size - MIN_ENTITY_SIZE) / (MAX_ENTITY_SIZE - MIN_ENTITY_SIZE);
-        t = Math.max(0.0D, Math.min(1.0D, t));
-
-        this.adaptiveLeadTime = MIN_PREDICTION_LEAD + t * (MAX_PREDICTION_LEAD - MIN_PREDICTION_LEAD);
-    }
-
-    // -------------------- Allies --------------------
+    // -------------------- Allies & Priority --------------------
 
     @Override
     public boolean isAlliedTo(Entity entity) {
         if (super.isAlliedTo(entity)) return true;
-
         if (entity instanceof TurretLightEntity otherTurret) {
             UUID myOwner = this.getOwnerUUID();
             UUID theirOwner = otherTurret.getOwnerUUID();
             if (myOwner != null && myOwner.equals(theirOwner)) return true;
         }
-
         UUID ownerUUID = this.getOwnerUUID();
         return ownerUUID != null && entity.getUUID().equals(ownerUUID);
     }
@@ -232,7 +186,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         return 999;
     }
 
-    // -------------------- Tick --------------------
+    // -------------------- TICK (Tracking Logic) --------------------
 
     @Override
     public void tick() {
@@ -241,15 +195,48 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         this.yBodyRot = this.getYRot();
         this.yBodyRotO = this.getYRot();
 
-        // Server: sync target id
         if (!this.level().isClientSide) {
-            LivingEntity currentTarget = this.getTarget();
-            int targetId = currentTarget != null ? currentTarget.getId() : -1;
+            LivingEntity target = this.getTarget();
+
+            // === WAR THUNDER TRACKER UPDATE ===
+            if (target != null && target.isAlive()) {
+                Vec3 currentPos = target.position();
+
+                if (trackingTicks > 0) {
+                    // Мгновенная скорость за тик
+                    Vec3 instantaneousVel = currentPos.subtract(lastTargetPos);
+
+                    // Сглаживание скорости (80% старой, 20% новой)
+                    // Это убирает "дёрганье" прицела
+                    this.avgTargetVelocity = this.avgTargetVelocity.lerp(instantaneousVel, 0.2);
+
+                    // Расчет ускорения (изменение скорости)
+                    Vec3 newAccel = instantaneousVel.subtract(this.avgTargetVelocity);
+                    // Ускорение сглаживаем сильнее (90% старого, 10% нового), чтобы не реагировать на микро-рывки
+                    this.targetAcceleration = this.targetAcceleration.lerp(newAccel, 0.1);
+                } else {
+                    // Первый тик захвата
+                    this.avgTargetVelocity = target.getDeltaMovement();
+                    this.targetAcceleration = Vec3.ZERO;
+                }
+
+                this.lastTargetPos = currentPos;
+                this.trackingTicks++;
+            } else {
+                // Цели нет - сбрасываем трекер
+                this.trackingTicks = 0;
+                this.avgTargetVelocity = Vec3.ZERO;
+                this.targetAcceleration = Vec3.ZERO;
+                this.lastTargetPos = Vec3.ZERO;
+            }
+            // ==================================
+
+            int targetId = target != null ? target.getId() : -1;
             if (this.entityData.get(TARGET_ID) != targetId) {
                 this.entityData.set(TARGET_ID, targetId);
             }
         } else {
-            // Client debug
+            // Client debug logic
             int targetId = this.entityData.get(TARGET_ID);
             if (targetId != -1) {
                 Entity targetEntity = this.level().getEntity(targetId);
@@ -267,7 +254,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             }
         }
 
-        // Server-only logic
         if (!this.level().isClientSide) {
             int currentTimer = this.entityData.get(DEPLOY_TIMER);
             if (currentTimer > 0) {
@@ -289,7 +275,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             LivingEntity target = this.getTarget();
             currentTargetPriority = (target != null) ? calculateTargetPriority(target) : 999;
 
-            // Lock sound
             if (target != null && target != currentTargetCache && this.isDeployed()) {
                 if (this.lockSoundCooldown == 0) {
                     if (ModSounds.TURRET_LOCK.isPresent()) {
@@ -302,10 +287,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 currentTargetCache = null;
             }
 
-            // Look control
             if (target != null && this.isDeployed()) {
-                updateAdaptiveLeadTime(target);
-
                 Vec3 lead = predictLeadPoint(target, getMuzzlePos());
                 if (lead != null) {
                     this.getLookControl().setLookAt(lead.x, lead.y, lead.z, 30.0F, 30.0F);
@@ -314,7 +296,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 }
             }
 
-            // Re-targeting each 10 ticks
             if (this.tickCount % 10 == 0) {
                 LivingEntity closeThreat = findClosestThreat();
                 if (closeThreat != null && closeThreat != this.getTarget()) {
@@ -351,61 +332,123 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         }
     }
 
-    // -------------------- Ballistics + lead --------------------
+    // -------------------- BALLISTICS (WT Style) --------------------
 
+    /**
+     * WAR THUNDER STYLE CALCULATOR
+     * Использует сглаженную скорость и ускорение + итеративный подбор времени полета.
+     */
     private Vec3 calculateBallisticVelocity(LivingEntity target, Vec3 muzzlePos, float speed, float gravity) {
         Vec3 targetPos = getSmartTargetPos(target);
         if (targetPos == null) return null;
 
-        Vec3 targetVel = getFilteredTargetVelocity(target);
+        Vec3 targetVel;
+        Vec3 targetAcc;
 
-        double timeToTarget = targetPos.distanceTo(muzzlePos) / speed;
-        Vec3 impactPos = targetPos.add(targetVel.scale(timeToTarget * this.adaptiveLeadTime));
+        // Выбираем источник данных о скорости
+        // Если трекер "прогрет" (> 5 тиков), верим ему
+        if (trackingTicks > 5) {
+            targetVel = this.avgTargetVelocity;
 
-        double dirX = impactPos.x - muzzlePos.x;
-        double dirZ = impactPos.z - muzzlePos.z;
-        double dirY = impactPos.y - muzzlePos.y;
+            // Фильтр вертикального рывка (Recoil Filter)
+            long now = System.currentTimeMillis();
+            if (target.onGround() || (now - lastShotTimeMs < Y_IMPULSE_FILTER_MS)) {
+                targetVel = new Vec3(targetVel.x, 0, targetVel.z);
+                targetAcc = new Vec3(this.targetAcceleration.x, 0, this.targetAcceleration.z);
+            } else {
+                targetAcc = this.targetAcceleration;
+            }
+        } else {
+            // Если трекер пуст - используем ванильную физику
+            targetVel = target.getDeltaMovement();
+            if (target.onGround()) targetVel = new Vec3(targetVel.x, 0, targetVel.z);
+            targetAcc = Vec3.ZERO;
+        }
 
-        double x = Math.sqrt(dirX * dirX + dirZ * dirZ);
-        double y = dirY;
+        // 1. Грубая оценка времени (с учетом Drag)
+        double dist = targetPos.distanceTo(muzzlePos);
+        double t = calculateFlightTime(dist, speed);
+
+        // 2. Итеративное предсказание позиции (Ньютон-Рафсон Lite)
+        Vec3 predictedPos = targetPos;
+
+        for (int i = 0; i < 5; i++) {
+            // Формула: P_new = P_0 + V*t + 0.5*A*t^2
+            Vec3 velocityPart = targetVel.scale(t);
+            Vec3 accelPart = targetAcc.scale(0.5 * t * t);
+
+            predictedPos = targetPos.add(velocityPart).add(accelPart);
+
+            // Пересчитываем время до новой точки
+            double newDist = predictedPos.distanceTo(muzzlePos);
+            t = calculateFlightTime(newDist, speed);
+        }
+
+        // 3. Расчет баллистики на предсказанную точку
+        double dragFactor = getDragCompensationFactor(t);
+
+        double dirX = predictedPos.x - muzzlePos.x;
+        double dirZ = predictedPos.z - muzzlePos.z;
+        double dirY = predictedPos.y - muzzlePos.y;
+
+        double horizontalDist = Math.sqrt(dirX * dirX + dirZ * dirZ) * dragFactor;
 
         double v = speed;
         double v2 = v * v;
         double v4 = v2 * v2;
+        double g = gravity * dragFactor;
 
-        // Упрощенная “эффективная гравитация” (можно тюнить под твою пулю/drag)
-        double effectiveGravity = gravity;
-
-        double discriminant = v4 - effectiveGravity * (effectiveGravity * x * x + 2 * y * v2);
+        double discriminant = v4 - g * (g * horizontalDist * horizontalDist + 2 * dirY * v2);
         if (discriminant < 0) return null;
 
         double sqrtDisc = Math.sqrt(discriminant);
-        double tanTheta = (v2 - sqrtDisc) / (effectiveGravity * x);
-        double theta = Math.atan(tanTheta);
-
-        double vx = v * Math.cos(theta);
-        double vy = v * Math.sin(theta);
+        double tanTheta = (v2 - sqrtDisc) / (g * horizontalDist);
+        double pitch = Math.atan(tanTheta);
 
         double yaw = Math.atan2(dirZ, dirX);
 
-        double finalX = vx * Math.cos(yaw);
-        double finalZ = vx * Math.sin(yaw);
-        double finalY = vy;
+        double groundSpeed = v * Math.cos(pitch);
+        double vy = v * Math.sin(pitch);
 
-        return new Vec3(finalX, finalY, finalZ);
+        return new Vec3(groundSpeed * Math.cos(yaw), vy, groundSpeed * Math.sin(yaw));
     }
 
+    /**
+     * Помощник для предсказания поворота башни.
+     * Использует ту же логику V*t, чтобы башня смотрела в точку упреждения.
+     */
     private Vec3 predictLeadPoint(LivingEntity target, Vec3 muzzlePos) {
         Vec3 targetPos = getSmartTargetPos(target);
         if (targetPos == null) return null;
 
-        Vec3 targetVel = getFilteredTargetVelocity(target);
-        double timeToTarget = targetPos.distanceTo(muzzlePos) / BULLET_SPEED;
+        Vec3 targetVel = (trackingTicks > 5) ? this.avgTargetVelocity : target.getDeltaMovement();
+        if (target.onGround()) targetVel = new Vec3(targetVel.x, 0, targetVel.z);
 
-        return targetPos.add(targetVel.scale(timeToTarget * this.adaptiveLeadTime));
+        double dist = targetPos.distanceTo(muzzlePos);
+        double t = calculateFlightTime(dist, BULLET_SPEED);
+
+        return targetPos.add(targetVel.scale(t));
     }
 
-    // -------------------- Smart hitbox scan --------------------
+    /**
+     * Физика полета с сопротивлением воздуха.
+     */
+    private double calculateFlightTime(double dist, double speed) {
+        // t = log(1 - dist * (1-drag)/speed) / log(drag)
+        double term = 1.0 - (dist * (1.0 - DRAG) / speed);
+        if (term <= 0.05) return 60.0;
+        return Math.log(term) / Math.log(DRAG);
+    }
+
+    private double getDragCompensationFactor(double t) {
+        if (t <= 0.001) return 1.0;
+        double numerator = t * (1.0 - DRAG);
+        double denominator = 1.0 - Math.pow(DRAG, t);
+        if (denominator < 0.001) return 1.0;
+        return numerator / denominator;
+    }
+
+    // -------------------- Smart Hitbox --------------------
 
     private Vec3 getSmartTargetPos(LivingEntity target) {
         Vec3 start = this.getMuzzlePos();
@@ -414,7 +457,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
         if (this.level().isClientSide) this.debugScanPoints.clear();
 
-        // фикс “точки на границах”: используем центры ячеек (x+0.5)/steps
         int stepsX = 4;
         int stepsY = 6;
         int stepsZ = 4;
@@ -441,7 +483,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
         if (visiblePoints.isEmpty()) return null;
 
-        // Стабильный вариант: “верхняя видимая” (часто лучше против укрытий/ступеней)
         Vec3 bestPoint = null;
         double bestY = -1e9;
         for (Vec3 p : visiblePoints) {
@@ -451,7 +492,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             }
         }
 
-        // маленький bias вверх (чтобы не “в землю” при краях AABB)
         return bestPoint.add(0.0D, AIM_Y_BIAS, 0.0D);
     }
 
@@ -510,7 +550,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         return closest;
     }
 
-    // -------------------- Attack --------------------
+    // -------------------- Fire! --------------------
 
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
@@ -518,10 +558,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         if (this.shotCooldown > 0) return;
         if (!canShootSafe(target)) return;
 
-        // фикс “рывков”: отмечаем момент выстрела, чтобы ближайшие N мс игнорировать Y цели
         this.lastShotTimeMs = System.currentTimeMillis();
-
-        updateAdaptiveLeadTime(target);
 
         Vec3 muzzlePos = getMuzzlePos();
         Vec3 ballisticVelocity = calculateBallisticVelocity(target, muzzlePos, BULLET_SPEED, BULLET_GRAVITY);
@@ -545,8 +582,15 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
             bullet.setDeltaMovement(ballisticVelocity);
 
-            // ✅ синхра поворота пули
-            bullet.alignToVelocity();
+            // SYNC ROTATION
+            double horizontalDist = Math.sqrt(ballisticVelocity.x * ballisticVelocity.x + ballisticVelocity.z * ballisticVelocity.z);
+            float yaw = (float) (Math.atan2(ballisticVelocity.z, ballisticVelocity.x) * (180D / Math.PI)) - 90.0F;
+            float pitch = (float) (Math.atan2(ballisticVelocity.y, horizontalDist) * (180D / Math.PI));
+
+            bullet.setYRot(yaw);
+            bullet.setXRot(pitch);
+            bullet.yRotO = yaw;
+            bullet.xRotO = pitch;
 
             serverLevel.addFreshEntity(bullet);
 
@@ -556,7 +600,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         }
     }
 
-    // -------------------- GeckoLib --------------------
+    // -------------------- GeckoLib & NBT --------------------
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
@@ -576,8 +620,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         }));
     }
 
-    // -------------------- NBT --------------------
-
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
@@ -593,8 +635,6 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         if (tag.contains("Deployed")) this.entityData.set(DEPLOYED, tag.getBoolean("Deployed"));
         if (tag.contains("DeployTimer")) this.entityData.set(DEPLOY_TIMER, tag.getInt("DeployTimer"));
     }
-
-    // -------------------- Goals --------------------
 
     @Override
     protected void registerGoals() {
@@ -649,27 +689,15 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
                 entity -> !this.isAlliedTo(entity) && TurretLightEntity.this.isDeployed()));
     }
 
-    // -------------------- Misc --------------------
-
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() { return this.cache; }
 
     public void setOwner(Player player) { this.entityData.set(OWNER_UUID, Optional.of(player.getUUID())); }
-
     public UUID getOwnerUUID() { return this.entityData.get(OWNER_UUID).orElse(null); }
-
     public void setShooting(boolean shooting) { this.entityData.set(SHOOTING, shooting); }
-
     public boolean isShooting() { return this.entityData.get(SHOOTING); }
-
     public boolean isDeployed() { return this.entityData.get(DEPLOYED); }
-
-    @Override
-    public boolean isPushable() { return false; }
-
-    @Override
-    public double getBoneResetTime() { return 0; }
-
-    @Override
-    protected void playStepSound(BlockPos pos, BlockState blockIn) {}
+    @Override public boolean isPushable() { return false; }
+    @Override public double getBoneResetTime() { return 0; }
+    @Override protected void playStepSound(BlockPos pos, BlockState blockIn) {}
 }
