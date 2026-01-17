@@ -44,13 +44,7 @@ public class RadiationDataPacket {
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                 OverlayGeiger.clientTotalEnvironmentRadiation = msg.totalEnvironmentRad;
                 OverlayGeiger.clientPlayerRadiation = msg.playerRad;
-                
-                if (msg.totalEnvironmentRad != lastEnvRad || msg.playerRad != lastPlayerRad) {
-                    MainRegistry.LOGGER.debug("CLIENT: Received RadiationDataPacket. EnvRad: {}, PlayerRad: {}", 
-                        msg.totalEnvironmentRad, msg.playerRad);
-                    lastEnvRad = msg.totalEnvironmentRad;
-                    lastPlayerRad = msg.playerRad;
-                }
+
             });
         });
         ctx.get().setPacketHandled(true);
