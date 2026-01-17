@@ -437,6 +437,5 @@ public class DoorRenderer extends AbstractPartBasedRenderer<DoorBlockEntity, Doo
         // Очищаем глобальный кэш мешей
         GlobalMeshCache.clearAll();
 
-        MainRegistry.LOGGER.debug("Door renderer caches cleared");
     }
 }

@@ -83,9 +83,7 @@ public class PlayerHandler {
                 // 2. Отправляем пакет с ДВУМЯ значениями
                 ModPacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new RadiationDataPacket(environmentRad, clamped));
                 
-                if (ModClothConfig.get().enableDebugLogging) {
-                    MainRegistry.LOGGER.debug("SERVER: Sent RadiationDataPacket (from setPlayerRads) to player {} with EnvRad: {}, PlayerRad: {}", player.getName().getString(), environmentRad, clamped);
-                }
+
             }
         }
     }
@@ -263,9 +261,7 @@ public class PlayerHandler {
                 //    который включает и чанк, и инвентарь.
                 ModPacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new RadiationDataPacket(incomingRadForPacket, currentAccumulatedRads));
                 
-                if (ModClothConfig.get().enableDebugLogging) {
-                    MainRegistry.LOGGER.debug("SERVER: Sending periodic RadiationDataPacket to player {}. EnvRad (Incoming): {}, PlayerRad (Accumulated): {}", player.getName().getString(), incomingRadForPacket, currentAccumulatedRads);
-                }
+
             }
         }
     }

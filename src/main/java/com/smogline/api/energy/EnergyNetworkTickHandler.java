@@ -25,12 +25,6 @@ public class EnergyNetworkTickHandler {
 
         if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel serverLevel) {
 
-            if (isDebugTick) {
-                LOGGER.info("[DEBUG-TICK] Ticking Network for Level: {} | Time: {}",
-                        serverLevel.dimension().location(),
-                        event.level.getGameTime());
-            }
-
             EnergyNetworkManager.get(serverLevel).tick();
         }
     }
