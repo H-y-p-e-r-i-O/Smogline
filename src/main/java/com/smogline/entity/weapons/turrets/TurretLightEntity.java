@@ -76,7 +76,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     private int trackingTicks = 0;                // Время удержания цели
 
     // Anti-Recoil Filter (сколько мс игнорировать Y после выстрела)
-    private static final long Y_IMPULSE_FILTER_MS = 220L;
+    private static final long Y_IMPULSE_FILTER_MS = 80L;
     private long lastShotTimeMs = 0L;
 
     // Aim tuning
@@ -337,60 +337,69 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     /**
      * WAR THUNDER STYLE CALCULATOR
      * Использует сглаженную скорость и ускорение + итеративный подбор времени полета.
+     * + Raycast Clamp (не стреляет сквозь стены при упреждении)
      */
     private Vec3 calculateBallisticVelocity(LivingEntity target, Vec3 muzzlePos, float speed, float gravity) {
-        Vec3 targetPos = getSmartTargetPos(target);
-        if (targetPos == null) return null;
+        Vec3 currentVisiblePos = getSmartTargetPos(target);
+        if (currentVisiblePos == null) return null;
 
+        // --- 1. Сбор данных о движении (как и было) ---
         Vec3 targetVel;
         Vec3 targetAcc;
-
-        // Выбираем источник данных о скорости
-        // Если трекер "прогрет" (> 5 тиков), верим ему
         if (trackingTicks > 5) {
             targetVel = this.avgTargetVelocity;
-
-            // Фильтр вертикального рывка (Recoil Filter)
             long now = System.currentTimeMillis();
-            if (target.onGround() || (now - lastShotTimeMs < Y_IMPULSE_FILTER_MS)) {
+            boolean isRecoilState = (now - lastShotTimeMs < Y_IMPULSE_FILTER_MS) || (target.hurtTime > 0);
+            if (target.onGround() || isRecoilState) {
                 targetVel = new Vec3(targetVel.x, 0, targetVel.z);
                 targetAcc = new Vec3(this.targetAcceleration.x, 0, this.targetAcceleration.z);
             } else {
                 targetAcc = this.targetAcceleration;
             }
         } else {
-            // Если трекер пуст - используем ванильную физику
             targetVel = target.getDeltaMovement();
             if (target.onGround()) targetVel = new Vec3(targetVel.x, 0, targetVel.z);
             targetAcc = Vec3.ZERO;
         }
 
-        // 1. Грубая оценка времени (с учетом Drag)
-        double dist = targetPos.distanceTo(muzzlePos);
+        double dist = currentVisiblePos.distanceTo(muzzlePos);
         double t = calculateFlightTime(dist, speed);
 
-        // 2. Итеративное предсказание позиции (Ньютон-Рафсон Lite)
-        Vec3 predictedPos = targetPos;
-
+        // --- 2. Предсказание позиции (как и было) ---
+        Vec3 predictedPos = currentVisiblePos;
         for (int i = 0; i < 5; i++) {
-            // Формула: P_new = P_0 + V*t + 0.5*A*t^2
             Vec3 velocityPart = targetVel.scale(t);
             Vec3 accelPart = targetAcc.scale(0.5 * t * t);
+            predictedPos = currentVisiblePos.add(velocityPart).add(accelPart);
 
-            predictedPos = targetPos.add(velocityPart).add(accelPart);
-
-            // Пересчитываем время до новой точки
             double newDist = predictedPos.distanceTo(muzzlePos);
-            t = calculateFlightTime(newDist, speed);
+            double newT = calculateFlightTime(newDist, speed);
+            if (Math.abs(newT - t) < 0.01) { t = newT; break; }
+            t = newT;
         }
 
-        // 3. Расчет баллистики на предсказанную точку
+        // --- 3. [FIX] CLAMP TO VISIBILITY (Моя добавка) ---
+        // Если упреждение ушло за стену, возвращаем прицел на край препятствия
+        if (!canSeePoint(muzzlePos, predictedPos)) {
+            predictedPos = currentVisiblePos;
+            // Пересчитываем время для статической цели, чтобы баллистика не перекинула
+            double staticDist = predictedPos.distanceTo(muzzlePos);
+            t = calculateFlightTime(staticDist, speed);
+        }
+
+        this.debugTargetPoint = predictedPos;
+
+        // --- 4. [RESTORED] Твоя оригинальная математика ---
+        // Расчет баллистики через дискриминант
+
+        // Убедись, что метод getDragCompensationFactor у тебя остался в классе!
         double dragFactor = getDragCompensationFactor(t);
 
         double dirX = predictedPos.x - muzzlePos.x;
         double dirZ = predictedPos.z - muzzlePos.z;
         double dirY = predictedPos.y - muzzlePos.y;
 
+        // Учитываем драг-фактор, как было у тебя
         double horizontalDist = Math.sqrt(dirX * dirX + dirZ * dirZ) * dragFactor;
 
         double v = speed;
@@ -398,10 +407,12 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         double v4 = v2 * v2;
         double g = gravity * dragFactor;
 
+        // Классическое решение уравнения траектории
         double discriminant = v4 - g * (g * horizontalDist * horizontalDist + 2 * dirY * v2);
-        if (discriminant < 0) return null;
+        if (discriminant < 0) return null; // Недолет
 
         double sqrtDisc = Math.sqrt(discriminant);
+        // Выбираем нижнюю дугу (минус sqrtDisc)
         double tanTheta = (v2 - sqrtDisc) / (g * horizontalDist);
         double pitch = Math.atan(tanTheta);
 
@@ -453,56 +464,97 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
     private Vec3 getSmartTargetPos(LivingEntity target) {
         Vec3 start = this.getMuzzlePos();
         AABB aabb = target.getBoundingBox();
-        List<Vec3> visiblePoints = new ArrayList<>();
 
         if (this.level().isClientSide) this.debugScanPoints.clear();
 
-        int stepsX = 4;
-        int stepsY = 6;
-        int stepsZ = 4;
+        List<Vec3> visiblePoints = new ArrayList<>();
 
-        for (int x = 0; x < stepsX; x++) {
-            for (int y = 0; y < stepsY; y++) {
-                for (int z = 0; z < stepsZ; z++) {
-                    double lx = (x + 0.5D) / stepsX;
-                    double ly = (y + 0.5D) / stepsY;
-                    double lz = (z + 0.5D) / stepsZ;
+        // 1. Оптимизированная сетка (Внешний контур)
+        int stepsX = 2;
+        int stepsY = 4;
+        int stepsZ = 2;
+
+        for (int y = stepsY; y >= 0; y--) {
+            for (int x = 0; x <= stepsX; x++) {
+                for (int z = 0; z <= stepsZ; z++) {
+                    // Проверяем только внешний контур
+                    boolean isOuterX = (x == 0 || x == stepsX);
+                    boolean isOuterY = (y == 0 || y == stepsY);
+                    boolean isOuterZ = (z == 0 || z == stepsZ);
+
+                    if (!isOuterX && !isOuterZ && !isOuterY) continue;
+
+                    double lx = (double)x / stepsX;
+                    double ly = (double)y / stepsY;
+                    double lz = (double)z / stepsZ;
 
                     double px = aabb.minX + (aabb.maxX - aabb.minX) * lx;
                     double py = aabb.minY + (aabb.maxY - aabb.minY) * ly;
                     double pz = aabb.minZ + (aabb.maxZ - aabb.minZ) * lz;
 
                     Vec3 point = new Vec3(px, py, pz);
-                    boolean visible = canSeePoint(start, point);
 
-                    if (visible) visiblePoints.add(point);
-                    if (this.level().isClientSide) this.debugScanPoints.add(Pair.of(point, visible));
+                    if (canSeePoint(start, point)) {
+                        visiblePoints.add(point);
+                        if (this.level().isClientSide) this.debugScanPoints.add(Pair.of(point, true));
+                    } else {
+                        if (this.level().isClientSide) this.debugScanPoints.add(Pair.of(point, false));
+                    }
+                }
+            }
+        }
+
+        // 2. [НОВОЕ] Резервный скан центральной оси (Центральный "позвоночник")
+        // Если внешние углы закрыты (цель в узкой щели), проверяем центр.
+        if (visiblePoints.isEmpty()) {
+            double cx = aabb.minX + (aabb.maxX - aabb.minX) * 0.5;
+            double cz = aabb.minZ + (aabb.maxZ - aabb.minZ) * 0.5;
+            int centerSteps = 5;
+
+            for (int i = 0; i <= centerSteps; i++) {
+                double ly = (double)i / (double)centerSteps;
+                double py = aabb.minY + (aabb.maxY - aabb.minY) * ly;
+                Vec3 point = new Vec3(cx, py, cz);
+
+                if (canSeePoint(start, point)) {
+                    visiblePoints.add(point);
+                    if (this.level().isClientSide) this.debugScanPoints.add(Pair.of(point, true));
+                } else {
+                    if (this.level().isClientSide) this.debugScanPoints.add(Pair.of(point, false));
                 }
             }
         }
 
         if (visiblePoints.isEmpty()) return null;
 
-        Vec3 bestPoint = null;
-        double bestY = -1e9;
-        for (Vec3 p : visiblePoints) {
-            if (bestPoint == null || p.y > bestY) {
-                bestPoint = p;
-                bestY = p.y;
-            }
+        // ЭВРИСТИКА: Сортируем (сначала высокие точки, чтобы стрелять в голову/тело, а не ноги)
+        visiblePoints.sort((p1, p2) -> Double.compare(p2.y, p1.y));
+
+        Vec3 bestPoint = visiblePoints.get(0);
+
+        // [НОВОЕ] Безопасное смещение (Safe Bias)
+        // Пытаемся поднять прицел чуть выше (AIM_Y_BIAS), но ТОЛЬКО если эта точка тоже видна.
+        // Иначе стреляем в "честную" видимую точку (например, в пятку).
+        Vec3 biasedPoint = bestPoint.add(0.0D, AIM_Y_BIAS, 0.0D);
+        if (canSeePoint(start, biasedPoint)) {
+            return biasedPoint;
         }
 
-        return bestPoint.add(0.0D, AIM_Y_BIAS, 0.0D);
+        return bestPoint;
     }
 
     private boolean canSeePoint(Vec3 start, Vec3 end) {
+        // Проверяем коллизию блоков между start и end
         BlockHitResult blockHit = this.level().clip(new ClipContext(
                 start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this
         ));
 
+        // MISS означает чисто.
+        // Либо дистанция до удара больше или равна дистанции до цели (минус погрешность).
         return blockHit.getType() == HitResult.Type.MISS ||
                 start.distanceToSqr(blockHit.getLocation()) >= start.distanceToSqr(end) - 0.05;
     }
+
 
     private boolean isLineOfFireSafe(LivingEntity target) {
         Vec3 start = this.getMuzzlePos();

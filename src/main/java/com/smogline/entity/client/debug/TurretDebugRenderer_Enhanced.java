@@ -36,22 +36,22 @@ public class TurretDebugRenderer_Enhanced {
             renderHitbox(poseStack, bufferSource, turret.getTarget().getBoundingBox(), 255, 255, 255, 255);
         }
 
-        // 3) Центроид (фиолетовая точка) — теперь это “lead point”
+        // 3) Точка упреждения (Lead Point)
         Vec3 leadPoint = turret.getDebugTargetPoint();
         if (leadPoint != null) {
+            // Рисуем точку (Magenta / Фиолетовый)
             renderHitPoint(poseStack, bufferSource, leadPoint, 255, 0, 255);
+
+            // Рисуем линию (Magenta)
+            drawLine(poseStack, bufferSource, muzzlePos, leadPoint, 255, 0, 255, 1.0F);
         }
 
-        // 4) Реальная траектория — симуляция как у пули
+        // 4) Баллистическая траектория
         Vec3 v0 = turret.getDebugBallisticVelocity();
         if (v0 != null) {
             renderSimulatedTrajectory(poseStack, bufferSource, muzzlePos, v0,
-                    0.01F,   // gravityPerTick: как в TurretBulletEntity#getGravity()
-                    0.99F,   // drag: типично для Projectile/ThrowableProjectile
-                    80       // maxTicks: подстрой под дальность (например 80 тиков = 4 секунды)
-            );
+                    0.01F, 0.99F, 80);
         } else {
-            // Если баллистика не посчиталась — просто покажем направление ствола
             Vec3 forward = Vec3.directionFromRotation(turret.getXRot(), turret.getYHeadRot()).scale(3.0);
             drawLine(poseStack, bufferSource, muzzlePos, muzzlePos.add(forward), 255, 0, 255, 0.3F);
         }
@@ -59,30 +59,20 @@ public class TurretDebugRenderer_Enhanced {
         poseStack.popPose();
     }
 
-    /**
-     * Рисуем траекторию симуляцией “как летит Projectile”:
-     * pos(t+1) = pos(t) + vel(t)
-     * vel(t+1) = vel(t) * drag + (0, -gravity, 0)
-     */
     private static void renderSimulatedTrajectory(PoseStack ps, MultiBufferSource buf,
                                                   Vec3 startPos, Vec3 startVel,
                                                   float gravityPerTick, float drag, int maxTicks) {
         Vec3 pos = startPos;
         Vec3 vel = startVel;
-
         for (int i = 0; i < maxTicks; i++) {
             Vec3 nextPos = pos.add(vel);
-
-            // Голубая линия траектории
             drawLine(ps, buf, pos, nextPos, 0, 255, 255, 1.0F);
-
-            // Переходим к следующему тику
             pos = nextPos;
             vel = vel.scale(drag).add(0.0, -gravityPerTick, 0.0);
         }
     }
 
-    // --- Drawing helpers ---
+    // --- Helpers (Старая версия с pushPose в каждом вызове) ---
 
     private static void renderMiniDot(PoseStack poseStack, MultiBufferSource bufferSource, Vec3 pos, int r, int g, int b) {
         VertexConsumer vc = bufferSource.getBuffer(RenderType.lines());
@@ -106,7 +96,7 @@ public class TurretDebugRenderer_Enhanced {
     private static void drawLine(PoseStack poseStack, MultiBufferSource bufferSource, Vec3 start, Vec3 end,
                                  int r, int g, int b, float alpha) {
         VertexConsumer vc = bufferSource.getBuffer(RenderType.lines());
-        poseStack.pushPose();
+        poseStack.pushPose(); // ВОТ ОНО - то, что, вероятно, фиксило координаты
 
         float dx = (float) (end.x - start.x);
         float dy = (float) (end.y - start.y);
@@ -125,19 +115,14 @@ public class TurretDebugRenderer_Enhanced {
     private static void drawBoxWireframe(VertexConsumer vc, PoseStack ps,
                                          double x1, double y1, double z1, double x2, double y2, double z2,
                                          int r, int g, int b, int a) {
-        // bottom
         drawLineV(vc, ps, x1, y1, z1, x2, y1, z1, r, g, b, a);
         drawLineV(vc, ps, x2, y1, z1, x2, y1, z2, r, g, b, a);
         drawLineV(vc, ps, x2, y1, z2, x1, y1, z2, r, g, b, a);
         drawLineV(vc, ps, x1, y1, z2, x1, y1, z1, r, g, b, a);
-
-        // top
         drawLineV(vc, ps, x1, y2, z1, x2, y2, z1, r, g, b, a);
         drawLineV(vc, ps, x2, y2, z1, x2, y2, z2, r, g, b, a);
         drawLineV(vc, ps, x2, y2, z2, x1, y2, z2, r, g, b, a);
         drawLineV(vc, ps, x1, y2, z2, x1, y2, z1, r, g, b, a);
-
-        // verticals
         drawLineV(vc, ps, x1, y1, z1, x1, y2, z1, r, g, b, a);
         drawLineV(vc, ps, x2, y1, z1, x2, y2, z1, r, g, b, a);
         drawLineV(vc, ps, x2, y1, z2, x2, y2, z2, r, g, b, a);
@@ -153,6 +138,7 @@ public class TurretDebugRenderer_Enhanced {
         float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (len > 0) { dx /= len; dy /= len; dz /= len; }
 
+        // Тут тоже использовался ps.last().pose(), это ок, так как pushPose вызывается выше в стеке
         vc.vertex(ps.last().pose(), (float) x1, (float) y1, (float) z1)
                 .color(r, g, b, a).normal(ps.last().normal(), dx, dy, dz).endVertex();
         vc.vertex(ps.last().pose(), (float) x2, (float) y2, (float) z2)
