@@ -54,15 +54,14 @@ public class TurretLightPlacerBlock extends BaseEntityBlock {
             // 2. БЕЗОПАСНОЕ СОЗДАНИЕ СУЩНОСТИ
             // Используем .create(), это стандарт Forge, он сам подтянет нужный EntityType
             TurretLightLinkedEntity turret = ModEntities.TURRET_LIGHT_LINKED.get().create(level);
-
+            turret.setParentBlock(pos); // <--- ЭТА СТРОКА ТОЧНО ЕСТЬ?
             if (turret == null) {
                 System.out.println("ERROR: Turret Entity failed to create (null)!");
                 return InteractionResult.FAIL;
             }
 
             // 3. Настройка позиции и данных
-            turret.setParentBlock(pos);
-
+            turret.setPersistenceRequired();
             // Центр буфера + 1 блок вверх
             double x = pos.getX() + 0.5D;
             double y = pos.getY() + 1.0D;

@@ -94,6 +94,9 @@ public class MachineGunRenderer extends GeoItemRenderer<MachineGunItem> {
         else if (loadedId.contains("hollow")) {
             textureName = "machinegun_hollow";
         }
+        else if (loadedId.contains("radio")) {
+            textureName = "machinegun_radio";
+        }
         else if (loadedId.contains("fire")) {
             textureName = "machinegun_fire";
         }
