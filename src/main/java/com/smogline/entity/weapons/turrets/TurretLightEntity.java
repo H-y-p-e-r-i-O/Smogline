@@ -848,4 +848,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         }
         return super.hasLineOfSight(entity);
     }
+    public void setOwnerUUIDDirect(java.util.UUID uuid) {
+        this.entityData.set(OWNER_UUID, java.util.Optional.ofNullable(uuid));
+    }
 }

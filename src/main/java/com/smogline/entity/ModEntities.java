@@ -24,8 +24,8 @@ public class ModEntities {
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light").toString()));
 
     public static final RegistryObject<EntityType<TurretLightLinkedEntity>> TURRET_LIGHT_LINKED = ENTITY_TYPES.register("turret_light_linked",
-            () -> EntityType.Builder.of(TurretLightLinkedEntity::new, MobCategory.MONSTER) // ✅ ИСПОЛЬЗУЕМ НОВЫЙ КЛАСС
-                    .sized(0.8f, 1.5f)
+            () -> EntityType.Builder.<TurretLightLinkedEntity>of(TurretLightLinkedEntity::new, MobCategory.MONSTER)
+                    .sized(0.8f, 0.8f) // Размер такой же как у обычной турели (или поправь если надо 1.5)
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light_linked").toString()));
 
 

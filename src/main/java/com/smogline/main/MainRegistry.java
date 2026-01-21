@@ -1126,6 +1126,8 @@ public class MainRegistry {
     // Метод регистрации атрибутов (здоровье, урон и т.д.)
     private void entityAttributeEvent(net.minecraftforge.event.entity.EntityAttributeCreationEvent event) {
         event.put(ModEntities.TURRET_LIGHT.get(), TurretLightEntity.createAttributes().build());
+        event.put(ModEntities.TURRET_LIGHT_LINKED.get(), TurretLightEntity.createAttributes().build());
+
     }
 
 
