@@ -318,6 +318,7 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModItems.AMMO_TURRET_PIERCING.get(), "20мм турельный бронебойный снаряд");
                 add(ModItems.AMMO_TURRET_FIRE.get(), "20мм турельный зажигательный снаряд");
                 add(ModItems.AMMO_TURRET.get(), "20мм турельный снаряд");
+                add(ModItems.AMMO_TURRET_RADIO.get(), "20мм турельный снаряд с радио-взрывателем");
                 add(ModItems.MACHINEGUN.get(), "А.П.-17");
                 add(ModBlocks.TURRET_LIGHT.get(), "Лёгкая десантная турель 'Нагваль'");
 
@@ -1834,6 +1835,7 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModItems.AMMO_TURRET_PIERCING.get(), "20mm Turret AP Ammo");
                 add(ModItems.AMMO_TURRET_FIRE.get(), "20mm Turret Fire Ammo");
                 add(ModItems.AMMO_TURRET.get(), "20mm Turret Ammo");
+                add(ModItems.AMMO_TURRET.get(), "20mm Turret Ammo With Radio-Detonator");
                 add(ModItems.MACHINEGUN.get(), "A.P.-17");
                 add(ModBlocks.TURRET_LIGHT.get(), "Light Landing Turret 'Nagual'");
 

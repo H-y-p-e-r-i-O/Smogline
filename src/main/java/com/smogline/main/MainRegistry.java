@@ -235,6 +235,7 @@ public class MainRegistry {
             event.accept(ModItems.AMMO_TURRET_HOLLOW);
             event.accept(ModItems.AMMO_TURRET_PIERCING);
             event.accept(ModItems.AMMO_TURRET_FIRE);
+            event.accept(ModItems.AMMO_TURRET_RADIO);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added Alloy Sword to NTM Weapons tab");

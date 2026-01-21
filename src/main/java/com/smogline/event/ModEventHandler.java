@@ -29,6 +29,7 @@ public class ModEventHandler {
             registerAmmo(ModItems.AMMO_TURRET_PIERCING.get(), "20mm_turret");
             registerAmmo(ModItems.AMMO_TURRET_HOLLOW.get(), "20mm_turret");
             registerAmmo(ModItems.AMMO_TURRET_FIRE.get(), "20mm_turret");
+            registerAmmo(ModItems.AMMO_TURRET_RADIO.get(), "20mm_turret");
         });
     }
 
