@@ -1106,7 +1106,7 @@
                               "if_true": {
                                 "type": "minecraft:biome",
                                 "biome_is": [
-                                  "minecraft:desert"
+                                  "smogline:ruined_city"
                                 ]
                               },
                               "then_run": {
@@ -1882,7 +1882,7 @@
                               "if_true": {
                                 "type": "minecraft:biome",
                                 "biome_is": [
-                                  "minecraft:desert"
+                                  "smogline:ruined_city"
                                 ]
                               },
                               "then_run": {
@@ -2117,7 +2117,7 @@
                     "if_true": {
                       "type": "minecraft:biome",
                       "biome_is": [
-                        "minecraft:desert"
+                        "smogline:ruined_city"
                       ]
                     },
                     "then_run": {

@@ -1,6 +1,0 @@
-{
-  "type": "forge:add_features",
-  "biomes": "minecraft:jungle",
-  "features": "smogline:dead_jungle_tree_placed",
-  "step": "vegetal_decoration"
-}
