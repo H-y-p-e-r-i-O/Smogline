@@ -1,8 +1,7 @@
 package com.smogline.client.render;
 
 import com.smogline.block.ModBlocks;
-import com.smogline.entity.grenades.AirBombProjectileEntity;
-import com.smogline.entity.grenades.AirNukeBombProjectileEntity;
+import com.smogline.entity.weapons.grenades.AirNukeBombProjectileEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;

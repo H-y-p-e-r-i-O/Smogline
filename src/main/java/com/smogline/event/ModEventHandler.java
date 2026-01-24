@@ -1,10 +1,9 @@
 package com.smogline.event;
 
-import com.smogline.item.AmmoTurretItem;
+import com.smogline.item.custom.weapons.ammo.AmmoTurretItem;
 import com.smogline.item.ModItems;
 import com.smogline.item.tags_and_tiers.AmmoRegistry;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -30,6 +29,7 @@ public class ModEventHandler {
             registerAmmo(ModItems.AMMO_TURRET_PIERCING.get(), "20mm_turret");
             registerAmmo(ModItems.AMMO_TURRET_HOLLOW.get(), "20mm_turret");
             registerAmmo(ModItems.AMMO_TURRET_FIRE.get(), "20mm_turret");
+            registerAmmo(ModItems.AMMO_TURRET_RADIO.get(), "20mm_turret");
         });
     }
 

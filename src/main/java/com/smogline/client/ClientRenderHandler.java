@@ -2,11 +2,12 @@ package com.smogline.client;
 
 // Этот класс отвечает за подсветку блоков, если те мешают установке многоблочной структуры
 import com.smogline.config.ModClothConfig;
-import com.smogline.item.AmmoTurretItem;
+import com.smogline.item.custom.weapons.ammo.AmmoTurretItem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.smogline.item.custom.weapons.guns.MachineGunItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -108,7 +109,7 @@ public class ClientRenderHandler {
     public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Pre event) {
         if (event.getOverlay() == VanillaGuiOverlay.CROSSHAIR.type()) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.player != null && mc.player.getMainHandItem().getItem() instanceof com.smogline.item.MachineGunItem) {
+            if (mc.player != null && mc.player.getMainHandItem().getItem() instanceof MachineGunItem) {
                 event.setCanceled(true);
 
                 GuiGraphics graphics = event.getGuiGraphics();

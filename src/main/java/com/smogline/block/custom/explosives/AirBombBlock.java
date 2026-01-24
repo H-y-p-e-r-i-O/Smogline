@@ -1,7 +1,7 @@
 package com.smogline.block.custom.explosives;
 
 import com.smogline.entity.ModEntities;
-import com.smogline.entity.grenades.AirBombProjectileEntity;
+import com.smogline.entity.weapons.grenades.AirBombProjectileEntity;
 import com.smogline.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

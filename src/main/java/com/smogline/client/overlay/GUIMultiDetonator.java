@@ -8,8 +8,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import com.smogline.item.custom.grenades_and_activators.MultiDetonatorItem;
-import com.smogline.item.custom.grenades_and_activators.MultiDetonatorItem.PointData;
+import com.smogline.item.custom.weapons.grenades_and_activators.MultiDetonatorItem;
+import com.smogline.item.custom.weapons.grenades_and_activators.MultiDetonatorItem.PointData;
 import net.minecraft.ChatFormatting;
 
 /**

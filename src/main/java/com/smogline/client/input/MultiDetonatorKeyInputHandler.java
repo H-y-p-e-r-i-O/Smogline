@@ -7,7 +7,7 @@ import net.minecraftforge.client.event.InputEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import com.smogline.item.custom.grenades_and_activators.MultiDetonatorItem;
+import com.smogline.item.custom.weapons.grenades_and_activators.MultiDetonatorItem;
 import com.smogline.client.overlay.GUIMultiDetonator;
 import org.lwjgl.glfw.GLFW;
 

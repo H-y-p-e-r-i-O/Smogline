@@ -1,7 +1,8 @@
 package com.smogline.client;
 
-import com.smogline.entity.TurretLightEntity;
-import com.smogline.entity.client.renderer.TurretDebugRenderer_Enhanced;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
+import com.smogline.entity.client.debug.TurretDebugRenderer_Enhanced;
+import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
 import com.smogline.main.MainRegistry;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -53,9 +54,14 @@ public class TurretDebugRenderEvent {
                 renderCenter.x - 64, renderCenter.y - 64, renderCenter.z - 64,
                 renderCenter.x + 64, renderCenter.y + 64, renderCenter.z + 64))) {
 
-            if (entity instanceof TurretLightEntity turret && !turret.isRemoved()) {
-                TurretDebugRenderer_Enhanced.renderTurretDebug(poseStack, bufferSource, turret, camX, camY, camZ);
-            }
+
+                if (entity instanceof TurretLightEntity turret && !turret.isRemoved()) {
+                    TurretDebugRenderer_Enhanced.renderTurretDebug(poseStack, bufferSource, turret, camX, camY, camZ);
+                } else if (entity instanceof TurretLightLinkedEntity linked && !linked.isRemoved()) {
+                    TurretDebugRenderer_Enhanced.renderTurretDebug(poseStack, bufferSource, linked, camX, camY, camZ);
+                }
+
+
         }
 
         // Принудительно отрисовываем буфер линий, чтобы они были видны сквозь блоки (если нужно)

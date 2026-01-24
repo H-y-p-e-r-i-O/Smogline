@@ -1,11 +1,8 @@
 package com.smogline.client.overlay;
 
-import com.smogline.item.MachineGunItem;
-import com.smogline.lib.RefStrings;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.smogline.item.custom.weapons.guns.MachineGunItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;

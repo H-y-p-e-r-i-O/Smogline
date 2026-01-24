@@ -6,11 +6,11 @@ package com.smogline.main;
 import com.smogline.api.energy.EnergyNetworkManager;
 import com.smogline.api.fluids.ModFluids;
 import com.smogline.capability.ModCapabilities;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.smogline.event.BombDefuser;
 import com.smogline.event.CrateBreaker;
 import com.smogline.handler.MobGearHandler;
 import com.smogline.item.custom.fekal_electric.ModBatteryItem;
-import com.smogline.item.tags_and_tiers.AmmoRegistry;
 import com.smogline.particle.ModExplosionParticles;
 import com.smogline.world.biome.ModBiomes;
 import net.minecraft.server.level.ServerLevel;
@@ -39,7 +39,6 @@ import com.smogline.config.ModClothConfig;
 import com.smogline.effect.ModEffects;
 import com.smogline.hazard.ModHazards;
 import com.smogline.worldgen.ModWorldGen;
-import com.smogline.item.custom.liquids.ItemFluidIdentifier;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -229,12 +228,14 @@ public class MainRegistry {
 
             event.accept(ModItems.TURRET_REMOVER);
             event.accept(ModBlocks.TURRET_LIGHT);
+            event.accept(ModBlocks.TURRET_LIGHT_PLACER);
 
             event.accept(ModItems.MACHINEGUN);
             event.accept(ModItems.AMMO_TURRET);
             event.accept(ModItems.AMMO_TURRET_HOLLOW);
             event.accept(ModItems.AMMO_TURRET_PIERCING);
             event.accept(ModItems.AMMO_TURRET_FIRE);
+            event.accept(ModItems.AMMO_TURRET_RADIO);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added Alloy Sword to NTM Weapons tab");
@@ -1124,7 +1125,9 @@ public class MainRegistry {
     }
     // Метод регистрации атрибутов (здоровье, урон и т.д.)
     private void entityAttributeEvent(net.minecraftforge.event.entity.EntityAttributeCreationEvent event) {
-        event.put(ModEntities.TURRET_LIGHT.get(), com.smogline.entity.TurretLightEntity.createAttributes().build());
+        event.put(ModEntities.TURRET_LIGHT.get(), TurretLightEntity.createAttributes().build());
+        event.put(ModEntities.TURRET_LIGHT_LINKED.get(), TurretLightEntity.createAttributes().build());
+
     }
 
 

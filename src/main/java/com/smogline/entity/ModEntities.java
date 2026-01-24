@@ -1,10 +1,11 @@
 package com.smogline.entity;
 
-import com.smogline.entity.grenades.*;
-import com.smogline.lib.RefStrings;
+import com.smogline.entity.weapons.bullets.TurretBulletEntity;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
+import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
+import com.smogline.entity.weapons.grenades.*;
 import com.smogline.main.MainRegistry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.item.FallingBlockEntity;
@@ -23,8 +24,8 @@ public class ModEntities {
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light").toString()));
 
     public static final RegistryObject<EntityType<TurretLightLinkedEntity>> TURRET_LIGHT_LINKED = ENTITY_TYPES.register("turret_light_linked",
-            () -> EntityType.Builder.of(TurretLightLinkedEntity::new, MobCategory.MONSTER) // ✅ ИСПОЛЬЗУЕМ НОВЫЙ КЛАСС
-                    .sized(0.8f, 1.5f)
+            () -> EntityType.Builder.<TurretLightLinkedEntity>of(TurretLightLinkedEntity::new, MobCategory.MONSTER)
+                    .sized(0.8f, 0.8f) // Размер такой же как у обычной турели (или поправь если надо 1.5)
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light_linked").toString()));
 
 

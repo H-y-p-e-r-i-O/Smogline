@@ -1,6 +1,6 @@
 package com.smogline.network;
 
-import com.smogline.item.custom.grenades_and_activators.MultiDetonatorItem;
+import com.smogline.item.custom.weapons.grenades_and_activators.MultiDetonatorItem;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
