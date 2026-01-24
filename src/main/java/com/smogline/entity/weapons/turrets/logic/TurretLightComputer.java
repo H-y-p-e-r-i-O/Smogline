@@ -15,6 +15,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -150,7 +151,6 @@ public class TurretLightComputer {
                 }
             }
         }
-
         return closest;
     }
 
@@ -171,6 +171,7 @@ public class TurretLightComputer {
 
         if (target != null && target.isAlive()) {
             Vec3 currentPos = target.position();
+
             if (trackingTicks > 0) {
                 Vec3 instantaneousVel = currentPos.subtract(lastTargetPos);
                 // Сглаживание скорости (lerp 0.15)
@@ -233,19 +234,15 @@ public class TurretLightComputer {
             if (predictedPos.y > maxVisibleY) {
                 predictedPos = new Vec3(predictedPos.x, maxVisibleY, predictedPos.z);
             }
+        }
 
-            if (!canSeePoint(muzzlePos, predictedPos)) {
-                predictedPos = visibleBasePos; // Откат если точка ушла в стену
-            }
+        if (!canSeePoint(muzzlePos, predictedPos)) {
+            predictedPos = visibleBasePos; // Откат если точка ушла в стену
+        }
 
-            double newDist = predictedPos.distanceTo(muzzlePos);
-            double newT = calculateFlightTime(newDist);
-
-            if (Math.abs(newT - t) < 0.05) {
-                t = newT;
-                break;
-            }
-
+        double newDist = predictedPos.distanceTo(muzzlePos);
+        double newT = calculateFlightTime(newDist);
+        if (Math.abs(newT - t) < 0.05) {
             t = newT;
         }
 
@@ -281,35 +278,102 @@ public class TurretLightComputer {
     }
 
     // ========================================================================
-    // 👁️ УМНЫЙ ХИТБОКС (Smart Hitbox)
+    // 👁️ УМНЫЙ ХИТБОКС (Smart Hitbox) - ПОЛНЫЙ СКАН КАК У ТУРЕЛИ
     // ========================================================================
 
     private Vec3 getSmartTargetPos(LivingEntity target, Vec3 start) {
+        // === FIX: Очистка фантомов ===
+        if (target == null || !target.isAlive()) {
+            if (level.isClientSide) {
+                debugScanPoints.clear();
+            }
+            return null;
+        }
+        // =============================
+
         if (raycastSkipTimer > 0 && cachedSmartTargetPos != null) {
             raycastSkipTimer--;
+            // Доп. проверка дистанции, чтобы кеш не висел в воздухе, если моб телепортировался
             if (target.distanceToSqr(cachedSmartTargetPos) < 4.0) return cachedSmartTargetPos;
         }
 
-        Vec3 eyePos = target.getEyePosition();
-        if (canSeePoint(start, eyePos)) {
-            updateSmartCache(eyePos);
-            return eyePos;
+        // Очищаем дебаг только если мы на клиенте
+        if (level.isClientSide) {
+            debugScanPoints.clear();
         }
 
-        // Сканирование сетки
+        // 1. Проверяем глаза (самый быстрый способ)
+        Vec3 eyePos = target.getEyePosition();
+        if (canSeePoint(start, eyePos)) {
+            if (level.isClientSide) debugScanPoints.add(Pair.of(eyePos, true));
+            updateSmartCache(eyePos);
+            return eyePos;
+        } else {
+            if (level.isClientSide) debugScanPoints.add(Pair.of(eyePos, false));
+        }
+
+        // 2. Сканирование сетки (Grid Scan) - как в TurretLightEntity
         AABB aabb = target.getBoundingBox();
         List<Vec3> visiblePoints = new ArrayList<>();
+
+        int stepsX = 2;
         int stepsY = 3;
+        int stepsZ = 2;
 
         for (int y = stepsY; y >= 0; y--) {
-            double ly = (double) y / stepsY;
-            // Центр по Y
-            Vec3 point = new Vec3(aabb.getCenter().x, aabb.minY + (aabb.maxY - aabb.minY) * ly, aabb.getCenter().z);
-            if (canSeePoint(start, point)) {
-                visiblePoints.add(point);
-                if (ly > 0.7) { // Голова видна - берем
-                    updateSmartCache(point);
-                    return point;
+            for (int x = 0; x <= stepsX; x++) {
+                for (int z = 0; z <= stepsZ; z++) {
+                    // Проверяем только "оболочку" (края), внутренности пропускаем
+                    boolean isOuterX = x == 0 || x == stepsX;
+                    boolean isOuterY = y == 0 || y == stepsY;
+                    boolean isOuterZ = z == 0 || z == stepsZ;
+                    if (!isOuterX && !isOuterZ && !isOuterY) continue;
+
+                    double lx = (double) x / stepsX;
+                    double ly = (double) y / stepsY;
+                    double lz = (double) z / stepsZ;
+
+                    Vec3 point = new Vec3(
+                            aabb.minX + (aabb.maxX - aabb.minX) * lx,
+                            aabb.minY + (aabb.maxY - aabb.minY) * ly,
+                            aabb.minZ + (aabb.maxZ - aabb.minZ) * lz
+                    );
+
+                    boolean visible = canSeePoint(start, point);
+                    if (level.isClientSide) {
+                        debugScanPoints.add(Pair.of(point, visible));
+                    }
+
+                    if (visible) {
+                        visiblePoints.add(point);
+                        // Оптимизация: если нашли высокую точку, берем её сразу
+                        if (ly > 0.7) {
+                            updateSmartCache(point);
+                            return point;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Сканирование центральной линии (Center Line)
+        // Если ничего по краям не нашли, проверяем центр (на случай если моб тонкий)
+        if (visiblePoints.isEmpty()) {
+            double cx = aabb.minX + aabb.getXsize() * 0.5;
+            double cz = aabb.minZ + aabb.getZsize() * 0.5;
+            int centerSteps = 3;
+
+            for (int i = 0; i <= centerSteps; i++) {
+                double ly = (double) i / centerSteps;
+                Vec3 point = new Vec3(cx, aabb.minY + (aabb.maxY - aabb.minY) * ly, cz);
+
+                boolean visible = canSeePoint(start, point);
+                if (level.isClientSide) {
+                    debugScanPoints.add(Pair.of(point, visible));
+                }
+
+                if (visible) {
+                    visiblePoints.add(point);
                 }
             }
         }
@@ -319,6 +383,8 @@ public class TurretLightComputer {
             return null;
         }
 
+        // Сортируем: чем выше точка, тем лучше (хедшоты/торс приоритетнее ног)
+        visiblePoints.sort((p1, p2) -> Double.compare(p2.y, p1.y));
         Vec3 best = visiblePoints.get(0);
         updateSmartCache(best);
         return best;
@@ -347,19 +413,16 @@ public class TurretLightComputer {
         // Проверяем линию огня шагами по 0.5 блока
         for (double d = 0.5; d < dist; d += 0.5) {
             Vec3 checkPos = muzzlePos.add(fireVec.scale(d));
-            // Ищем сущности в радиусе 0.5 блока от траектории
             AABB safetyBox = new AABB(checkPos.subtract(0.5, 0.5, 0.5), checkPos.add(0.5, 0.5, 0.5));
             List<LivingEntity> entitiesInWay = level.getEntitiesOfClass(LivingEntity.class, safetyBox);
 
             for (LivingEntity ally : entitiesInWay) {
-                if (ally == turret || ally == target) continue; // Игнорируем себя и цель
-                // Если на линии огня союзник - НЕ СТРЛЯЕМ
+                if (ally == turret || ally == target) continue;
                 if (isAllied(ally, ownerUUID)) {
                     return false;
                 }
             }
         }
-
         return true;
     }
 
