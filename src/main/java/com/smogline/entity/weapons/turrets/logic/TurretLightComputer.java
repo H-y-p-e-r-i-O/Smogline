@@ -15,7 +15,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -83,22 +82,20 @@ public class TurretLightComputer {
     // ========================================================================
 
     public int calculateTargetPriority(LivingEntity entity, UUID ownerUUID) {
-        if (entity == null || !entity.isAlive() || isAllied(entity, ownerUUID)) return 999;
+        if (entity == null || !entity.isAlive()) return 999;
 
-        // 🔥 ДОБАВЛЕНО: Не атаковать другие турели того же владельца
+        // 1. АБСОЛЮТНЫЙ ИГНОР ТУРЕЛЕЙ
         if (entity instanceof TurretLightLinkedEntity || entity instanceof TurretLightEntity) {
-            // isAllied уже проверяет владельца, но на всякий случай явно:
-            if (isAllied(entity, ownerUUID)) return 999;
-
-            // Если хочешь чтобы турели ВООБЩЕ не воевали друг с другом (даже чужие):
-            // return 999;
+            return 999; // Никогда не атаковать свои же механизмы
         }
+
+        // 2. Игнор союзников (владелец, команда, петы)
+        if (isAllied(entity, ownerUUID)) return 999;
 
         double distanceSqr = turret.distanceToSqr(entity);
         if (distanceSqr < config.closeCombatRangeSqr) return 0; // В упор - высший приоритет
 
         Player owner = ownerUUID != null ? level.getPlayerByUUID(ownerUUID) : null;
-
         if (owner != null) {
             if (owner.getLastHurtByMob() == entity) return 1; // Кто бьет хозяина
             if (entity instanceof Mob mob && mob.getTarget() == owner) return 1; // Кто целится в хозяина
@@ -136,8 +133,6 @@ public class TurretLightComputer {
         return false;
     }
 
-
-
     public LivingEntity findClosestThreat(UUID ownerUUID) {
         LivingEntity closest = null;
         double closestDist = config.closeCombatRangeSqr;
@@ -155,6 +150,7 @@ public class TurretLightComputer {
                 }
             }
         }
+
         return closest;
     }
 
@@ -179,13 +175,13 @@ public class TurretLightComputer {
                 Vec3 instantaneousVel = currentPos.subtract(lastTargetPos);
                 // Сглаживание скорости (lerp 0.15)
                 this.avgTargetVelocity = this.avgTargetVelocity.lerp(instantaneousVel, 0.15);
-
                 Vec3 newAccel = instantaneousVel.subtract(this.avgTargetVelocity);
                 this.targetAcceleration = this.targetAcceleration.lerp(newAccel, 0.05);
             } else {
                 this.avgTargetVelocity = target.getDeltaMovement();
                 this.targetAcceleration = Vec3.ZERO;
             }
+
             this.lastTargetPos = currentPos;
             this.trackingTicks++;
         } else {
@@ -244,10 +240,12 @@ public class TurretLightComputer {
 
             double newDist = predictedPos.distanceTo(muzzlePos);
             double newT = calculateFlightTime(newDist);
+
             if (Math.abs(newT - t) < 0.05) {
                 t = newT;
                 break;
             }
+
             t = newT;
         }
 
@@ -260,8 +258,8 @@ public class TurretLightComputer {
         double dirX = target.x - muzzle.x;
         double dirZ = target.z - muzzle.z;
         double dirY = target.y - muzzle.y;
-        double horizontalDist = Math.sqrt(dirX * dirX + dirZ * dirZ) * dragFactor;
 
+        double horizontalDist = Math.sqrt(dirX * dirX + dirZ * dirZ) * dragFactor;
         double v = config.bulletSpeed;
         double v2 = v * v;
         double v4 = v2 * v2;
@@ -278,7 +276,8 @@ public class TurretLightComputer {
         double groundSpeed = v * Math.cos(pitch);
         double vy = v * Math.sin(pitch);
 
-        return new Vec3(groundSpeed * Math.cos(yaw), vy, groundSpeed * Math.sin(yaw));
+        this.debugBallisticVelocity = new Vec3(groundSpeed * Math.cos(yaw), vy, groundSpeed * Math.sin(yaw));
+        return this.debugBallisticVelocity;
     }
 
     // ========================================================================
@@ -297,13 +296,13 @@ public class TurretLightComputer {
             return eyePos;
         }
 
-        // Сканирование сетки (как было у тебя)
+        // Сканирование сетки
         AABB aabb = target.getBoundingBox();
         List<Vec3> visiblePoints = new ArrayList<>();
         int stepsY = 3;
 
         for (int y = stepsY; y >= 0; y--) {
-            double ly = (double)y / stepsY;
+            double ly = (double) y / stepsY;
             // Центр по Y
             Vec3 point = new Vec3(aabb.getCenter().x, aabb.minY + (aabb.maxY - aabb.minY) * ly, aabb.getCenter().z);
             if (canSeePoint(start, point)) {
@@ -338,32 +337,31 @@ public class TurretLightComputer {
     }
 
     public boolean canShootSafe(LivingEntity target, Vec3 muzzlePos, UUID ownerUUID) {
-        Vec3 targetPos = getSmartTargetPos(target, muzzlePos); // или просто target.position() для начала
+        Vec3 targetPos = getSmartTargetPos(target, muzzlePos);
         if (targetPos == null) return false;
 
         Vec3 fireVec = targetPos.subtract(muzzlePos);
         double dist = fireVec.length();
         fireVec = fireVec.normalize();
 
-        // Проверяем линию огня шагами по 1 блоку
-        for (double d = 1.0; d < dist; d += 1.0) {
+        // Проверяем линию огня шагами по 0.5 блока
+        for (double d = 0.5; d < dist; d += 0.5) {
             Vec3 checkPos = muzzlePos.add(fireVec.scale(d));
             // Ищем сущности в радиусе 0.5 блока от траектории
             AABB safetyBox = new AABB(checkPos.subtract(0.5, 0.5, 0.5), checkPos.add(0.5, 0.5, 0.5));
-
             List<LivingEntity> entitiesInWay = level.getEntitiesOfClass(LivingEntity.class, safetyBox);
+
             for (LivingEntity ally : entitiesInWay) {
                 if (ally == turret || ally == target) continue; // Игнорируем себя и цель
-
                 // Если на линии огня союзник - НЕ СТРЛЯЕМ
                 if (isAllied(ally, ownerUUID)) {
                     return false;
                 }
             }
         }
+
         return true;
     }
-
 
     // ========================================================================
     // ⚙️ ВСПОМОГАТЕЛЬНЫЕ РАСЧЕТЫ

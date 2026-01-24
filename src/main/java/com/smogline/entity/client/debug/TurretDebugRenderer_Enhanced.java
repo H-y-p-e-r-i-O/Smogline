@@ -1,147 +1,111 @@
 package com.smogline.entity.client.debug;
 
-import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Pair;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
+import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import java.util.List;
+
 
 public class TurretDebugRenderer_Enhanced {
 
-    public static void renderTurretDebug(PoseStack poseStack, MultiBufferSource bufferSource,
+    // Публичные методы для вызова из ивента
+    public static void renderTurretDebug(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
                                          TurretLightEntity turret, double camX, double camY, double camZ) {
-        if (turret == null || !turret.isDeployed()) return;
+        renderDebugInfo(poseStack, turret.getDebugTargetPoint(),
+                turret.getDebugBallisticVelocity(),
+                turret.getDebugScanPoints(),
+                turret.getMuzzlePos(), // Используем дуло как начало
+                turret.getPosition(0));
+    }
+
+    public static void renderTurretDebug(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
+                                         TurretLightLinkedEntity turret, double camX, double camY, double camZ) {
+        renderDebugInfo(poseStack, turret.getDebugTargetPoint(),
+                turret.getDebugBallisticVelocity(),
+                turret.getDebugScanPoints(),
+                turret.getMuzzlePos(),
+                turret.getPosition(0));
+    }
+
+    private static void renderDebugInfo(PoseStack poseStack, Vec3 targetPoint, Vec3 velocity,
+                                        List<Pair<Vec3, Boolean>> scanPoints, Vec3 muzzlePos, Vec3 turretPos) {
+        VertexConsumer lineBuilder = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderType.lines());
 
         poseStack.pushPose();
-        poseStack.translate(-camX, -camY, -camZ);
 
-        Vec3 muzzlePos = turret.getMuzzlePos();
+        // Смещение камеры
+        Vec3 cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+        Matrix4f matrix = poseStack.last().pose();
 
-        // 1) Сетка сканирования
-        if (turret.getDebugScanPoints() != null) {
-            for (Pair<Vec3, Boolean> pointData : turret.getDebugScanPoints()) {
-                Vec3 pos = pointData.getFirst();
-                boolean visible = pointData.getSecond();
-                int r = visible ? 0 : 255;
-                int g = visible ? 255 : 0;
-                renderMiniDot(poseStack, bufferSource, pos, r, g, 0);
+        // 1. СЕТКА (Grid Scan) - Красные/Зеленые точки
+        if (scanPoints != null && !scanPoints.isEmpty()) {
+            for (Pair<Vec3, Boolean> point : scanPoints) {
+                Vec3 p = point.getFirst();
+                boolean isHit = point.getSecond();
+                float r = isHit ? 0.0F : 1.0F;
+                float g = isHit ? 1.0F : 0.0F;
+                LevelRenderer.renderLineBox(poseStack, lineBuilder,
+                        p.x - 0.05, p.y - 0.05, p.z - 0.05,
+                        p.x + 0.05, p.y + 0.05, p.z + 0.05,
+                        r, g, 0.0F, 0.8F);
             }
         }
 
-        // 2) Хитбокс цели
-        if (turret.getTarget() != null) {
-            renderHitbox(poseStack, bufferSource, turret.getTarget().getBoundingBox(), 255, 255, 255, 255);
-        }
+        if (targetPoint != null) {
+            // 2. ЦЕНТРОИД (Фиолетовый бокс цели)
+            float boxSize = 0.25F;
+            LevelRenderer.renderLineBox(poseStack, lineBuilder,
+                    targetPoint.x - boxSize, targetPoint.y - boxSize, targetPoint.z - boxSize,
+                    targetPoint.x + boxSize, targetPoint.y + boxSize, targetPoint.z + boxSize,
+                    0.6F, 0.0F, 1.0F, 1.0F); // Фиолетовый
 
-        // 3) Точка упреждения (Lead Point)
-        Vec3 leadPoint = turret.getDebugTargetPoint();
-        if (leadPoint != null) {
-            // Рисуем точку (Magenta / Фиолетовый)
-            renderHitPoint(poseStack, bufferSource, leadPoint, 255, 0, 255);
+            // 3. ЛИНИЯ НАВОДКИ (Фиолетовая прямая)
+            lineBuilder.vertex(matrix, (float)muzzlePos.x, (float)muzzlePos.y, (float)muzzlePos.z)
+                    .color(0.6F, 0.0F, 1.0F, 0.8F)
+                    .normal(0, 1, 0)
+                    .endVertex();
+            lineBuilder.vertex(matrix, (float)targetPoint.x, (float)targetPoint.y, (float)targetPoint.z)
+                    .color(0.6F, 0.0F, 1.0F, 0.8F)
+                    .normal(0, 1, 0)
+                    .endVertex();
 
-            // Рисуем линию (Magenta)
-            drawLine(poseStack, bufferSource, muzzlePos, leadPoint, 255, 0, 255, 1.0F);
-        }
+            // 4. ТРАЕКТОРИЯ (Бирюзовая парабола)
+            if (velocity != null) {
+                Vec3 currentPos = muzzlePos;
+                Vec3 currentVel = velocity;
+                double gravity = 0.05; // Гравитация (подстрой под свои пули)
+                double drag = 0.99;    // Сопротивление воздуха
 
-        // 4) Баллистическая траектория
-        Vec3 v0 = turret.getDebugBallisticVelocity();
-        if (v0 != null) {
-            renderSimulatedTrajectory(poseStack, bufferSource, muzzlePos, v0,
-                    0.01F, 0.99F, 80);
-        } else {
-            Vec3 forward = Vec3.directionFromRotation(turret.getXRot(), turret.getYHeadRot()).scale(3.0);
-            drawLine(poseStack, bufferSource, muzzlePos, muzzlePos.add(forward), 255, 0, 255, 0.3F);
+                for (int i = 0; i < 50; i++) { // Рисуем 50 шагов вперед
+                    Vec3 nextPos = currentPos.add(currentVel);
+
+                    lineBuilder.vertex(matrix, (float)currentPos.x, (float)currentPos.y, (float)currentPos.z)
+                            .color(0.0F, 1.0F, 1.0F, 1.0F) // Бирюзовый
+                            .normal(0, 1, 0)
+                            .endVertex();
+                    lineBuilder.vertex(matrix, (float)nextPos.x, (float)nextPos.y, (float)nextPos.z)
+                            .color(0.0F, 1.0F, 1.0F, 1.0F)
+                            .normal(0, 1, 0)
+                            .endVertex();
+
+                    currentPos = nextPos;
+                    currentVel = currentVel.scale(drag).subtract(0, gravity, 0);
+
+                    // Если ушли под землю - стоп (опционально)
+                    if (currentPos.y < targetPoint.y - 5) break;
+                }
+            }
         }
 
         poseStack.popPose();
-    }
-
-    private static void renderSimulatedTrajectory(PoseStack ps, MultiBufferSource buf,
-                                                  Vec3 startPos, Vec3 startVel,
-                                                  float gravityPerTick, float drag, int maxTicks) {
-        Vec3 pos = startPos;
-        Vec3 vel = startVel;
-        for (int i = 0; i < maxTicks; i++) {
-            Vec3 nextPos = pos.add(vel);
-            drawLine(ps, buf, pos, nextPos, 0, 255, 255, 1.0F);
-            pos = nextPos;
-            vel = vel.scale(drag).add(0.0, -gravityPerTick, 0.0);
-        }
-    }
-
-    // --- Helpers (Старая версия с pushPose в каждом вызове) ---
-
-    private static void renderMiniDot(PoseStack poseStack, MultiBufferSource bufferSource, Vec3 pos, int r, int g, int b) {
-        VertexConsumer vc = bufferSource.getBuffer(RenderType.lines());
-        double s = 0.05;
-        drawBoxWireframe(vc, poseStack, pos.x - s, pos.y - s, pos.z - s, pos.x + s, pos.y + s, pos.z + s, r, g, b, 255);
-    }
-
-    private static void renderHitPoint(PoseStack poseStack, MultiBufferSource bufferSource, Vec3 pos, int r, int g, int b) {
-        VertexConsumer vc = bufferSource.getBuffer(RenderType.lines());
-        double s = 0.15;
-        drawBoxWireframe(vc, poseStack, pos.x - s, pos.y - s, pos.z - s, pos.x + s, pos.y + s, pos.z + s, r, g, b, 255);
-        drawLine(poseStack, bufferSource, pos.subtract(s, s, s), pos.add(s, s, s), r, g, b, 1.0F);
-        drawLine(poseStack, bufferSource, pos.subtract(s, -s, s), pos.add(s, -s, s), r, g, b, 1.0F);
-    }
-
-    private static void renderHitbox(PoseStack poseStack, MultiBufferSource bufferSource, AABB box, int r, int g, int b, int a) {
-        VertexConsumer vc = bufferSource.getBuffer(RenderType.lines());
-        drawBoxWireframe(vc, poseStack, box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, r, g, b, a);
-    }
-
-    private static void drawLine(PoseStack poseStack, MultiBufferSource bufferSource, Vec3 start, Vec3 end,
-                                 int r, int g, int b, float alpha) {
-        VertexConsumer vc = bufferSource.getBuffer(RenderType.lines());
-        poseStack.pushPose(); // ВОТ ОНО - то, что, вероятно, фиксило координаты
-
-        float dx = (float) (end.x - start.x);
-        float dy = (float) (end.y - start.y);
-        float dz = (float) (end.z - start.z);
-        float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (len > 0) { dx /= len; dy /= len; dz /= len; } else { dx = 0; dy = 1; dz = 0; }
-
-        vc.vertex(poseStack.last().pose(), (float) start.x, (float) start.y, (float) start.z)
-                .color(r, g, b, (int) (alpha * 255)).normal(poseStack.last().normal(), dx, dy, dz).endVertex();
-        vc.vertex(poseStack.last().pose(), (float) end.x, (float) end.y, (float) end.z)
-                .color(r, g, b, (int) (alpha * 255)).normal(poseStack.last().normal(), dx, dy, dz).endVertex();
-
-        poseStack.popPose();
-    }
-
-    private static void drawBoxWireframe(VertexConsumer vc, PoseStack ps,
-                                         double x1, double y1, double z1, double x2, double y2, double z2,
-                                         int r, int g, int b, int a) {
-        drawLineV(vc, ps, x1, y1, z1, x2, y1, z1, r, g, b, a);
-        drawLineV(vc, ps, x2, y1, z1, x2, y1, z2, r, g, b, a);
-        drawLineV(vc, ps, x2, y1, z2, x1, y1, z2, r, g, b, a);
-        drawLineV(vc, ps, x1, y1, z2, x1, y1, z1, r, g, b, a);
-        drawLineV(vc, ps, x1, y2, z1, x2, y2, z1, r, g, b, a);
-        drawLineV(vc, ps, x2, y2, z1, x2, y2, z2, r, g, b, a);
-        drawLineV(vc, ps, x2, y2, z2, x1, y2, z2, r, g, b, a);
-        drawLineV(vc, ps, x1, y2, z2, x1, y2, z1, r, g, b, a);
-        drawLineV(vc, ps, x1, y1, z1, x1, y2, z1, r, g, b, a);
-        drawLineV(vc, ps, x2, y1, z1, x2, y2, z1, r, g, b, a);
-        drawLineV(vc, ps, x2, y1, z2, x2, y2, z2, r, g, b, a);
-        drawLineV(vc, ps, x1, y1, z2, x1, y2, z2, r, g, b, a);
-    }
-
-    private static void drawLineV(VertexConsumer vc, PoseStack ps,
-                                  double x1, double y1, double z1, double x2, double y2, double z2,
-                                  int r, int g, int b, int a) {
-        float dx = (float) (x2 - x1);
-        float dy = (float) (y2 - y1);
-        float dz = (float) (z2 - z1);
-        float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (len > 0) { dx /= len; dy /= len; dz /= len; }
-
-        // Тут тоже использовался ps.last().pose(), это ок, так как pushPose вызывается выше в стеке
-        vc.vertex(ps.last().pose(), (float) x1, (float) y1, (float) z1)
-                .color(r, g, b, a).normal(ps.last().normal(), dx, dy, dz).endVertex();
-        vc.vertex(ps.last().pose(), (float) x2, (float) y2, (float) z2)
-                .color(r, g, b, a).normal(ps.last().normal(), dx, dy, dz).endVertex();
     }
 }
