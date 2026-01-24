@@ -146,17 +146,6 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     public void tick() {
         super.tick();
 
-        // Body follows base yaw (как у обычной)
-        this.yBodyRot = this.getYRot();
-        this.yBodyRotO = this.getYRot();
-
-        // Base “fix” to head when it turns too far
-        float diff = Mth.wrapDegrees(this.yHeadRot - this.getYRot());
-        if (Math.abs(diff) > 60.0F) {
-            float step = 8.0F;
-            this.setYRot(this.getYRot() + Mth.clamp(diff, -step, step));
-        }
-
         if (this.level().isClientSide) {
             // client debug (если нужно)
             int tid = this.entityData.get(TARGET_ID);
@@ -170,7 +159,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             return;
         }
 
-        // ---- Grace period: дождаться, пока block entity/placer всё проставит ----
+        // ---- Grace period ----
         if (this.tickCount < 20) {
             BlockPos p = getParentBlock();
             if (p != null) {
@@ -192,6 +181,27 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             return;
         }
 
+        // ================== ФИКСАЦИЯ (ОДИН РАЗ) ==================
+        if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)) {
+            float fixedYaw = state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING).toYRot();
+
+            // 1. Ставим поворот энтити
+            this.setYRot(fixedYaw);
+
+            // 2. Ставим поворот тела
+            this.yBodyRot = fixedYaw;
+
+            // 3. Убиваем интерполяцию (рывки)
+            this.yBodyRotO = fixedYaw;
+            this.yRotO = fixedYaw;
+
+        } else {
+            // Фолбек
+            this.yBodyRot = this.getYRot();
+            this.yBodyRotO = this.getYRot();
+        }
+        // ========================================================
+
         // ---- Position sync ----
         this.moveTo(parent.getX() + 0.5, parent.getY() + 1.0, parent.getZ() + 0.5, this.getYRot(), this.getXRot());
 
@@ -212,16 +222,12 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             }
         }
 
-        // ---- HARD GATE: до deploy вообще не работаем по целям ----
+        // ---- HARD GATE ----
         if (!this.isDeployed()) {
             this.setTarget(null);
             this.currentTargetCache = null;
             computer.updateTracking(null);
-
-            // можно ещё сбрасывать анимацию стрельбы на всякий:
             this.setShooting(false);
-
-            // target id sync
             if (this.entityData.get(TARGET_ID) != -1) this.entityData.set(TARGET_ID, -1);
             return;
         }
@@ -255,7 +261,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         // tracking update
         computer.updateTracking(target);
 
-        // target id sync (debug)
+        // target id sync
         int targetId = target != null ? target.getId() : -1;
         if (this.entityData.get(TARGET_ID) != targetId) {
             this.entityData.set(TARGET_ID, targetId);
@@ -269,7 +275,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             }
         }
 
-        // ---- Priority switching (every 10 ticks) ----
+        // ---- Priority switching ----
         if (this.tickCount % 10 == 0) {
             LivingEntity closeThreat = computer.findClosestThreat(getOwnerUUID());
             if (closeThreat != null && closeThreat != this.getTarget()) {
@@ -288,6 +294,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             }
         }
     }
+
 
     private Vec3 getAimTargetPosition(LivingEntity target) {
         Vec3 muzzle = getMuzzlePos();
@@ -317,50 +324,62 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
 
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
-        // 1. Базовые проверки
         if (!this.isDeployed()) return;
         if (this.shotCooldown > 0) return;
+
+        // 0. Сначала проверяем линию огня
         if (!computer.canShootSafe(target, getMuzzlePos(), getOwnerUUID())) return;
 
-        // 2. Забираем патрон
-        IAmmoItem ammoUsed = null;
+        // 1. ПРОВЕРЯЕМ (Peek), есть ли патрон, но пока НЕ БЕРЕМ ЕГО
+        IAmmoItem potentialAmmo = null;
         if (linkedAmmoContainer != null) {
-            ammoUsed = linkedAmmoContainer.takeAmmoAndGet("20mm_turret");
-            if (ammoUsed == null) return;
+            potentialAmmo = linkedAmmoContainer.peekAmmo("20mm_turret");
+            if (potentialAmmo == null) return; // Патронов нет - выход
         } else {
             return;
         }
 
-        // 3. Расчет баллистики
         Vec3 muzzlePos = getMuzzlePos();
-        if (!computer.canShootSafe(target, muzzlePos, getOwnerUUID())) return;
 
-        // Баллистика
+        // 2. Считаем баллистику (если нужно, можно использовать potentialAmmo.getSpeed())
         Vec3 ballisticVelocity = computer.calculateBallisticVelocity(target, muzzlePos);
         if (ballisticVelocity == null) return;
 
-        // 4. Проверка наведения
+        // 3. Проверка угла
         double horizontalDist = Math.sqrt(ballisticVelocity.x * ballisticVelocity.x + ballisticVelocity.z * ballisticVelocity.z);
-        float targetYaw = (float) (Math.atan2(ballisticVelocity.z, ballisticVelocity.x) * (180D / Math.PI)) - 90.0F;
+
+        // Используем логику турели для проверки угла (-90 градусов)
+        float turretCheckYaw = (float) (Math.atan2(ballisticVelocity.z, ballisticVelocity.x) * (180D / Math.PI)) - 90.0F;
         float targetPitch = (float) (Math.atan2(ballisticVelocity.y, horizontalDist) * (180D / Math.PI));
 
         float currentYaw = this.yHeadRot;
         float currentPitch = -this.getXRot();
 
-        if (Math.abs(wrapDegrees(targetYaw - currentYaw)) > 10.0F ||
-                Math.abs(wrapDegrees(targetPitch - currentPitch)) > 10.0F) return;
+        float yawDiff = Math.abs(wrapDegrees(turretCheckYaw - currentYaw));
+        float pitchDiff = Math.abs(wrapDegrees(targetPitch - currentPitch));
 
-        // 5. Выстрел
+        // 🚨 ГЛАВНОЕ ИЗМЕНЕНИЕ: Если угол плохой - выходим, НО ПАТРОН МЫ ЕЩЕ НЕ ТРАТИЛИ!
+        if (yawDiff > 10.0F || pitchDiff > 10.0F) return;
+
+        // =================================================================
+        // 4. ТЕПЕРЬ, когда мы на 100% уверены, что выстрел состоится,
+        // мы официально забираем патрон из инвентаря.
+        // =================================================================
+        IAmmoItem ammoUsed = linkedAmmoContainer.takeAmmoAndGet("20mm_turret");
+        if (ammoUsed == null) return; // На всякий случай (гонка потоков маловероятна, но все же)
+
+        // 5. Эффекты и кулдаун
         computer.onShotFired(target, muzzlePos);
         this.shotCooldown = SHOT_ANIMATION_LENGTH;
         this.setShooting(true);
         this.shootAnimTimer = 0;
+        this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
 
         if (!this.level().isClientSide) {
             ServerLevel serverLevel = (ServerLevel) this.level();
             TurretBulletEntity bullet = new TurretBulletEntity(serverLevel, this);
 
-            // ✅ ПРАВИЛЬНОЕ ПОЛУЧЕНИЕ ТИПА ПАТРОНА (как в пулемете)
+            // Тип патрона
             if (ammoUsed instanceof Item item) {
                 ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(item);
                 if (itemId != null) {
@@ -368,37 +387,27 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
                     if (type != null) {
                         bullet.setAmmoType(type);
                     } else {
-                        // Fallback: создаем тип вручную, если в реестре нет
-                        bullet.setAmmoType(new AmmoRegistry.AmmoType(
-                                itemId.toString(),
-                                ammoUsed.getCaliber(),
-                                ammoUsed.getDamage(),
-                                ammoUsed.getSpeed(),
-                                ammoUsed.isPiercing()
-                        ));
+                        bullet.setAmmoType(new AmmoRegistry.AmmoType(itemId.toString(), ammoUsed.getCaliber(), ammoUsed.getDamage(), ammoUsed.getSpeed(), ammoUsed.isPiercing()));
                     }
                 }
             } else {
-                // Fallback для неизвестных предметов
                 bullet.setAmmoType(new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false));
             }
 
             bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
-            bullet.setDeltaMovement(ballisticVelocity); // Вектор уже рассчитан компьютером
+            bullet.setDeltaMovement(ballisticVelocity);
 
-            bullet.setYRot(targetYaw);
+            // Расчет угла для пули (без -90, как в фиксе выше)
+            float bulletYaw = (float) (Math.atan2(ballisticVelocity.x, ballisticVelocity.z) * (180D / Math.PI));
+
+            bullet.setYRot(bulletYaw);
             bullet.setXRot(targetPitch);
-            bullet.yRotO = targetYaw;
+            bullet.yRotO = bulletYaw;
             bullet.xRotO = targetPitch;
 
             serverLevel.addFreshEntity(bullet);
-
-            if (ModSounds.TURRET_FIRE.isPresent()) {
-                this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
-            }
         }
     }
-
 
 
 
@@ -660,4 +669,16 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     public List<Pair<Vec3, Boolean>> getDebugScanPoints() {
         return computer.debugScanPoints;
     }
+
+    @Override
+    protected net.minecraft.world.entity.ai.control.BodyRotationControl createBodyControl() {
+        return new net.minecraft.world.entity.ai.control.BodyRotationControl(this) {
+            @Override
+            public void clientTick() {
+                // Полная блокировка вращения тела клиентом
+            }
+        };
+    }
+
+
 }

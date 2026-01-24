@@ -626,13 +626,17 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
         if (ballisticVelocity == null) return;
 
         double horizontalDist = Math.sqrt(ballisticVelocity.x * ballisticVelocity.x + ballisticVelocity.z * ballisticVelocity.z);
-        float targetYaw = (float) (Math.atan2(ballisticVelocity.z, ballisticVelocity.x) * (180D / Math.PI)) - 90.0F;
+
+        // 1. УГОЛ ДЛЯ ПРОВЕРКИ ТУРЕЛИ (Оставляем как было в оригинале!)
+        // Турель использует систему координат с offset -90
+        float turretCheckYaw = (float) (Math.atan2(ballisticVelocity.z, ballisticVelocity.x) * (180D / Math.PI)) - 90.0F;
         float targetPitch = (float) (Math.atan2(ballisticVelocity.y, horizontalDist) * (180D / Math.PI));
 
         float currentYaw = this.yHeadRot;
         float currentPitch = -this.getXRot();
 
-        float yawDiff = Math.abs(wrapDegrees(targetYaw - currentYaw));
+        // Сравниваем именно с turretCheckYaw
+        float yawDiff = Math.abs(wrapDegrees(turretCheckYaw - currentYaw));
         float pitchDiff = Math.abs(wrapDegrees(targetPitch - currentPitch));
 
         if (yawDiff > 10.0F || pitchDiff > 10.0F) return;
@@ -659,9 +663,16 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
 
             bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
             bullet.setDeltaMovement(ballisticVelocity);
-            bullet.setYRot(targetYaw);
+
+            // 2. УГОЛ ДЛЯ ПУЛИ (Исправленная формула для визуализации)
+            // Пуля использует atan2(x, z) как в методе alignToVelocity
+            float bulletYaw = (float) (Math.atan2(ballisticVelocity.x, ballisticVelocity.z) * (180D / Math.PI));
+
+            bullet.setYRot(bulletYaw);
             bullet.setXRot(targetPitch);
-            bullet.yRotO = targetYaw;
+
+            // Интерполяция (чтобы не дергалась)
+            bullet.yRotO = bulletYaw;
             bullet.xRotO = targetPitch;
 
             serverLevel.addFreshEntity(bullet);
@@ -671,6 +682,7 @@ public class TurretLightEntity extends Monster implements GeoEntity, RangedAttac
             }
         }
     }
+
 
     private float wrapDegrees(float degrees) {
         float f = degrees % 360.0F;

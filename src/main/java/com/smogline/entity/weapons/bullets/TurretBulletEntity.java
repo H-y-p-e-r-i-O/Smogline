@@ -222,11 +222,21 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
         this.spin += 20.0F;
         this.flightDuration++;
 
-        // 1. Расширение хитбокса
+        // 1. Расширение хитбокса с сохранением центра (Centering fix)
         if (this.flightDuration == 5 && getAmmoType() == AmmoType.RADIO) {
-            this.refreshDimensions();
-            this.reapplyPosition();
+            float oldHeight = this.getBbHeight(); // 1. Запоминаем старую высоту (0.5)
+
+            this.refreshDimensions();             // 2. Применяем новые размеры (1.5)
+
+            float newHeight = this.getBbHeight(); // 3. Получаем новую высоту
+
+            // 4. Сдвигаем "дно" вниз на половину разницы, чтобы центр остался на месте
+            // Формула: Y_new = Y_old - (Height_new - Height_old) / 2
+            this.setPos(this.getX(), this.getY() - (newHeight - oldHeight) / 2.0, this.getZ());
+
+            // reapplyPosition вызывать не нужно, setPos сам пересчитает AABB
         }
+
 
         if (initialPosition != null && this.position().distanceTo(initialPosition) > MAX_FLIGHT_DISTANCE) {
             this.discard();

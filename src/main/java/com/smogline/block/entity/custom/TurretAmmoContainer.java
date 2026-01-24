@@ -37,7 +37,24 @@ public class TurretAmmoContainer extends ItemStackHandler {
         return 64;
     }
 
-    // TurretAmmoContainer.java
+
+    /**
+     * Проверяет наличие патрона нужного калибра, но НЕ забирает его.
+     * Нужен для расчетов баллистики перед выстрелом.
+     */
+    public IAmmoItem peekAmmo(String caliber) {
+        for (int i = 0; i < SLOT_COUNT; i++) {
+            ItemStack stack = getStackInSlot(i);
+            if (stack.isEmpty()) continue;
+            if (stack.getItem() instanceof IAmmoItem ammo) {
+                if (ammo.getCaliber().equals(caliber)) {
+                    return ammo;
+                }
+            }
+        }
+        return null;
+    }
+
 
     public IAmmoItem takeAmmoAndGet(String caliber) {
         for (int i = 0; i < SLOT_COUNT; i++) {
