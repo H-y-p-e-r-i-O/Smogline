@@ -7,49 +7,13 @@
       "type": "minecraft:multi_noise",
       "biomes": [
         {
-          "biome": "smogline:ruined_city",
+          "biome": "smogline:wind_peaks",
           "parameters": {
-            "temperature": [0.5, 1.5],
-            "humidity": [-1.0, -0.1],
-            "continentalness": [-1.0, 1.0],
-            "erosion": [-1.0, -0.2],
-            "weirdness": [-1.0, 1.0],
-            "depth": 0,
-            "offset": 0
-          }
-        },
-        {
-          "biome": "smogline:wasteland",
-          "parameters": {
-            "temperature": [-0.2, 0.5],
-            "humidity": [-1.0, 0.2],
-            "continentalness": [-1.0, 1.0],
-            "erosion": [-1.0, 1.0],
-            "weirdness": [-0.5, 0.5],
-            "depth": 0,
-            "offset": 0
-          }
-        },
-        {
-          "biome": "smogline:alienation_plains",
-          "parameters": {
-            "temperature": [-1.0, -0.2],
-            "humidity": [0.0, 1.0],
-            "continentalness": [-1.0, 1.0],
-            "erosion": [-1.0, 0.5],
-            "weirdness": [-1.0, 1.0],
-            "depth": 0,
-            "offset": 0
-          }
-        },
-        {
-          "biome": "smogline:coniferous_forest",
-          "parameters": {
-            "temperature": [-1.0, 0.0],
-            "humidity": [-0.5, 0.5],
-            "continentalness": [-1.0, 1.0],
-            "erosion": [-1.0, 1.0],
-            "weirdness": [-1.0, 1.0],
+            "temperature": [-1.0, 1.5],
+            "humidity": [-1.5, 0.0],
+            "continentalness": [0.0, 1.2],
+            "erosion": [-1.0, -0.55],
+            "weirdness": [-1.0, 0.0],
             "depth": 0,
             "offset": 0
           }
@@ -57,23 +21,59 @@
         {
           "biome": "smogline:oasis",
           "parameters": {
-            "temperature": [-1.0, 1.0],
-            "humidity": [0.5, 1.5],
-            "continentalness": [0.2, 1.5],
-            "erosion": [-1.0, 1.0],
-            "weirdness": [0.8, 1.5],
+            "temperature": [-0.5, 0.5],
+            "humidity": [0.1, 1.5],
+            "continentalness": [0.0, 1.2],
+            "erosion": [-1.0, -0.55],
+            "weirdness": [-1.0, 0.0],
+            "depth": 0,
+            "offset": 0.55
+          }
+        },
+        {
+          "biome": "smogline:ruined_city",
+          "parameters": {
+            "temperature": [0.65, 1.5],
+            "humidity": [-1.0, -0.4],
+            "continentalness": [-0.2, 1.0],
+            "erosion": [-0.2, 1.0],
+            "weirdness": [-0.3, 0.3],
             "depth": 0,
             "offset": 0
           }
         },
         {
-          "biome": "smogline:wind_peaks",
+          "biome": "smogline:wasteland",
           "parameters": {
-            "temperature": [-1.0, 1.0],
-            "humidity": [-1.5, 0.4],
-            "continentalness": [0.2, 1.5],
-            "erosion": [-1.0, 1.0],
-            "weirdness": [0.6, 1.5],
+            "temperature": [0.15, 0.65],
+            "humidity": [-1.0, 0.5],
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-0.3, 1.0],
+            "weirdness": [-0.6, 0.6],
+            "depth": 0,
+            "offset": 0
+          }
+        },
+        {
+          "biome": "smogline:alienation_plains",
+          "parameters": {
+            "temperature": [-0.4, 0.15],
+            "humidity": [-1.0, 1.0],
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-0.3, 1.0],
+            "weirdness": [-0.4, 0.4],
+            "depth": 0,
+            "offset": 0
+          }
+        },
+        {
+          "biome": "smogline:coniferous_forest",
+          "parameters": {
+            "temperature": [-1.0, -0.4],
+            "humidity": [-0.5, 0.5],
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-0.5, 1.0],
+            "weirdness": [-1.0, 1.0],
             "depth": 0,
             "offset": 0
           }
