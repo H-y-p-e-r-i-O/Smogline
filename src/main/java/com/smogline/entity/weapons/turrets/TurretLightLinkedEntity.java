@@ -2,16 +2,20 @@ package com.smogline.entity.weapons.turrets;
 
 import com.mojang.datafixers.util.Pair;
 import com.smogline.block.custom.weapons.TurretLightPlacerBlock;
+import com.smogline.block.entity.custom.TurretAmmoContainer;
+import com.smogline.block.entity.custom.TurretLightPlacerBlockEntity;
 import com.smogline.entity.ModEntities;
 import com.smogline.entity.weapons.bullets.TurretBulletEntity;
 import com.smogline.entity.weapons.turrets.logic.TurretLightComputer;
 import com.smogline.item.tags_and_tiers.AmmoRegistry;
+import com.smogline.item.tags_and_tiers.IAmmoItem;
 import com.smogline.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -25,10 +29,14 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.ForgeRegistries;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
@@ -41,8 +49,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class TurretLightLinkedEntity extends Monster implements GeoEntity {
+public class TurretLightLinkedEntity extends Monster implements GeoEntity, RangedAttackMob {
 
+    // В начало класса добавь:
+    private TurretAmmoContainer linkedAmmoContainer = null;
+
+    public void setAmmoContainer(TurretAmmoContainer container) {
+        this.linkedAmmoContainer = container;
+    }
+
+    public TurretAmmoContainer getAmmoContainer() {
+        return linkedAmmoContainer;
+    }
     private final TurretLightComputer computer;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -262,6 +280,13 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity {
                 }
             }
         }
+
+        if (!this.level().isClientSide) {
+            BlockEntity be = this.level().getBlockEntity(getParentBlock());
+            if (be instanceof TurretLightPlacerBlockEntity turretBE && linkedAmmoContainer == null) {
+                setAmmoContainer(turretBE.getAmmoContainer());
+            }
+        }
     }
 
     private Vec3 getAimTargetPosition(LivingEntity target) {
@@ -290,18 +315,31 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity {
 
     // -------------------- Ranged attack --------------------
 
+    @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
+        // 1. Базовые проверки
         if (!this.isDeployed()) return;
         if (this.shotCooldown > 0) return;
+        if (!computer.canShootSafe(target, getMuzzlePos(), getOwnerUUID())) return;
 
+        // 2. Забираем патрон
+        IAmmoItem ammoUsed = null;
+        if (linkedAmmoContainer != null) {
+            ammoUsed = linkedAmmoContainer.takeAmmoAndGet("20mm_turret");
+            if (ammoUsed == null) return;
+        } else {
+            return;
+        }
+
+        // 3. Расчет баллистики
         Vec3 muzzlePos = getMuzzlePos();
-
-        // safety
         if (!computer.canShootSafe(target, muzzlePos, getOwnerUUID())) return;
 
+        // Баллистика
         Vec3 ballisticVelocity = computer.calculateBallisticVelocity(target, muzzlePos);
         if (ballisticVelocity == null) return;
 
+        // 4. Проверка наведения
         double horizontalDist = Math.sqrt(ballisticVelocity.x * ballisticVelocity.x + ballisticVelocity.z * ballisticVelocity.z);
         float targetYaw = (float) (Math.atan2(ballisticVelocity.z, ballisticVelocity.x) * (180D / Math.PI)) - 90.0F;
         float targetPitch = (float) (Math.atan2(ballisticVelocity.y, horizontalDist) * (180D / Math.PI));
@@ -309,42 +347,60 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity {
         float currentYaw = this.yHeadRot;
         float currentPitch = -this.getXRot();
 
-        float yawDiff = Math.abs(wrapDegrees(targetYaw - currentYaw));
-        float pitchDiff = Math.abs(wrapDegrees(targetPitch - currentPitch));
+        if (Math.abs(wrapDegrees(targetYaw - currentYaw)) > 10.0F ||
+                Math.abs(wrapDegrees(targetPitch - currentPitch)) > 10.0F) return;
 
-        // Wait for align
-        if (yawDiff > 10.0F || pitchDiff > 10.0F) return;
-
-        // Fire
+        // 5. Выстрел
         computer.onShotFired(target, muzzlePos);
-
         this.shotCooldown = SHOT_ANIMATION_LENGTH;
         this.setShooting(true);
         this.shootAnimTimer = 0;
 
-        ServerLevel serverLevel = (ServerLevel) this.level();
-        TurretBulletEntity bullet = new TurretBulletEntity(serverLevel, this);
+        if (!this.level().isClientSide) {
+            ServerLevel serverLevel = (ServerLevel) this.level();
+            TurretBulletEntity bullet = new TurretBulletEntity(serverLevel, this);
 
-        AmmoRegistry.AmmoType randomAmmo = AmmoRegistry.getRandomAmmoForCaliber("20mm_turret", this.level().random);
-        if (randomAmmo != null) {
-            bullet.setAmmoType(randomAmmo);
-        } else {
-            bullet.setAmmoType(new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false));
-        }
+            // ✅ ПРАВИЛЬНОЕ ПОЛУЧЕНИЕ ТИПА ПАТРОНА (как в пулемете)
+            if (ammoUsed instanceof Item item) {
+                ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(item);
+                if (itemId != null) {
+                    AmmoRegistry.AmmoType type = AmmoRegistry.getAmmoTypeById(itemId.toString());
+                    if (type != null) {
+                        bullet.setAmmoType(type);
+                    } else {
+                        // Fallback: создаем тип вручную, если в реестре нет
+                        bullet.setAmmoType(new AmmoRegistry.AmmoType(
+                                itemId.toString(),
+                                ammoUsed.getCaliber(),
+                                ammoUsed.getDamage(),
+                                ammoUsed.getSpeed(),
+                                ammoUsed.isPiercing()
+                        ));
+                    }
+                }
+            } else {
+                // Fallback для неизвестных предметов
+                bullet.setAmmoType(new AmmoRegistry.AmmoType("default", "20mm_turret", 6.0f, 3.0f, false));
+            }
 
-        bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
-        bullet.setDeltaMovement(ballisticVelocity);
-        bullet.setYRot(targetYaw);
-        bullet.setXRot(targetPitch);
-        bullet.yRotO = targetYaw;
-        bullet.xRotO = targetPitch;
+            bullet.setPos(muzzlePos.x, muzzlePos.y, muzzlePos.z);
+            bullet.setDeltaMovement(ballisticVelocity); // Вектор уже рассчитан компьютером
 
-        serverLevel.addFreshEntity(bullet);
+            bullet.setYRot(targetYaw);
+            bullet.setXRot(targetPitch);
+            bullet.yRotO = targetYaw;
+            bullet.xRotO = targetPitch;
 
-        if (ModSounds.TURRET_FIRE.isPresent()) {
-            this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
+            serverLevel.addFreshEntity(bullet);
+
+            if (ModSounds.TURRET_FIRE.isPresent()) {
+                this.playSound(ModSounds.TURRET_FIRE.get(), 1.0F, 1.0F);
+            }
         }
     }
+
+
+
 
     private float wrapDegrees(float degrees) {
         float f = degrees % 360.0F;

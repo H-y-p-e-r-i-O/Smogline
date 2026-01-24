@@ -9,6 +9,7 @@ import com.smogline.client.loader.*;
 import com.smogline.client.overlay.crates.GUIDeshCrate;
 import com.smogline.client.overlay.crates.GUIIronCrate;
 import com.smogline.client.overlay.crates.GUISteelCrate;
+import com.smogline.client.overlay.turrets.GUITurretAmmo;
 import com.smogline.client.render.*;
 import com.smogline.client.render.shader.*;
 import com.smogline.config.*;
@@ -144,6 +145,7 @@ public class ClientSetup {
 
         event.enqueueWork(() -> {
             // Здесь мы связываем наш тип меню с классом экрана
+            MenuScreens.register(ModMenuTypes.TURRET_AMMO_MENU.get(), GUITurretAmmo::new);
             MenuScreens.register(ModMenuTypes.ARMOR_TABLE_MENU.get(), GUIArmorTable::new);
             MenuScreens.register(ModMenuTypes.MACHINE_ASSEMBLER_MENU.get(), GUIMachineAssembler::new);
             MenuScreens.register(ModMenuTypes.ADVANCED_ASSEMBLY_MACHINE_MENU.get(), GUIMachineAdvancedAssembler::new);
