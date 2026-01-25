@@ -57,11 +57,8 @@ public class TurretLightPlacerBlock extends BaseEntityBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
+            // Энергия удаляется в BE.setRemoved(), так что здесь удаляем только энтити турели
             if (!level.isClientSide) {
-                // Удаляем узел из сети
-                EnergyNetworkManager.get((ServerLevel) level).removeNode(pos);
-
-                // Удаляем саму турель, если она была
                 AABB box = new AABB(pos).inflate(2.0);
                 var turrets = level.getEntitiesOfClass(TurretLightLinkedEntity.class, box,
                         t -> pos.equals(t.getParentBlock()));
@@ -70,6 +67,7 @@ public class TurretLightPlacerBlock extends BaseEntityBlock {
             super.onRemove(state, level, pos, newState, isMoving);
         }
     }
+
 
     // ------------------------------------
 
