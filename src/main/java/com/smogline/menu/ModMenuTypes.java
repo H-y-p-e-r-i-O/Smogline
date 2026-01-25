@@ -33,12 +33,17 @@ public class ModMenuTypes {
 
     public static final RegistryObject<MenuType<TurretLightMenu>> TURRET_AMMO_MENU =
             MENUS.register("turret_ammo", () -> IForgeMenuType.create((windowId, inv, data) -> {
-                // 1. Создаем пустой контейнер для клиента
+                // На клиенте мы не знаем реального содержимого контейнера сразу,
+                // поэтому создаем новый пустой.
                 TurretAmmoContainer container = new TurretAmmoContainer();
 
-                // 2. ВОЗВРАЩАЕМ новый экземпляр меню (НЕ super!)
-                return new TurretLightMenu(windowId, inv, container);
+                // ВАЖНО: Создаем пустую заглушку для данных энергии (2 слота: текущая, макс)
+                var emptyData = new net.minecraft.world.inventory.SimpleContainerData(2);
+
+                // Вызываем ГЛАВНЫЙ конструктор
+                return new TurretLightMenu(windowId, inv, container, emptyData);
             }));
+
 
 
 

@@ -680,5 +680,10 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         };
     }
 
+    // В TurretLightLinkedEntity.java
+    public void setOwnerUUIDDirect(UUID uuid) {
+        this.entityData.set(OWNER_UUID, Optional.ofNullable(uuid));
+    }
+
 
 }

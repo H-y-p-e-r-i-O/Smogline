@@ -17,16 +17,20 @@ public class TurretLightMenu extends AbstractContainerMenu {
     public static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
     private static final int HOTBAR_SLOT_COUNT = 9;
 
-    public TurretLightMenu(int containerId, Inventory playerInventory, TurretAmmoContainer ammoContainer) {
-        // Здесь мы вызываем super конструктора родителя
-        // Можно передать null, но лучше передать зарегистрированный тип меню, если он доступен
-        super(ModMenuTypes.TURRET_AMMO_MENU.get(), containerId);
+    private final net.minecraft.world.inventory.ContainerData data;
 
+    // ОБНОВЛЕННЫЙ КОНСТРУКТОР
+    public TurretLightMenu(int containerId, Inventory playerInventory, TurretAmmoContainer ammoContainer, net.minecraft.world.inventory.ContainerData data) {
+        super(ModMenuTypes.TURRET_AMMO_MENU.get(), containerId);
         this.ammoContainer = ammoContainer;
+        this.data = data;
+
+        // ВАЖНО: Регистрируем данные для синхронизации
+        this.addDataSlots(data);
 
         // Турельные слоты (3x3 = 9 слотов) СЛЕВА
-        int ammoStartX = 8;
-        int ammoStartY = 18;
+        int ammoStartX = 115;
+        int ammoStartY = 44;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 int index = row * 3 + col; // currentIndex не нужен, SlotItemHandler сам справится
@@ -48,7 +52,7 @@ public class TurretLightMenu extends AbstractContainerMenu {
 
         // Инвентарь игрока (3 ряда × 9 слотов) НИЖЕ
         int playerStartX = 8;
-        int playerStartY = 85;
+        int playerStartY = 106;
         for (int row = 0; row < PLAYER_INVENTORY_ROW_COUNT; row++) {
             for (int column = 0; column < PLAYER_INVENTORY_COLUMN_COUNT; column++) {
                 this.addSlot(new Slot(playerInventory, column + row * 9 + 9,
@@ -95,4 +99,17 @@ public class TurretLightMenu extends AbstractContainerMenu {
     public TurretAmmoContainer getAmmoContainer() {
         return ammoContainer;
     }
+
+    // ДОПОЛНИТЕЛЬНЫЙ КОНСТРУКТОР (ДЛЯ КЛИЕНТА)
+    // Forge вызывает его при открытии GUI на клиенте
+    public TurretLightMenu(int containerId, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf extraData) {
+        // На клиенте создаем пустышку SimpleContainerData
+        this(containerId, playerInventory, new TurretAmmoContainer(), new net.minecraft.world.inventory.SimpleContainerData(2));
+    }
+
+    // Геттер для GUI
+    public int getDataSlot(int index) {
+        return this.data.get(index);
+    }
+
 }
