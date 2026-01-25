@@ -80,27 +80,20 @@ public class TurretLightPlacerBlock extends BaseEntityBlock {
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof TurretLightPlacerBlockEntity turretBE) {
 
-            // --- DEBUG: ВЫВОД ЭНЕРГИИ В ЧАТ ---
-            long energy = turretBE.getEnergyStored();
-            long max = turretBE.getMaxEnergyStored();
-            String msg = String.format("§eEnergy: §b%d §7/ §b%d §7HE", energy, max);
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal(msg), true); // true = над хотбаром
-            // ----------------------------------
 
             if (player instanceof ServerPlayer serverPlayer) {
-                // В TurretLightPlacerBlock.java -> use()
-
                 NetworkHooks.openScreen(serverPlayer,
                         new net.minecraft.world.SimpleMenuProvider(
                                 (windowId, playerInventory, playerEntity) ->
-                                        // ПЕРЕДАЕМ turretBE.getDataAccess()
-                                        new TurretLightMenu(windowId, playerInventory, turretBE.getAmmoContainer(), turretBE.getDataAccess()),
+                                        // ПЕРЕДАЕМ pos В КОНСТРУКТОР (5-й аргумент)
+                                        new TurretLightMenu(windowId, playerInventory, turretBE.getAmmoContainer(), turretBE.getDataAccess(), pos),
                                 net.minecraft.network.chat.Component.literal("Turret Buffer")
                         ),
-                        pos
+                        // ВАЖНО: Пишем BlockPos в буфер, чтобы клиентский конструктор мог его прочитать
+                        buf -> buf.writeBlockPos(pos)
                 );
-
             }
+
         }
 
         return InteractionResult.SUCCESS;

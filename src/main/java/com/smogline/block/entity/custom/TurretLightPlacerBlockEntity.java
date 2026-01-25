@@ -47,6 +47,12 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     private static final long DRAIN_HEALING = 25;
     private static final float HEAL_PER_TICK = 0.05F;
 
+    // ... после cachedHealth
+    private boolean isSwitchedOn = false; // По умолчанию ВЫКЛЮЧЕНА
+    private int bootTimer = 0; // Таймер загрузки (3 сек = 60 тиков)
+
+
+
     // Кэш здоровья для GUI (0-100)
     private int cachedHealth = 0;
 
@@ -66,10 +72,35 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     public static void tick(Level level, BlockPos pos, BlockState state, TurretLightPlacerBlockEntity entity) {
         if (level.isClientSide) return;
 
-        // Фикс сети
+        // Фикс сети... (без изменений)
         if (level instanceof ServerLevel serverLevel) {
             EnergyNetworkManager manager = EnergyNetworkManager.get(serverLevel);
             if (!manager.hasNode(pos)) manager.addNode(pos);
+        }
+
+        // --- ЛОГИКА ВЫКЛЮЧАТЕЛЯ ---
+        // Если выключено -> НЕ спавним, НЕ тратим энергию, турель засыпает
+        if (!entity.isSwitchedOn) {
+            // Если турель уже была заспавнена, отключаем ей ИИ
+            if (entity.turretUUID != null) {
+                if (level instanceof ServerLevel sL) {
+                    Entity e = sL.getEntity(entity.turretUUID);
+                    if (e instanceof TurretLightLinkedEntity t && t.isAlive()) {
+                        t.setPowered(false);
+                    }
+                }
+            }
+            // Просто копим энергию (логика receiveEnergy работает сама),
+            // но выходим из tick, чтобы не было спавна и трат.
+            return;
+        }
+
+        // --- ЛОГИКА ЗАГРУЗКИ ---
+        if (entity.bootTimer > 0) {
+            entity.bootTimer--;
+            // Пока идет загрузка, турель еще не активна, но энергия уже не копится (или копится, но не тратится)
+            // Возвращаемся, чтобы не спавнить и не стрелять, пока грузится
+            return;
         }
 
         // --- 1. ПРОВЕРКА ТУРЕЛИ ---
@@ -250,6 +281,8 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         if (ownerUUID != null) tag.putUUID("OwnerUUID", ownerUUID);
         if (turretUUID != null) tag.putUUID("TurretUUID", turretUUID);
         tag.putInt("RespawnTimer", respawnTimer);
+        tag.putBoolean("SwitchedOn", isSwitchedOn);
+        tag.putInt("BootTimer", bootTimer);
     }
 
     @Override
@@ -260,6 +293,8 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         if (tag.contains("Energy")) energyStored = tag.getLong("Energy");
         if (tag.hasUUID("TurretUUID")) turretUUID = tag.getUUID("TurretUUID");
         if (tag.contains("RespawnTimer")) respawnTimer = tag.getInt("RespawnTimer");
+        isSwitchedOn = tag.getBoolean("SwitchedOn");
+        bootTimer = tag.getInt("BootTimer");
     }
 
     @Override public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
@@ -290,7 +325,9 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
             switch (index) {
                 case 0: return TurretLightPlacerBlockEntity.this.getEnergyStoredInt();
                 case 1: return TurretLightPlacerBlockEntity.this.getMaxEnergyStoredInt();
-                case 2: return TurretLightPlacerBlockEntity.this.getStatusInt(); // Новый слот
+                case 2: return TurretLightPlacerBlockEntity.this.getStatusInt();
+                case 3: return TurretLightPlacerBlockEntity.this.isSwitchedOn ? 1 : 0; // <--- КНОПКА
+                case 4: return TurretLightPlacerBlockEntity.this.bootTimer;             // <--- ТАЙМЕР
                 default: return 0;
             }
         }
@@ -300,10 +337,25 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
             if (index == 0) TurretLightPlacerBlockEntity.this.energyStored = value;
         }
 
+        // ...
         @Override
         public int getCount() {
-            return 3; // Увеличили размер массива данных
+            return 5; // <--- БЫЛО 3, СТАЛО 5
         }
     };
     public net.minecraft.world.inventory.ContainerData getDataAccess() { return dataAccess; }
+
+    public void togglePower() {
+        this.isSwitchedOn = !this.isSwitchedOn;
+        if (this.isSwitchedOn) {
+            // Если включили -> запускаем таймер загрузки (3 секунды)
+            this.bootTimer = 60;
+        } else {
+            // Если выключили -> сбрасываем таймер
+            this.bootTimer = 0;
+        }
+        setChanged();
+    }
+
+
 }

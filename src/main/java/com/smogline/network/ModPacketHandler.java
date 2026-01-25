@@ -1,6 +1,7 @@
 package com.smogline.network;
 
 import com.smogline.lib.RefStrings;
+import com.smogline.network.packet.PacketToggleTurret;
 import com.smogline.network.sounds.GeigerSoundPacket;
 import com.smogline.network.ToggleWoodBurnerPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -60,5 +61,13 @@ public class ModPacketHandler {
                 PacketUnloadGun::new,
                 PacketUnloadGun::handle
         );
+
+        INSTANCE.registerMessage(id++,
+                PacketToggleTurret.class,
+                PacketToggleTurret::toBytes,
+                PacketToggleTurret::new,
+                PacketToggleTurret::handle
+        );
+
     }
 }
