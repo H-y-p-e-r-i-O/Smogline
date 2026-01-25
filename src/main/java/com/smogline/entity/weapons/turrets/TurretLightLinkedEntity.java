@@ -79,6 +79,10 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             SynchedEntityData.defineId(TurretLightLinkedEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> TARGET_ID =
             SynchedEntityData.defineId(TurretLightLinkedEntity.class, EntityDataSerializers.INT);
+    // Добавь это поле к остальным EntityDataAccessor
+    private static final EntityDataAccessor<Boolean> POWERED =
+            SynchedEntityData.defineId(TurretLightLinkedEntity.class, EntityDataSerializers.BOOLEAN);
+
 
     // Balance
     private static final int DEPLOY_DURATION = 80;
@@ -138,6 +142,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         this.entityData.define(OWNER_UUID, Optional.empty());
         this.entityData.define(DEPLOY_TIMER, DEPLOY_DURATION);
         this.entityData.define(TARGET_ID, -1);
+        this.entityData.define(POWERED, true); // <--- ДОБАВИТЬ ЭТО
     }
 
     // -------------------- Tick --------------------
@@ -147,7 +152,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         super.tick();
 
         if (this.level().isClientSide) {
-            // client debug (если нужно)
+            // client debug
             int tid = this.entityData.get(TARGET_ID);
             if (tid != -1) {
                 Entity e = this.level().getEntity(tid);
@@ -169,49 +174,39 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         }
 
         // ---- Validate parent block ----
+        // ЭТО ДОЛЖНО ВЫПОЛНЯТЬСЯ ВСЕГДА, ДАЖЕ ЕСЛИ НЕТ ЭНЕРГИИ
         BlockPos parent = getParentBlock();
-        if (parent == null) {
-            this.discard();
-            return;
-        }
+        if (parent == null) { this.discard(); return; }
 
         BlockState state = this.level().getBlockState(parent);
-        if (!(state.getBlock() instanceof TurretLightPlacerBlock)) {
-            this.discard();
-            return;
-        }
+        if (!(state.getBlock() instanceof TurretLightPlacerBlock)) { this.discard(); return; }
 
-        // ================== ФИКСАЦИЯ (ОДИН РАЗ) ==================
+        // ================== ФИКСАЦИЯ ==================
         if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)) {
             float fixedYaw = state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING).toYRot();
-
-            // 1. Ставим поворот энтити
             this.setYRot(fixedYaw);
-
-            // 2. Ставим поворот тела
             this.yBodyRot = fixedYaw;
-
-            // 3. Убиваем интерполяцию (рывки)
             this.yBodyRotO = fixedYaw;
             this.yRotO = fixedYaw;
-
         } else {
-            // Фолбек
             this.yBodyRot = this.getYRot();
             this.yBodyRotO = this.getYRot();
         }
-        // ========================================================
 
-        // ---- Position sync ----
         this.moveTo(parent.getX() + 0.5, parent.getY() + 1.0, parent.getZ() + 0.5, this.getYRot(), this.getXRot());
 
-        // ---- Auto heal ----
-        int last = this.entityData.get(LAST_DAMAGE_TICK);
-        if (this.tickCount - last >= HEAL_DELAY_TICKS) {
-            if (this.getHealth() < this.getMaxHealth() && (this.tickCount % HEAL_INTERVAL_TICKS == 0)) {
-                this.heal(HEAL_AMOUNT);
-            }
+        // --- 1. ПРОВЕРКА ПИТАНИЯ (ТЕПЕРЬ ТУТ) ---
+        // Если нет энергии, мы замираем, НО мы уже проверили, что блок на месте.
+        if (!isPowered()) {
+            this.setTarget(null);
+            this.getNavigation().stop();
+            this.setShooting(false);
+            this.currentTargetCache = null;
+            if (this.entityData.get(TARGET_ID) != -1) this.entityData.set(TARGET_ID, -1);
+            return;
         }
+
+        // ❌ СТАРОЕ АВТО-ЛЕЧЕНИЕ УДАЛЕНО
 
         // ---- Deploy timer ----
         int t = this.entityData.get(DEPLOY_TIMER);
@@ -258,10 +253,8 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             currentTargetCache = null;
         }
 
-        // tracking update
         computer.updateTracking(target);
 
-        // target id sync
         int targetId = target != null ? target.getId() : -1;
         if (this.entityData.get(TARGET_ID) != targetId) {
             this.entityData.set(TARGET_ID, targetId);
@@ -296,6 +289,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     }
 
 
+
     private Vec3 getAimTargetPosition(LivingEntity target) {
         Vec3 muzzle = getMuzzlePos();
         Vec3 vel = computer.calculateBallisticVelocity(target, muzzle);
@@ -325,6 +319,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
         if (!this.isDeployed()) return;
+        if (!this.isPowered()) return; // <--- ДОБАВЬ ЭТО ДЛЯ БЕЗОПАСНОСТИ
         if (this.shotCooldown > 0) return;
 
         // 0. Сначала проверяем линию огня
@@ -437,6 +432,9 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         }));
 
         controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
+            // НОВОЕ: Если нет питания -> стоп анимация
+            if (!this.isPowered()) return PlayState.STOP;
+
             if (this.isShooting()) {
                 if (event.getController().getAnimationState() == AnimationController.State.STOPPED) {
                     event.getController().forceAnimationReset();
@@ -446,6 +444,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             return PlayState.STOP;
         }));
     }
+
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
@@ -609,6 +608,8 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
 
     // -------------------- NBT --------------------
 
+    // -------------------- NBT --------------------
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
@@ -629,6 +630,9 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
 
         tag.putBoolean("Deployed", this.isDeployed());
         tag.putInt("DeployTimer", this.entityData.get(DEPLOY_TIMER));
+
+        // ВЫНЕСЕНО НАРУЖУ (Всегда сохраняем питание)
+        tag.putBoolean("Powered", isPowered());
     }
 
     @Override
@@ -654,7 +658,13 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         if (tag.contains("DeployTimer")) {
             this.entityData.set(DEPLOY_TIMER, tag.getInt("DeployTimer"));
         }
+
+        // ПРАВИЛЬНОЕ ЧТЕНИЕ
+        if (tag.contains("Powered")) {
+            setPowered(tag.getBoolean("Powered"));
+        }
     }
+
 
     // -------------------- Debug access --------------------
 
@@ -683,6 +693,32 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     // В TurretLightLinkedEntity.java
     public void setOwnerUUIDDirect(UUID uuid) {
         this.entityData.set(OWNER_UUID, Optional.ofNullable(uuid));
+    }
+
+    // --- Methods for Buffer Interaction ---
+
+    public void setPowered(boolean powered) {
+        this.entityData.set(POWERED, powered);
+    }
+
+    public boolean isPowered() {
+        return this.entityData.get(POWERED);
+    }
+
+    // Лечение от энергии (вызывается буфером)
+    public void healFromPower(float amount) {
+        this.heal(amount);
+    }
+
+    // Нуждается ли в лечении? (HP < MAX и прошло 5 сек после урона)
+    public boolean needsHealing() {
+        return this.getHealth() < this.getMaxHealth() &&
+                (this.tickCount - this.entityData.get(LAST_DAMAGE_TICK) >= 100);
+    }
+
+    // Ведет ли цель? (для потребления энергии)
+    public boolean isTrackingTarget() {
+        return this.getTarget() != null && this.getTarget().isAlive();
     }
 
 

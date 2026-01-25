@@ -43,6 +43,14 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     private long energyStored = 0;
     private final long MAX_ENERGY = 100000;
     private final long MAX_RECEIVE = 10000;
+    // --- Новые поля для логики ---
+    private int respawnTimer = 0;
+    private static final int RESPAWN_DELAY_TICKS = 1200; // 60 секунд
+
+    // Потребление (HE/tick)
+    private static final long DRAIN_TRACKING = 13; // ~250 HE/s
+    private static final long DRAIN_HEALING = 25;  // x2 от базы (примерно)
+    private static final float HEAL_PER_TICK = 0.05F; // 1 HP в секунду
 
     // HBM Capabilities
     private final LazyOptional<IEnergyReceiver> hbmReceiverOptional = LazyOptional.of(() -> this);
@@ -128,67 +136,116 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     public static void tick(Level level, BlockPos pos, BlockState state, TurretLightPlacerBlockEntity entity) {
         if (level.isClientSide) return;
 
-        // 1. ПРОВЕРКА СУЩЕСТВОВАНИЯ ТУРЕЛИ
+        // --- 1. ПРОВЕРКА СОСТОЯНИЯ ТУРЕЛИ ---
+        TurretLightLinkedEntity existingTurret = null;
         if (entity.turretUUID != null) {
             ServerLevel serverLevel = (ServerLevel) level;
-            Entity existing = serverLevel.getEntity(entity.turretUUID);
+            Entity e = serverLevel.getEntity(entity.turretUUID);
 
-            // Если энтити найдена в памяти сервера -> Проверяем, жива ли она
-            if (existing != null) {
-                if (!existing.isAlive()) {
-                    // Турель умерла -> Сбрасываем UUID, разрешаем новый спавн
-                    entity.turretUUID = null;
-                    entity.setChanged();
+            if (e instanceof TurretLightLinkedEntity t) {
+                if (t.isAlive()) {
+                    existingTurret = t;
+                } else {
+                    // ТУРЕЛЬ ПОГИБЛА В ЭТОМ ТИКЕ
+                    handleTurretDeath(entity);
                 }
-            }
-            // Если existing == null, это может значить две вещи:
-            // а) Турель уничтожена и исчезла.
-            // б) Турель в выгруженном чанке.
-            // МЫ НЕ ДОЛЖНЫ сбрасывать UUID просто так, иначе при перезаходе будет дубликат!
-            // Поэтому, если null, мы считаем "пусть пока считается живой",
-            // и проверяем более сложным способом (поиск по UUID в мире, если очень надо),
-            // но для простоты лучше НЕ сбрасывать UUID, если мы не уверены.
-
-            // ЕДИНСТВЕННОЕ ИСКЛЮЧЕНИЕ: Если мы точно знаем, что турель должна быть ЗДЕСЬ, но её нет.
-            // Можно проверить AABB вокруг блока.
-            else {
-                // Ищем турель физически в мире рядом с блоком (радиус 2 блока)
-                // Это защитит от ситуации "перезашел в мир -> переменная existing сбросилась -> спавн дубликата"
-                boolean foundPhysical = false;
+            } else {
+                // Если энтити null, проверяем физически (вдруг выгружена)
                 var nearby = level.getEntitiesOfClass(TurretLightLinkedEntity.class,
                         new net.minecraft.world.phys.AABB(pos).inflate(2.0));
-
+                boolean found = false;
                 for (var t : nearby) {
                     if (t.getUUID().equals(entity.turretUUID)) {
-                        foundPhysical = true;
+                        if (t.isAlive()) {
+                            existingTurret = t;
+                            found = true;
+                        } else {
+                            handleTurretDeath(entity);
+                        }
                         break;
                     }
                 }
+                // Если не нашли и не убили -> считаем, что она просто далеко/выгружена (ничего не делаем)
+            }
+        }
 
-                // Если в радиусе 2 блоков турели с таким UUID нет -> считаем её погибшей
-                if (!foundPhysical) {
-                    entity.turretUUID = null;
-                    entity.setChanged();
+        // --- 2. ЛОГИКА ЖИВОЙ ТУРЕЛИ (ПОТРЕБЛЕНИЕ) ---
+        if (existingTurret != null) {
+            long totalDrain = 0;
+            boolean needsHeal = existingTurret.needsHealing();
+            boolean isTracking = existingTurret.isTrackingTarget();
+
+            // Если лечимся -> Потребление x2 (25)
+            if (needsHeal) {
+                totalDrain = DRAIN_HEALING;
+            }
+            // Если просто следим -> Потребление (13)
+            else if (isTracking) {
+                totalDrain = DRAIN_TRACKING;
+            }
+
+            // Пытаемся списать энергию
+            if (entity.energyStored >= totalDrain) {
+                entity.energyStored -= totalDrain;
+                existingTurret.setPowered(true);
+
+                // Лечим
+                if (needsHeal) {
+                    existingTurret.healFromPower(HEAL_PER_TICK);
+                }
+
+                if (totalDrain > 0) entity.setChanged();
+            } else {
+                // Энергии не хватило даже на слежение -> Выключаем ИИ
+                existingTurret.setPowered(false);
+            }
+
+            // Если турель жива, таймер респауна не нужен
+            entity.respawnTimer = 0;
+        }
+
+        // --- 3. ЛОГИКА ВОЗРОЖДЕНИЯ (ТУРЕЛИ НЕТ) ---
+        else if (entity.turretUUID == null) {
+            // Энергия копится сама через receiveEnergy.
+
+            // Если накопили максимум (100к)
+            if (entity.energyStored >= entity.MAX_ENERGY) {
+
+                // Если таймер > 0, значит мы ждем восстановления (минута)
+                if (entity.respawnTimer > 0) {
+
+                    // Потребление x2 во время восстановления (как в ТЗ)
+                    if (entity.energyStored >= DRAIN_HEALING) {
+                        entity.energyStored -= DRAIN_HEALING;
+                        entity.respawnTimer--; // Тикаем таймер только если есть энергия на "процесс"
+                        entity.setChanged();
+                    }
+
+                    // Таймер вышел -> СПАВН
+                    if (entity.respawnTimer <= 0) {
+                        spawnTurret(level, pos, entity);
+                    }
+                }
+                // Если таймер == 0 и энергия полная -> Значит это первая установка блока (не смерть)
+                else {
+                    spawnTurret(level, pos, entity);
                 }
             }
         }
-
-        // 2. ЛОГИКА СПАВНА
-        // Спавним ТОЛЬКО если турели нет (UUID == null)
-        if (entity.turretUUID == null) {
-            // И только если энергии хватает
-            if (entity.energyStored >= 100000) {
-                spawnTurret(level, pos, entity);
-
-                // Списываем энергию
-                entity.energyStored -= 100000;
-                entity.setChanged();
-            }
-        }
-
-        // В любых других случаях (турель есть) энергия просто копится до максимума (MAX_ENERGY)
-        // благодаря методу receiveEnergy.
     }
+
+    // Вызывается при смерти турели
+    private static void handleTurretDeath(TurretLightPlacerBlockEntity entity) {
+        // ТЗ: "буфер её блока обнуляется"
+        entity.energyStored = 0;
+        entity.turretUUID = null;
+
+        // ТЗ: "после того как он снова заполнится, через минуту турель снова восстановится"
+        entity.respawnTimer = RESPAWN_DELAY_TICKS;
+
+        entity.setChanged();
+    }
+
 
 
     private static void spawnTurret(Level level, BlockPos pos, TurretLightPlacerBlockEntity entity) {
@@ -266,6 +323,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         tag.putLong("Energy", energyStored);
         if (ownerUUID != null) tag.putUUID("OwnerUUID", ownerUUID); // <--- СОХРАНЕНИЕ
         if (turretUUID != null) {tag.putUUID("TurretUUID", turretUUID);}
+        tag.putInt("RespawnTimer", respawnTimer);
     }
 
     @Override
@@ -275,6 +333,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         if (tag.hasUUID("OwnerUUID")) ownerUUID = tag.getUUID("OwnerUUID"); // <---
         if (tag.contains("Energy")) {energyStored = tag.getLong("Energy");}
         if (tag.hasUUID("TurretUUID")) {turretUUID = tag.getUUID("TurretUUID");}
+        if (tag.contains("RespawnTimer")) respawnTimer = tag.getInt("RespawnTimer");
     }
 
     @Override
