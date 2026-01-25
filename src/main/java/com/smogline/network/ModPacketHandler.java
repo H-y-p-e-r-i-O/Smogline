@@ -69,5 +69,23 @@ public class ModPacketHandler {
                 PacketToggleTurret::handle
         );
 
+
+        // ... твои старые пакеты ...
+
+        INSTANCE.registerMessage(id++,
+                com.smogline.network.packet.PacketModifyTurretChip.class,
+                com.smogline.network.packet.PacketModifyTurretChip::toBytes,
+                com.smogline.network.packet.PacketModifyTurretChip::new,
+                com.smogline.network.packet.PacketModifyTurretChip::handle
+        );
+
+        INSTANCE.registerMessage(id++,
+                com.smogline.network.packet.PacketChipFeedback.class,
+                com.smogline.network.packet.PacketChipFeedback::toBytes,
+                com.smogline.network.packet.PacketChipFeedback::new,
+                com.smogline.network.packet.PacketChipFeedback::handle
+        );
+
+
     }
 }
