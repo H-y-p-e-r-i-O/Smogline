@@ -104,7 +104,7 @@ public class TurretLightMenu extends AbstractContainerMenu {
     // Forge вызывает его при открытии GUI на клиенте
     public TurretLightMenu(int containerId, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf extraData) {
         // На клиенте создаем пустышку SimpleContainerData
-        this(containerId, playerInventory, new TurretAmmoContainer(), new net.minecraft.world.inventory.SimpleContainerData(2));
+        this(containerId, playerInventory, new TurretAmmoContainer(), new net.minecraft.world.inventory.SimpleContainerData(3));
     }
 
     // Геттер для GUI

@@ -47,6 +47,9 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     private static final long DRAIN_HEALING = 25;
     private static final float HEAL_PER_TICK = 0.05F;
 
+    // Кэш здоровья для GUI (0-100)
+    private int cachedHealth = 0;
+
     private final LazyOptional<IEnergyReceiver> hbmReceiverOptional = LazyOptional.of(() -> this);
     private final LazyOptional<IEnergyStorage> forgeEnergyOptional = LazyOptional.of(
             () -> new LongEnergyWrapper(this, LongEnergyWrapper.BitMode.LOW)
@@ -74,7 +77,6 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         if (entity.turretUUID != null) {
             ServerLevel serverLevel = (ServerLevel) level;
             Entity e = serverLevel.getEntity(entity.turretUUID);
-
             if (e instanceof TurretLightLinkedEntity t && t.isAlive()) {
                 existingTurret = t;
             } else {
@@ -97,7 +99,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
             long totalDrain = 0;
             boolean needsHeal = existingTurret.needsHealing();
             boolean isTracking = existingTurret.isTrackingTarget();
-
+            entity.cachedHealth = (int)((existingTurret.getHealth() / existingTurret.getMaxHealth()) * 100);
             if (needsHeal) totalDrain = DRAIN_HEALING;
             else if (isTracking) totalDrain = DRAIN_TRACKING;
 
@@ -263,19 +265,45 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     @Override public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
     @Override public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
 
+    // Логика статусов:
+    // 0            = OFFLINE (Турели нет, энергии мало)
+    // 1            = ONLINE (Турель жива и здорова)
+    // 200..300     = REPAIRING (200 + % здоровья)
+    // 1000+        = RESPAWNING (1000 + тики таймера)
+
+    private int getStatusInt() {
+        if (turretUUID == null) {
+            if (respawnTimer > 0) return 1000 + respawnTimer; // Режим возрождения
+            return 0; // Режим накопления (Offline)
+        } else {
+            // Если здоровье меньше 100%, значит идет ремонт
+            if (cachedHealth < 100) {
+                return 200 + cachedHealth;
+            }
+            return 1; // Online
+        }
+    }
+
     protected final net.minecraft.world.inventory.ContainerData dataAccess = new net.minecraft.world.inventory.ContainerData() {
         @Override
         public int get(int index) {
             switch (index) {
                 case 0: return TurretLightPlacerBlockEntity.this.getEnergyStoredInt();
                 case 1: return TurretLightPlacerBlockEntity.this.getMaxEnergyStoredInt();
+                case 2: return TurretLightPlacerBlockEntity.this.getStatusInt(); // Новый слот
                 default: return 0;
             }
         }
+
         @Override
-        public void set(int index, int value) { if (index == 0) TurretLightPlacerBlockEntity.this.energyStored = value; }
+        public void set(int index, int value) {
+            if (index == 0) TurretLightPlacerBlockEntity.this.energyStored = value;
+        }
+
         @Override
-        public int getCount() { return 2; }
+        public int getCount() {
+            return 3; // Увеличили размер массива данных
+        }
     };
     public net.minecraft.world.inventory.ContainerData getDataAccess() { return dataAccess; }
 }
