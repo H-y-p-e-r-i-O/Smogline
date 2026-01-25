@@ -9,12 +9,12 @@ public class TurretLightPlacerItemModel extends GeoModel<TurretLightPlacerBlockI
 
     @Override
     public ResourceLocation getModelResource(TurretLightPlacerBlockItem animatable) {
-        return new ResourceLocation("smogline", "geo/buffer_small.geo.json");
+        return new ResourceLocation("smogline", "geo/turret_light.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(TurretLightPlacerBlockItem animatable) {
-        return new ResourceLocation("smogline", "textures/block/buffer_light.png");
+        return new ResourceLocation("smogline", "textures/entity/turret_light.png");
     }
 
     @Override

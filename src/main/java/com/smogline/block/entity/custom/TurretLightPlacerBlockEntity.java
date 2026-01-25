@@ -1,6 +1,7 @@
 package com.smogline.block.entity.custom;
 
 import com.smogline.api.energy.EnergyNetworkManager;
+import com.smogline.item.custom.weapons.turrets.TurretChipItem;
 import com.smogline.api.energy.IEnergyReceiver;
 import com.smogline.api.energy.IEnergyConnector;
 import com.smogline.api.energy.LongEnergyWrapper;
@@ -14,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -143,6 +145,37 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
                 existingTurret.setPowered(false);
             }
             entity.respawnTimer = 0;
+
+            // Проверяем 9-й слот (чип)
+            ItemStack chipStack = entity.ammoContainer.getStackInSlot(9);
+            if (!chipStack.isEmpty() && chipStack.getItem() instanceof TurretChipItem) {
+                net.minecraft.nbt.CompoundTag tag = chipStack.getTag();
+                if (tag != null && tag.contains("TurretOwners")) {
+                    net.minecraft.nbt.ListTag owners = tag.getList("TurretOwners", 8); // 8 = String
+
+                    // Создаем список UUID
+                    java.util.List<UUID> allowedUsers = new java.util.ArrayList<>();
+
+                    // Добавляем основного владельца блока
+                    if (entity.ownerUUID != null) allowedUsers.add(entity.ownerUUID);
+
+                    for (net.minecraft.nbt.Tag t : owners) {
+                        String s = t.getAsString();
+                        // Формат: "UUID|Name" или просто "UUID"
+                        String uuidStr = s.contains("|") ? s.split("\\|")[0] : s;
+                        try {
+                            allowedUsers.add(UUID.fromString(uuidStr));
+                        } catch (IllegalArgumentException ignored) {}
+                    }
+
+                    // Передаем в турель (нужно добавить этот метод в TurretLightLinkedEntity!)
+                    existingTurret.setAllowedUsers(allowedUsers);
+                }
+            } else {
+                // Если чипа нет, сбрасываем (оставляем только владельца блока)
+                existingTurret.clearAllowedUsers();
+            }
+
         }
 
         // --- 3. ВОЗРОЖДЕНИЕ И СПАВН ---

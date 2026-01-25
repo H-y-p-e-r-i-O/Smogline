@@ -563,7 +563,16 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
 
     @Override
     public boolean isAlliedTo(Entity entity) {
-        return computer.isAllied(entity, getOwnerUUID());
+        if (super.isAlliedTo(entity)) return true;
+
+        if (entity instanceof Player player) {
+            UUID id = player.getUUID();
+            // Проверка основного владельца
+            if (id.equals(getOwnerUUID())) return true;
+            // Проверка списка с чипа
+            return allowedUsers.contains(id);
+        }
+        return false;
     }
 
     @Override
@@ -720,6 +729,20 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     public boolean isTrackingTarget() {
         return this.getTarget() != null && this.getTarget().isAlive();
     }
+
+    // В классе TurretLightLinkedEntity
+    private final List<UUID> allowedUsers = new java.util.ArrayList<>();
+
+    public void setAllowedUsers(List<UUID> users) {
+        this.allowedUsers.clear();
+        this.allowedUsers.addAll(users);
+    }
+
+    public void clearAllowedUsers() {
+        this.allowedUsers.clear();
+    }
+
+
 
 
 }

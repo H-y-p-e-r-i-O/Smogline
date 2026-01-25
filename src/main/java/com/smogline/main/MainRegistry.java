@@ -227,6 +227,7 @@ public class MainRegistry {
             event.accept(ModBlocks.DUD_SALTED);
 
             event.accept(ModItems.TURRET_REMOVER);
+            event.accept(ModItems.TURRET_CHIP);
             event.accept(ModBlocks.TURRET_LIGHT);
             event.accept(ModBlocks.TURRET_LIGHT_PLACER);
 

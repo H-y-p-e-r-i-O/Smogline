@@ -1,16 +1,28 @@
 package com.smogline.block.entity.custom;
 
+import com.smogline.item.custom.weapons.turrets.TurretChipItem;
 import com.smogline.item.tags_and_tiers.IAmmoItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
+import org.jetbrains.annotations.NotNull;
 
 public class TurretAmmoContainer extends ItemStackHandler {
 
-    private static final int SLOT_COUNT = 9;
+    private static final int SLOT_COUNT = 10;
     private Runnable onContentsChanged;
+
+
+    @Override
+    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+        if (slot == 9) {
+            return stack.getItem() instanceof TurretChipItem;
+        }
+        // Для остальных слотов (0-8) логика патронов (если она была)
+        return true;
+    }
 
     public TurretAmmoContainer() {
         super(SLOT_COUNT);
@@ -25,11 +37,6 @@ public class TurretAmmoContainer extends ItemStackHandler {
         if (onContentsChanged != null) {
             onContentsChanged.run();
         }
-    }
-
-    @Override
-    public boolean isItemValid(int slot, ItemStack stack) {
-        return stack.getItem() instanceof IAmmoItem;
     }
 
     @Override
