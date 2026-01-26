@@ -211,44 +211,62 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         double relX = mouseX - x;
         double relY = mouseY - y;
 
-        if (button == 0) {
-            // Power
-            if (relX >= 10 && relX < 20 && relY >= 62 && relY < 94) {
+        if (button == 0) { // ЛКМ
+
+            // --- 1. ОПРЕДЕЛЕНИЕ ОБЛАСТЕЙ КНОПОК ---
+            boolean hitPower = (relX >= 10 && relX < 20 && relY >= 62 && relY < 94);
+            boolean hitMenu  = (relX >= 73 && relX < 88 && relY >= 79 && relY < 94); // Квадрат с плюсом
+            boolean hitCheck = (relX >= 22 && relX < 37 && relY >= 62 && relY < 77); // Галочка
+            boolean hitPlus  = (relX >= 39 && relX < 54 && relY >= 62 && relY < 77); // Плюс
+            boolean hitMinus = (relX >= 56 && relX < 71 && relY >= 62 && relY < 77); // Минус
+            boolean hitLeft  = (relX >= 73 && relX < 88 && relY >= 62 && relY < 77); // Влево
+            boolean hitRight = (relX >= 90 && relX < 105 && relY >= 62 && relY < 77); // Вправо
+
+            // --- 2. ВИЗУАЛ И ЗВУК (Срабатывает ВСЕГДА) ---
+            // Если мы нажали на любую из кнопок, она должна мигнуть и щелкнуть
+            if (hitPower || hitMenu || hitCheck || hitPlus || hitMinus || hitLeft || hitRight) {
+                playClickSound();
+            }
+
+            if (hitMenu)  timerMenu  = PRESS_DURATION;
+            if (hitCheck) timerCheck = PRESS_DURATION;
+            if (hitPlus)  timerPlus  = PRESS_DURATION;
+            if (hitMinus) timerMinus = PRESS_DURATION;
+            if (hitLeft)  timerLeft  = PRESS_DURATION;
+            if (hitRight) timerRight = PRESS_DURATION;
+
+            // --- 3. ЛОГИКА (Срабатывает только в нужных состояниях) ---
+
+            // POWER (Работает всегда)
+            if (hitPower) {
                 com.smogline.network.ModPacketHandler.INSTANCE.send(
                         net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
                         new PacketToggleTurret(this.menu.getPos()));
-                playClickSound(); return true;
+                return true;
             }
 
-            // КНОПКА МЕНЮ (КВАДРАТ С ПЛЮСОМ) - 73, 79
-            if (relX >= 73 && relX < 88 && relY >= 79 && relY < 94) {
-                timerMenu = PRESS_DURATION;
-                playClickSound();
+            // MENU TOGGLE (Работает всегда, если есть чип, или просто открывает/закрывает)
+            if (hitMenu) {
                 if (uiState == STATE_NORMAL) {
                     uiState = STATE_MAIN_MENU;
-                    selectedIndex = hasChip() ? 0 : 1; // Если чипа нет, сразу на Attack Mode
+                    selectedIndex = hasChip() ? 0 : 1;
                 } else {
-                    uiState = STATE_NORMAL; // Выход
+                    uiState = STATE_NORMAL;
                 }
                 return true;
             }
 
-            // УПРАВЛЕНИЕ (Если не в обычном режиме)
+            // ОСТАЛЬНЫЕ КНОПКИ (Работают только внутри меню)
             if (uiState != STATE_NORMAL && uiState != STATE_RESULT_MSG) {
 
-                // ГАЛОЧКА (22, 62) - ПОДТВЕРЖДЕНИЕ
-                if (relX >= 22 && relX < 37 && relY >= 62 && relY < 77) {
-                    timerCheck = PRESS_DURATION; playClickSound();
-
+                if (hitCheck) {
                     if (uiState == STATE_MAIN_MENU) {
                         if (selectedIndex == 0) {
                             if (hasChip()) { uiState = STATE_CHIP_LIST; selectedIndex = 0; }
-                            // Иначе (нет чипа) - ничего не делаем или звук ошибки
                         } else if (selectedIndex == 1) {
                             uiState = STATE_ATTACK_MODE; selectedIndex = 0;
                         }
-                    }
-                    else if (uiState == STATE_ADD_INPUT) {
+                    } else if (uiState == STATE_ADD_INPUT) {
                         if (!inputString.isEmpty()) {
                             com.smogline.network.ModPacketHandler.INSTANCE.send(
                                     net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
@@ -258,46 +276,26 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
                     return true;
                 }
 
-                // СТРЕЛКИ (73, 62 / 90, 62) - НАВИГАЦИЯ
-                boolean isLeft = (relX >= 73 && relX < 88 && relY >= 62 && relY < 77);
-                boolean isRight = (relX >= 90 && relX < 105 && relY >= 62 && relY < 77);
-
-                if (isLeft || isRight) {
-                    if (isLeft) timerLeft = PRESS_DURATION; else timerRight = PRESS_DURATION;
-                    playClickSound();
-
+                if (hitLeft || hitRight) {
                     if (uiState == STATE_MAIN_MENU) {
-                        selectedIndex = (selectedIndex == 0) ? 1 : 0; // Переключение 0 <-> 1
-                    }
-                    else if (uiState == STATE_CHIP_LIST || uiState == STATE_ATTACK_MODE) {
-                        if (isLeft) selectedIndex--; else selectedIndex++;
-                        // Цикличность делается внутри draw-методов или здесь, но там безопаснее
+                        selectedIndex = (selectedIndex == 0) ? 1 : 0;
+                    } else if (uiState == STATE_CHIP_LIST || uiState == STATE_ATTACK_MODE) {
+                        if (hitLeft) selectedIndex--; else selectedIndex++;
                     }
                     return true;
                 }
 
-                // ПЛЮС / МИНУС (39, 62 / 56, 62)
-                boolean isPlus = (relX >= 39 && relX < 54 && relY >= 62 && relY < 77);
-                boolean isMinus = (relX >= 56 && relX < 71 && relY >= 62 && relY < 77);
-
-                if (isPlus || isMinus) {
-                    if (isPlus) timerPlus = PRESS_DURATION; else timerMinus = PRESS_DURATION;
-                    playClickSound();
-
+                if (hitPlus || hitMinus) {
                     if (uiState == STATE_CHIP_LIST) {
-                        if (isPlus) { uiState = STATE_ADD_INPUT; inputString = ""; }
+                        if (hitPlus) { uiState = STATE_ADD_INPUT; inputString = ""; }
                         else {
                             com.smogline.network.ModPacketHandler.INSTANCE.send(
                                     net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
                                     new PacketModifyTurretChip(0, String.valueOf(selectedIndex)));
                             if (selectedIndex > 0) selectedIndex--;
                         }
-                    }
-                    else if (uiState == STATE_ATTACK_MODE) {
-                        // Меняем настройки турели
-                        // isPlus = true (Вкл), isMinus = false (Выкл)
-                        boolean newValue = isPlus;
-
+                    } else if (uiState == STATE_ATTACK_MODE) {
+                        boolean newValue = hitPlus; // true если плюс, false если минус
                         com.smogline.network.ModPacketHandler.INSTANCE.send(
                                 net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
                                 new PacketUpdateTurretSettings(this.menu.getPos(), selectedIndex, newValue));
@@ -308,6 +306,7 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
+
 
     // --- ВВОД С КЛАВИАТУРЫ ---
     @Override
