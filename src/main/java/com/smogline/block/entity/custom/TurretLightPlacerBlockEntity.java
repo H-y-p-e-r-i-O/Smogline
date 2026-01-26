@@ -15,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -53,7 +54,10 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     private boolean isSwitchedOn = false; // По умолчанию ВЫКЛЮЧЕНА
     private int bootTimer = 0; // Таймер загрузки (3 сек = 60 тиков)
 
-
+    // 1. Поля для хранения настроек (сохраняем их в NBT в saveAdditional!)
+    private boolean targetHostile = true;  // По умолчанию стреляем
+    private boolean targetNeutral = false; // По умолчанию НЕ стреляем
+    private boolean targetPlayers = true;  // По умолчанию стреляем
 
     // Кэш здоровья для GUI (0-100)
     private int cachedHealth = 0;
@@ -217,8 +221,24 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
             }
         }
     }
+    // 2. Метод обновления данных
+    public void updateAttackSetting(int index, boolean value) {
+        switch (index) {
+            case 0 -> this.targetHostile = value;
+            case 1 -> this.targetNeutral = value;
+            case 2 -> this.targetPlayers = value;
+        }
+        setChanged(); // Сохраняем NBT
 
-    // ... Остальной код (handleTurretDeath, spawnTurret, Capabilities и т.д.) без изменений ...
+        // ИСПРАВЛЕНИЕ: Ищем турель в мире, если сервер
+        if (this.level instanceof ServerLevel serverLevel && this.turretUUID != null) {
+            Entity entity = serverLevel.getEntity(this.turretUUID);
+            if (entity instanceof TurretLightLinkedEntity turret && turret.isAlive()) {
+                turret.setAttackSettings(targetHostile, targetNeutral, targetPlayers);
+            }
+        }
+    }
+
 
     @Override
     public void setRemoved() {
@@ -316,6 +336,10 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         tag.putInt("RespawnTimer", respawnTimer);
         tag.putBoolean("SwitchedOn", isSwitchedOn);
         tag.putInt("BootTimer", bootTimer);
+        // НОВЫЕ ПОЛЯ
+        tag.putBoolean("TargetHostile", targetHostile);
+        tag.putBoolean("TargetNeutral", targetNeutral);
+        tag.putBoolean("TargetPlayers", targetPlayers);
     }
 
     @Override
@@ -328,6 +352,10 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         if (tag.contains("RespawnTimer")) respawnTimer = tag.getInt("RespawnTimer");
         isSwitchedOn = tag.getBoolean("SwitchedOn");
         bootTimer = tag.getInt("BootTimer");
+        // НОВЫЕ ПОЛЯ
+        if (tag.contains("TargetHostile")) targetHostile = tag.getBoolean("TargetHostile");
+        if (tag.contains("TargetNeutral")) targetNeutral = tag.getBoolean("TargetNeutral");
+        if (tag.contains("TargetPlayers")) targetPlayers = tag.getBoolean("TargetPlayers");
     }
 
     @Override public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
@@ -352,31 +380,56 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         }
     }
 
-    protected final net.minecraft.world.inventory.ContainerData dataAccess = new net.minecraft.world.inventory.ContainerData() {
+    // 3. ContainerData (Синхронизация с GUI)
+    protected final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
-            switch (index) {
-                case 0: return TurretLightPlacerBlockEntity.this.getEnergyStoredInt();
-                case 1: return TurretLightPlacerBlockEntity.this.getMaxEnergyStoredInt();
-                case 2: return TurretLightPlacerBlockEntity.this.getStatusInt();
-                case 3: return TurretLightPlacerBlockEntity.this.isSwitchedOn ? 1 : 0; // <--- КНОПКА
-                case 4: return TurretLightPlacerBlockEntity.this.bootTimer;             // <--- ТАЙМЕР
-                default: return 0;
-            }
+            return switch (index) {
+                // ИСПРАВЛЕНИЕ: Используем getEnergyStoredInt() вместо energyStorage.get...
+                case 0 -> TurretLightPlacerBlockEntity.this.getEnergyStoredInt();
+                case 1 -> TurretLightPlacerBlockEntity.this.getMaxEnergyStoredInt();
+
+                // ИСПРАВЛЕНИЕ: Используем метод getStatusInt() вместо несуществующего поля status
+                case 2 -> TurretLightPlacerBlockEntity.this.getStatusInt();
+
+                case 3 -> TurretLightPlacerBlockEntity.this.isSwitchedOn ? 1 : 0;
+                case 4 -> TurretLightPlacerBlockEntity.this.bootTimer;
+
+                // Новые слоты настроек
+                case 5 -> TurretLightPlacerBlockEntity.this.targetHostile ? 1 : 0;
+                case 6 -> TurretLightPlacerBlockEntity.this.targetNeutral ? 1 : 0;
+                case 7 -> TurretLightPlacerBlockEntity.this.targetPlayers ? 1 : 0;
+                default -> 0;
+            };
         }
 
         @Override
         public void set(int index, int value) {
-            if (index == 0) TurretLightPlacerBlockEntity.this.energyStored = value;
+            switch (index) {
+                // ИСПРАВЛЕНИЕ: Устанавливаем энергию напрямую в поле
+                case 0 -> TurretLightPlacerBlockEntity.this.energyStored = value;
+                // Макс энергию менять через GUI обычно не нужно, пропускаем case 1
+
+                // Статус вычисляемый, его нельзя "установить", пропускаем case 2
+
+                case 3 -> TurretLightPlacerBlockEntity.this.isSwitchedOn = (value == 1);
+
+                // Настройки
+                case 5 -> TurretLightPlacerBlockEntity.this.targetHostile = (value == 1);
+                case 6 -> TurretLightPlacerBlockEntity.this.targetNeutral = (value == 1);
+                case 7 -> TurretLightPlacerBlockEntity.this.targetPlayers = (value == 1);
+            }
         }
 
-        // ...
         @Override
         public int getCount() {
-            return 5; // <--- БЫЛО 3, СТАЛО 5
+            return 8; // Размер данных
         }
     };
-    public net.minecraft.world.inventory.ContainerData getDataAccess() { return dataAccess; }
+
+    // Поле называется data, поэтому возвращаем this.data
+    public net.minecraft.world.inventory.ContainerData getDataAccess() { return this.data; }
+
 
     public void togglePower() {
         this.isSwitchedOn = !this.isSwitchedOn;

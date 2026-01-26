@@ -97,6 +97,20 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     private int lockSoundCooldown = 0;
     private LivingEntity currentTargetCache = null;
     private int currentTargetPriority = 999;
+// Внутри класса TurretLightLinkedEntity
+
+    // Поля настроек (по умолчанию: Враги=Да, Нейтралы=Нет, Игроки=Да)
+    private boolean attackHostile = true;
+    private boolean attackNeutral = false;
+    private boolean attackPlayers = true;
+
+    // Сеттеры для BlockEntity
+    public void setAttackSettings(boolean hostile, boolean neutral, boolean players) {
+        this.attackHostile = hostile;
+        this.attackNeutral = neutral;
+        this.attackPlayers = players;
+    }
+
 
     public TurretLightLinkedEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -457,13 +471,11 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     }
 
     // -------------------- Goals --------------------
-
     @Override
     protected void registerGoals() {
-        // Attack goal (как у обычной турели)
+        // Attack goal (стрельба) - без изменений
         this.goalSelector.addGoal(1, new Goal() {
             private final TurretLightLinkedEntity turret = TurretLightLinkedEntity.this;
-
             @Override
             public boolean canUse() {
                 LivingEntity target = turret.getTarget();
@@ -472,22 +484,12 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
                         && target.isAlive()
                         && turret.distanceToSqr(target) < 1225.0D; // 35^2
             }
-
             @Override
-            public void start() {
-                turret.getNavigation().stop();
-            }
-
+            public void start() { turret.getNavigation().stop(); }
             @Override
-            public void stop() {
-                turret.setShooting(false);
-            }
-
+            public void stop() { turret.setShooting(false); }
             @Override
-            public boolean requiresUpdateEveryTick() {
-                return true;
-            }
-
+            public boolean requiresUpdateEveryTick() { return true; }
             @Override
             public void tick() {
                 LivingEntity target = turret.getTarget();
@@ -501,13 +503,10 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, entity -> {
             if (!this.isDeployed()) return false;
             if (computer.isAllied(entity, this.getOwnerUUID())) return false;
-
             UUID ownerUUID = this.getOwnerUUID();
             if (ownerUUID == null) return false;
-
             Player owner = this.level().getPlayerByUUID(ownerUUID);
             if (owner == null) return false;
-
             if (owner.getLastHurtByMob() == entity) return true;
             return entity instanceof Mob mob && mob.getTarget() == owner;
         }));
@@ -541,12 +540,43 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             return owner != null && owner.getLastHurtMob() == entity;
         }));
 
-        // 5–6) Пассивная агрессия: только монстры и игроки (как у обычной) [file:11]
-        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false,
-                entity -> this.isDeployed() && !this.isAlliedTo(entity)));
+        // ================= НОВЫЕ ЦЕЛИ С УЧЕТОМ НАСТРОЕК =================
 
+        // 5. МОНСТРЫ (Hostile) - Приоритет 5
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false,
+                entity -> this.isDeployed()
+                        && this.attackHostile
+                        && !this.isAlliedTo(entity)));
+
+        // 6. ИГРОКИ (Players) - Приоритет 6
         this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
-                entity -> this.isDeployed() && !this.isAlliedTo(entity)));
+                entity -> {
+                    // ПРОВЕРКА: Приводим к Player, чтобы вызвать isCreative()
+                    if (entity instanceof Player player) {
+                        return this.isDeployed()
+                                && this.attackPlayers
+                                && !this.isAlliedTo(player)
+                                && !player.isCreative()
+                                && !player.isSpectator();
+                    }
+                    return false;
+                }));
+
+        // 7. ЖИВОТНЫЕ / НЕЙТРАЛЬНЫЕ - Приоритет 7
+        this.targetSelector.addGoal(7, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false,
+                entity -> {
+                    if (!this.isDeployed()) return false;
+                    if (this.isAlliedTo(entity)) return false;
+
+                    // Исключаем Монстров и Игроков, так как для них свои правила выше
+                    if (entity instanceof Monster) return false;
+                    if (entity instanceof Player) return false;
+
+                    // Для всего остального (овцы, жители и т.д.) работает флаг attackNeutral
+                    return this.attackNeutral;
+                }));
+
+
     }
 
     // -------------------- Entity props --------------------

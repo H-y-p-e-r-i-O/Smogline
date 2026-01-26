@@ -3,6 +3,9 @@ package com.smogline.client.overlay.turrets;
 import com.smogline.block.entity.custom.TurretLightPlacerBlockEntity;
 import com.smogline.item.custom.weapons.turrets.TurretChipItem;
 import com.smogline.menu.TurretLightMenu;
+import com.smogline.network.packet.PacketModifyTurretChip;
+import com.smogline.network.packet.PacketToggleTurret;
+import com.smogline.network.packet.PacketUpdateTurretSettings;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.nbt.ListTag;
@@ -19,30 +22,38 @@ import java.util.List;
 
 public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
 
-    private static final ResourceLocation TEXTURE =
-            new ResourceLocation("smogline", "textures/gui/weapon/turret_light.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("smogline", "textures/gui/weapon/turret_light.png");
 
-    // Состояния
+    // --- СОСТОЯНИЯ GUI ---
     private static final int STATE_NORMAL = 0;
-    private static final int STATE_CHIP_MENU = 1;
+
+    // Главное меню выбора
+    private static final int STATE_MAIN_MENU = 1;
+
+    // Подменю Чипа
     private static final int STATE_CHIP_LIST = 2;
-    private static final int STATE_ADD_INPUT = 3;  // Ввод ника
-    private static final int STATE_RESULT_MSG = 4; // Сообщение (404 / Success)
+    private static final int STATE_ADD_INPUT = 3;
+    private static final int STATE_RESULT_MSG = 4;
+
+    // Подменю Атаки
+    private static final int STATE_ATTACK_MODE = 5;
 
     private int uiState = STATE_NORMAL;
-    private int selectedUserIndex = 0;
+
+    // Навигация
+    private int selectedIndex = 0; // Общий индекс для списков
 
     // Ввод текста
     private String inputString = "";
     private int cursorTimer = 0;
 
-    // Результат
+    // Сообщения
     private String resultMessage = "";
     private int resultColor = 0xFFFFFF;
-    private int resultDuration = 0; // Таймер показа сообщения
+    private int resultDuration = 0;
 
     // Таймеры кнопок
-    private int timerPlus = 0, timerMinus = 0, timerCheck = 0, timerLeft = 0, timerRight = 0;
+    private int timerPlus = 0, timerMinus = 0, timerCheck = 0, timerLeft = 0, timerRight = 0, timerMenu = 0;
     private static final int PRESS_DURATION = 10;
 
     public GUITurretAmmo(TurretLightMenu menu, Inventory inventory, Component component) {
@@ -51,17 +62,15 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         this.imageHeight = 188;
     }
 
-    // --- ОБРАБОТКА ОТВЕТА ОТ СЕРВЕРА ---
     public void handleFeedback(boolean success) {
         this.uiState = STATE_RESULT_MSG;
-        this.resultDuration = 40; // 2 секунды (20 тиков * 2)
+        this.resultDuration = 40;
         if (success) {
             this.resultMessage = "SUCCESS";
-            this.resultColor = 0x55FF55; // Зеленый
-            // Если успех, сервер уже добавил в NBT, так что при выходе мы увидим нового юзера
+            this.resultColor = 0x55FF55;
         } else {
             this.resultMessage = "ERROR 404";
-            this.resultColor = 0xFF5555; // Красный
+            this.resultColor = 0xFF5555;
         }
     }
 
@@ -73,35 +82,20 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         guiGraphics.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
         // Данные
-        int energy = this.menu.getDataSlot(0);
-        int maxEnergy = this.menu.getDataSlot(1);
-        int status = this.menu.getDataSlot(2);
-        boolean isSwitchedOn = this.menu.getDataSlot(3) == 1;
-        int bootTimer = this.menu.getDataSlot(4);
+        int energy = this.menu.getDataSlot(TurretLightMenu.DATA_ENERGY);
+        int maxEnergy = this.menu.getDataSlot(TurretLightMenu.DATA_MAX_ENERGY);
+        int status = this.menu.getDataSlot(TurretLightMenu.DATA_STATUS);
+        boolean isSwitchedOn = this.menu.getDataSlot(TurretLightMenu.DATA_SWITCH) == 1;
+        int bootTimer = this.menu.getDataSlot(TurretLightMenu.DATA_BOOT_TIMER);
 
-        // --- АНИМАЦИЯ КНОПОК ---
-        if (isSwitchedOn) guiGraphics.blit(TEXTURE, x + 10, y + 62, 204, 103, 10, 32); // Power
-        if (timerPlus > 0) { timerPlus--; guiGraphics.blit(TEXTURE, x + 39, y + 62, 221, 171, 15, 15); } // Plus
-        if (timerMinus > 0) { timerMinus--; guiGraphics.blit(TEXTURE, x + 56, y + 62, 204, 137, 15, 15); } // Minus
-        if (timerCheck > 0) { timerCheck--; guiGraphics.blit(TEXTURE, x + 22, y + 62, 204, 171, 15, 15); } // Check
-        if (timerLeft > 0) { timerLeft--; guiGraphics.blit(TEXTURE, x + 73, y + 62, 221, 137, 15, 15); } // Left
-        if (timerRight > 0) { timerRight--; guiGraphics.blit(TEXTURE, x + 90, y + 62, 221, 120, 15, 15); } // Right
-
-        // Кнопка MENU (+) переключатель
-        if (this.uiState != STATE_NORMAL) { // Визуально она "нажата" если мы в меню? Или нет, оставим просто анимацию клика
-            // Если нужно, чтобы она горела пока мы в меню, добавь условие
-        }
-        // Кнопка "открытия меню" (квадрат с плюсом)
-        // В твоем описании это 73,79. У меня таймер для нее timerMenuToggle (в прошлом коде было timerPlus, но сейчас Plus это добавление)
-        // Давай добавим отдельный таймер для кнопки открытия меню, если она нужна.
-        // Но судя по прошлому промпту, ты используешь "квадрат с плюсом" (73, 79) для входа.
-        // А новые "плюс" и "минус" это 39,62 и 56,62.
-
-        // Кнопка MENU (73, 79) - я использую отдельный таймер для визуализации
-        if (menuToggleTimer > 0) {
-            menuToggleTimer--;
-            guiGraphics.blit(TEXTURE, x + 73, y + 79, 221, 154, 15, 15);
-        }
+        // Анимация кнопок
+        if (isSwitchedOn) guiGraphics.blit(TEXTURE, x + 10, y + 62, 204, 103, 10, 32);
+        if (timerPlus > 0) { timerPlus--; guiGraphics.blit(TEXTURE, x + 39, y + 62, 221, 171, 15, 15); }
+        if (timerMinus > 0) { timerMinus--; guiGraphics.blit(TEXTURE, x + 56, y + 62, 204, 137, 15, 15); }
+        if (timerCheck > 0) { timerCheck--; guiGraphics.blit(TEXTURE, x + 22, y + 62, 204, 171, 15, 15); }
+        if (timerLeft > 0) { timerLeft--; guiGraphics.blit(TEXTURE, x + 73, y + 62, 221, 137, 15, 15); }
+        if (timerRight > 0) { timerRight--; guiGraphics.blit(TEXTURE, x + 90, y + 62, 221, 120, 15, 15); }
+        if (timerMenu > 0) { timerMenu--; guiGraphics.blit(TEXTURE, x + 73, y + 79, 221, 154, 15, 15); }
 
         // Энергия
         if (maxEnergy > 0 && energy > 0) {
@@ -118,24 +112,24 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
                 drawBootingText(guiGraphics, x + 10, y + 32, 95, 16);
                 if (uiState != STATE_NORMAL) uiState = STATE_NORMAL;
             } else {
-                if (uiState != STATE_NORMAL && !hasChip()) uiState = STATE_NORMAL;
 
-                // ЛОГИКА ОТРИСОВКИ СОСТОЯНИЙ
                 switch (uiState) {
-                    case STATE_CHIP_MENU:
-                        drawCenteredText(guiGraphics, "CHIP CONTROL", 0xFFFFFF, x + 10, y + 32, 95, 16);
+                    case STATE_MAIN_MENU:
+                        drawMainMenu(guiGraphics, x + 10, y + 32, 95, 16);
+                        break;
+
+                    case STATE_ATTACK_MODE:
+                        drawAttackMode(guiGraphics, x + 10, y + 32, 95, 16);
                         break;
 
                     case STATE_CHIP_LIST:
+                        if (!hasChip()) { uiState = STATE_MAIN_MENU; break; }
                         drawChipUserList(guiGraphics, x + 10, y + 32, 95, 16);
                         break;
 
                     case STATE_ADD_INPUT:
-                        // Мигающий курсор
                         cursorTimer++;
-                        String cursor = (cursorTimer / 10 % 2 == 0) ? "_" : "";
-                        String display = inputString + cursor;
-                        // Ограничим длину отображения
+                        String display = inputString + ((cursorTimer / 10 % 2 == 0) ? "_" : "");
                         if (display.length() > 14) display = display.substring(display.length() - 14);
                         drawCenteredText(guiGraphics, display, 0xFFFF00, x + 10, y + 32, 95, 16);
                         break;
@@ -145,17 +139,12 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
                             resultDuration--;
                             drawCenteredText(guiGraphics, resultMessage, resultColor, x + 10, y + 32, 95, 16);
                         } else {
-                            // Таймер кончился
-                            if (resultMessage.equals("SUCCESS")) {
-                                uiState = STATE_CHIP_LIST; // Возвращаемся в список
-                                // Нужно бы поставить индекс на последнего, но 0 тоже норм
-                            } else {
-                                uiState = STATE_ADD_INPUT; // Возвращаем вводить имя заново
-                            }
+                            if (resultMessage.equals("SUCCESS")) uiState = STATE_CHIP_LIST;
+                            else uiState = STATE_ADD_INPUT;
                         }
                         break;
 
-                    default:
+                    default: // STATE_NORMAL
                         drawStatusText(guiGraphics, x + 10, y + 32, 95, 16, status, energy, maxEnergy);
                         break;
                 }
@@ -165,7 +154,55 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         }
     }
 
-    private int menuToggleTimer = 0; // Для кнопки 73, 79
+    // --- ОТРИСОВКА НОВЫХ МЕНЮ ---
+
+    private void drawMainMenu(GuiGraphics guiGraphics, int x, int y, int w, int h) {
+        // Опции: 0 = CHIP CONTROL, 1 = ATTACK MODE
+        // Ограничиваем индекс
+        if (selectedIndex < 0) selectedIndex = 1;
+        if (selectedIndex > 1) selectedIndex = 0;
+
+        String text = "";
+        int color = 0xFFFFFF;
+
+        if (selectedIndex == 0) {
+            text = "CHIP CONTROL";
+            // Если чипа нет - тусклый
+            if (!hasChip()) color = 0x555555;
+        } else {
+            text = "ATTACK MODE";
+        }
+
+        // Рисуем стрелочки выбора вокруг текста
+        text = "< " + text + " >";
+        drawCenteredText(guiGraphics, text, color, x, y, w, h);
+    }
+
+    private void drawAttackMode(GuiGraphics guiGraphics, int x, int y, int w, int h) {
+        // Индексы: 0=Hostile, 1=Neutral, 2=Players
+        if (selectedIndex < 0) selectedIndex = 2;
+        if (selectedIndex > 2) selectedIndex = 0;
+
+        String name = "";
+        boolean isEnabled = false;
+
+        // Получаем текущие данные из меню
+        int valHostile = this.menu.getDataSlot(TurretLightMenu.DATA_TARGET_HOSTILE);
+        int valNeutral = this.menu.getDataSlot(TurretLightMenu.DATA_TARGET_NEUTRAL);
+        int valPlayer = this.menu.getDataSlot(TurretLightMenu.DATA_TARGET_PLAYERS);
+
+        switch (selectedIndex) {
+            case 0: name = "HOSTILES"; isEnabled = valHostile == 1; break;
+            case 1: name = "NEUTRALS"; isEnabled = valNeutral == 1; break;
+            case 2: name = "PLAYERS"; isEnabled = valPlayer == 1; break;
+        }
+
+        String symbol = isEnabled ? "[V]" : "[X]";
+        int color = isEnabled ? 0x55FF55 : 0xFF5555; // Зеленый / Красный
+
+        drawCenteredText(guiGraphics, name + " " + symbol, color, x, y, w, h);
+    }
+
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -175,85 +212,97 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         double relY = mouseY - y;
 
         if (button == 0) {
-            // Power (10, 62)
+            // Power
             if (relX >= 10 && relX < 20 && relY >= 62 && relY < 94) {
                 com.smogline.network.ModPacketHandler.INSTANCE.send(
                         net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
-                        new com.smogline.network.packet.PacketToggleTurret(this.menu.getPos()));
+                        new PacketToggleTurret(this.menu.getPos()));
+                playClickSound(); return true;
+            }
+
+            // КНОПКА МЕНЮ (КВАДРАТ С ПЛЮСОМ) - 73, 79
+            if (relX >= 73 && relX < 88 && relY >= 79 && relY < 94) {
+                timerMenu = PRESS_DURATION;
                 playClickSound();
+                if (uiState == STATE_NORMAL) {
+                    uiState = STATE_MAIN_MENU;
+                    selectedIndex = hasChip() ? 0 : 1; // Если чипа нет, сразу на Attack Mode
+                } else {
+                    uiState = STATE_NORMAL; // Выход
+                }
                 return true;
             }
 
-            if (hasChip()) {
-                // КНОПКА "КВАДРАТ С ПЛЮСОМ" (Вход в меню) (73, 79)
-                if (relX >= 73 && relX < 88 && relY >= 79 && relY < 94) {
-                    menuToggleTimer = PRESS_DURATION;
-                    playClickSound();
-                    if (uiState == STATE_NORMAL) uiState = STATE_CHIP_MENU;
-                    else uiState = STATE_NORMAL;
+            // УПРАВЛЕНИЕ (Если не в обычном режиме)
+            if (uiState != STATE_NORMAL && uiState != STATE_RESULT_MSG) {
+
+                // ГАЛОЧКА (22, 62) - ПОДТВЕРЖДЕНИЕ
+                if (relX >= 22 && relX < 37 && relY >= 62 && relY < 77) {
+                    timerCheck = PRESS_DURATION; playClickSound();
+
+                    if (uiState == STATE_MAIN_MENU) {
+                        if (selectedIndex == 0) {
+                            if (hasChip()) { uiState = STATE_CHIP_LIST; selectedIndex = 0; }
+                            // Иначе (нет чипа) - ничего не делаем или звук ошибки
+                        } else if (selectedIndex == 1) {
+                            uiState = STATE_ATTACK_MODE; selectedIndex = 0;
+                        }
+                    }
+                    else if (uiState == STATE_ADD_INPUT) {
+                        if (!inputString.isEmpty()) {
+                            com.smogline.network.ModPacketHandler.INSTANCE.send(
+                                    net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
+                                    new PacketModifyTurretChip(1, inputString));
+                        }
+                    }
                     return true;
                 }
 
-                // Кнопки управления (только если не в обычном режиме)
-                if (uiState != STATE_NORMAL && uiState != STATE_RESULT_MSG) {
+                // СТРЕЛКИ (73, 62 / 90, 62) - НАВИГАЦИЯ
+                boolean isLeft = (relX >= 73 && relX < 88 && relY >= 62 && relY < 77);
+                boolean isRight = (relX >= 90 && relX < 105 && relY >= 62 && relY < 77);
 
-                    // ГАЛОЧКА (22, 62)
-                    if (relX >= 22 && relX < 37 && relY >= 62 && relY < 77) {
-                        timerCheck = PRESS_DURATION;
-                        playClickSound();
+                if (isLeft || isRight) {
+                    if (isLeft) timerLeft = PRESS_DURATION; else timerRight = PRESS_DURATION;
+                    playClickSound();
 
-                        if (uiState == STATE_CHIP_MENU) {
-                            uiState = STATE_CHIP_LIST; // Входим
-                            selectedUserIndex = 0;
-                        } else if (uiState == STATE_ADD_INPUT) {
-                            // ОТПРАВКА НА СЕРВЕР (Добавить)
-                            if (!inputString.isEmpty()) {
-                                com.smogline.network.ModPacketHandler.INSTANCE.send(
-                                        net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
-                                        new com.smogline.network.packet.PacketModifyTurretChip(1, inputString)
-                                );
-                                // Не меняем стейт тут, ждем пакета ответа
-                            }
-                        }
-                        return true;
+                    if (uiState == STATE_MAIN_MENU) {
+                        selectedIndex = (selectedIndex == 0) ? 1 : 0; // Переключение 0 <-> 1
                     }
-
-                    // ПЛЮС (39, 62) -> РЕЖИМ ДОБАВЛЕНИЯ
-                    if (relX >= 39 && relX < 54 && relY >= 62 && relY < 77) {
-                        timerPlus = PRESS_DURATION;
-                        playClickSound();
-                        // Можно нажать и из меню, и из списка
-                        uiState = STATE_ADD_INPUT;
-                        inputString = "";
-                        return true;
+                    else if (uiState == STATE_CHIP_LIST || uiState == STATE_ATTACK_MODE) {
+                        if (isLeft) selectedIndex--; else selectedIndex++;
+                        // Цикличность делается внутри draw-методов или здесь, но там безопаснее
                     }
+                    return true;
+                }
 
-                    // МИНУС (56, 62) -> УДАЛЕНИЕ
-                    if (relX >= 56 && relX < 71 && relY >= 62 && relY < 77) {
-                        timerMinus = PRESS_DURATION;
-                        playClickSound();
+                // ПЛЮС / МИНУС (39, 62 / 56, 62)
+                boolean isPlus = (relX >= 39 && relX < 54 && relY >= 62 && relY < 77);
+                boolean isMinus = (relX >= 56 && relX < 71 && relY >= 62 && relY < 77);
 
-                        if (uiState == STATE_CHIP_LIST) {
-                            // Удаляем текущего выбранного
+                if (isPlus || isMinus) {
+                    if (isPlus) timerPlus = PRESS_DURATION; else timerMinus = PRESS_DURATION;
+                    playClickSound();
+
+                    if (uiState == STATE_CHIP_LIST) {
+                        if (isPlus) { uiState = STATE_ADD_INPUT; inputString = ""; }
+                        else {
                             com.smogline.network.ModPacketHandler.INSTANCE.send(
                                     net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
-                                    new com.smogline.network.packet.PacketModifyTurretChip(0, String.valueOf(selectedUserIndex))
-                            );
-                            // Индекс можно уменьшить, если он был последним
-                            if (selectedUserIndex > 0) selectedUserIndex--;
+                                    new PacketModifyTurretChip(0, String.valueOf(selectedIndex)));
+                            if (selectedIndex > 0) selectedIndex--;
                         }
-                        return true;
                     }
+                    else if (uiState == STATE_ATTACK_MODE) {
+                        // Меняем настройки турели
+                        // isPlus = true (Вкл), isMinus = false (Выкл)
+                        boolean newValue = isPlus;
 
-                    // СТРЕЛКИ (Навигация)
-                    if (uiState == STATE_CHIP_LIST) {
-                        if (relX >= 73 && relX < 88 && relY >= 62 && relY < 77) { // Left
-                            timerLeft = PRESS_DURATION; playClickSound(); selectedUserIndex--; return true;
-                        }
-                        if (relX >= 90 && relX < 105 && relY >= 62 && relY < 77) { // Right
-                            timerRight = PRESS_DURATION; playClickSound(); selectedUserIndex++; return true;
-                        }
+                        com.smogline.network.ModPacketHandler.INSTANCE.send(
+                                net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
+                                new PacketUpdateTurretSettings(this.menu.getPos(), selectedIndex, newValue));
                     }
+                    return true;
                 }
             }
         }
@@ -327,20 +376,16 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
             }
         }
 
-        String textToShow;
-        int color = 0x00FFFF;
+        if (selectedIndex < 0) selectedIndex = names.size() - 1;
+        if (selectedIndex >= names.size()) selectedIndex = 0;
 
-        if (names.isEmpty()) {
-            textToShow = "EMPTY LIST";
-            color = 0xAAAAAA;
-        } else {
-            // Коррекция индекса
-            if (selectedUserIndex < 0) selectedUserIndex = names.size() - 1;
-            if (selectedUserIndex >= names.size()) selectedUserIndex = 0;
-            textToShow = (selectedUserIndex + 1) + "/" + names.size() + " " + names.get(selectedUserIndex);
-        }
-        drawCenteredText(guiGraphics, textToShow, color, screenX, screenY, w, h);
+        String textToShow;
+        if (names.isEmpty()) textToShow = "EMPTY LIST";
+        else textToShow = (selectedIndex + 1) + "/" + names.size() + " " + names.get(selectedIndex);
+
+        drawCenteredText(guiGraphics, textToShow, 0x00FFFF, screenX, screenY, w, h);
     }
+
 
     private void drawCenteredText(GuiGraphics guiGraphics, String textStr, int color, int screenX, int screenY, int w, int h) {
         Component text = Component.literal(textStr);
@@ -387,16 +432,11 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, delta);
-        renderTooltip(guiGraphics, mouseX, mouseY); // Тултипы предметов
-
-        // --- ВОЗВРАЩАЕМ ТУЛТИП ЭНЕРГИИ ---
-        // Проверяем наведение на координаты полоски (180, 27, ширина 16, высота 52)
+        renderTooltip(guiGraphics, mouseX, mouseY);
         if (isHovering(180, 27, 16, 52, mouseX, mouseY)) {
             int energy = this.menu.getDataSlot(0);
             int maxEnergy = this.menu.getDataSlot(1);
-            guiGraphics.renderTooltip(this.font,
-                    Component.literal(String.format("%d / %d HE", energy, maxEnergy)),
-                    mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal(String.format("%d / %d HE", energy, maxEnergy)), mouseX, mouseY);
         }
     }
 

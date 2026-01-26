@@ -86,6 +86,12 @@ public class ModPacketHandler {
                 com.smogline.network.packet.PacketChipFeedback::handle
         );
 
+        INSTANCE.registerMessage(id++,
+                com.smogline.network.packet.PacketUpdateTurretSettings.class,
+                com.smogline.network.packet.PacketUpdateTurretSettings::toBytes,
+                com.smogline.network.packet.PacketUpdateTurretSettings::new,
+                com.smogline.network.packet.PacketUpdateTurretSettings::handle
+        );
 
     }
 }
