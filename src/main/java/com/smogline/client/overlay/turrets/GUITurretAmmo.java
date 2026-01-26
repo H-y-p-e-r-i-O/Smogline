@@ -33,6 +33,14 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
     private static final int STATE_ATTACK_MODE = 5;
     private static final int STATE_STATS = 6; // 🔥
 
+    // --- ПАЛИТRA (Pastel Terminal) ---
+    private static final int COLOR_TEXT    = 0xE0E0E0; // Белый (основной)
+    private static final int COLOR_GOOD    = 0x77DD77; // Зеленый (ок/вкл)
+    private static final int COLOR_BAD     = 0xFF6961; // Красный (ошибка/выкл/киллы)
+    private static final int COLOR_WARN    = 0xFDFD96; // Желтый (зарядка/ввод)
+    private static final int COLOR_INFO    = 0xAEC6CF; // Голубой (время/списки)
+    private static final int COLOR_OFF     = 0x949494; // Серый (отключено)
+
     private int uiState = STATE_NORMAL;
     private int selectedIndex = 0;
     private String inputString = "";
@@ -54,12 +62,13 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         this.resultDuration = 40;
         if (success) {
             this.resultMessage = "SUCCESS";
-            this.resultColor = 0x55FF55;
+            this.resultColor = COLOR_GOOD;
         } else {
             this.resultMessage = "ERROR 404";
-            this.resultColor = 0xFF5555;
+            this.resultColor = COLOR_BAD;
         }
     }
+
 
     @Override
     protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
@@ -155,31 +164,32 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         if (selectedIndex > 2) selectedIndex = 0;
 
         String text = "";
-        int color = 0xFFFFFF;
+        int color = COLOR_TEXT;
 
         if (selectedIndex == 0) {
             text = "CHIP CONTROL";
-            if (!hasChip()) color = 0x555555;
+            if (!hasChip()) color = COLOR_OFF; // Серый, если нет чипа
         } else if (selectedIndex == 1) {
             text = "ATTACK MODE";
         } else {
-            text = "TURRET STATS"; // 🔥 Пункт статистики
+            text = "TURRET STATS";
         }
 
+        // Единый стиль стрелочек
         text = "< " + text + " >";
         drawCenteredText(guiGraphics, text, color, x, y, w, h);
     }
+
 
     private void drawAttackMode(GuiGraphics guiGraphics, int x, int y, int w, int h) {
         if (selectedIndex < 0) selectedIndex = 2;
         if (selectedIndex > 2) selectedIndex = 0;
 
         String name = "";
-        boolean isEnabled = false;
-
         int valHostile = this.menu.getDataSlot(TurretLightMenu.DATA_TARGET_HOSTILE);
         int valNeutral = this.menu.getDataSlot(TurretLightMenu.DATA_TARGET_NEUTRAL);
         int valPlayer = this.menu.getDataSlot(TurretLightMenu.DATA_TARGET_PLAYERS);
+        boolean isEnabled = false;
 
         switch (selectedIndex) {
             case 0: name = "HOSTILES"; isEnabled = valHostile == 1; break;
@@ -188,10 +198,13 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         }
 
         String symbol = isEnabled ? "[V]" : "[X]";
-        int color = isEnabled ? 0x55FF55 : 0xFF5555;
+        int color = isEnabled ? COLOR_GOOD : COLOR_BAD;
 
-        drawCenteredText(guiGraphics, name + " " + symbol, color, x, y, w, h);
+        // Стрелочки теперь тоже рисуются тут
+        String text = "< " + name + " " + symbol + " >";
+        drawCenteredText(guiGraphics, text, color, x, y, w, h);
     }
+
 
     // 🔥 ДОБАВЛЕНО: Метод отрисовки статистики
     private void drawStats(GuiGraphics guiGraphics, int x, int y, int w, int h) {
@@ -199,32 +212,30 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         if (selectedIndex > 2) selectedIndex = 0;
 
         String text = "";
-        int color = 0xAAAAAA;
+        int color = COLOR_TEXT;
 
         switch (selectedIndex) {
             case 0:
                 int kills = this.menu.getDataSlot(TurretLightMenu.DATA_KILLS);
                 text = "KILLS: " + kills;
-                color = 0xFF5555; // Красный
+                color = COLOR_BAD; // Красный для агрессии
                 break;
             case 1:
                 int secondsTotal = this.menu.getDataSlot(TurretLightMenu.DATA_LIFETIME);
                 int hours = secondsTotal / 3600;
                 int minutes = (secondsTotal % 3600) / 60;
                 text = String.format("TIME: %dh %dm", hours, minutes);
-                color = 0x55FF55; // Зеленый
+                color = COLOR_INFO; // Голубой для времени
                 break;
             case 2:
                 text = "OWNER: [DATA]";
-                color = 0xFFFF55;
+                color = COLOR_WARN; // Желтый для важного
                 break;
         }
 
-        // Стрелочки для навигации
-        String leftArr = (selectedIndex > 0) ? "< " : "  ";
-        String rightArr = (selectedIndex < 2) ? " >" : "  ";
-
-        drawCenteredText(guiGraphics, leftArr + text + rightArr, color, x, y, w, h);
+        // Исправленные стрелочки (как в главном меню)
+        text = "< " + text + " >";
+        drawCenteredText(guiGraphics, text, color, x, y, w, h);
     }
 
 
@@ -399,7 +410,10 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
         if (names.isEmpty()) textToShow = "EMPTY LIST";
         else textToShow = (selectedIndex + 1) + "/" + names.size() + " " + names.get(selectedIndex);
 
-        drawCenteredText(guiGraphics, textToShow, 0x00FFFF, screenX, screenY, w, h);
+        // Стрелочки и тут добавим для красоты
+        if (!names.isEmpty()) textToShow = "< " + textToShow + " >";
+
+        drawCenteredText(guiGraphics, textToShow, COLOR_INFO, screenX, screenY, w, h);
     }
 
 
@@ -417,18 +431,18 @@ public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
     private void drawBootingText(GuiGraphics guiGraphics, int x, int y, int w, int h) {
         long time = System.currentTimeMillis() / 500;
         String dots = ".".repeat((int) (time % 4));
-        drawCenteredText(guiGraphics, "SYSTEM BOOT" + dots, 0xFFFFFF, x, y, w, h);
+        drawCenteredText(guiGraphics, "SYSTEM BOOT" + dots, COLOR_TEXT, x, y, w, h);
     }
 
     private void drawStatusText(GuiGraphics guiGraphics, int x, int y, int w, int h, int status, int energy, int maxEnergy) {
         String msg;
         int color;
-        if (status == 1) { msg = "SYSTEM ONLINE"; color = 0xCCFFCC; }
-        else if (status >= 200 && status <= 300) { msg = "REPAIRING: " + (status - 200) + "%"; color = 0xFFFDD0; }
-        else if (status >= 1000) { msg = "RESPAWN: " + ((status - 1000) / 20) + "s"; color = 0xFFCCCC; }
+        if (status == 1) { msg = "SYSTEM ONLINE"; color = COLOR_GOOD; }
+        else if (status >= 200 && status <= 300) { msg = "REPAIRING: " + (status - 200) + "%"; color = COLOR_WARN; }
+        else if (status >= 1000) { msg = "RESPAWN: " + ((status - 1000) / 20) + "s"; color = COLOR_BAD; }
         else {
-            if (energy < maxEnergy) { msg = "CHARGING..."; color = 0xFFE4B5; }
-            else { msg = "STANDBY MODE"; color = 0xE0E0E0; }
+            if (energy < maxEnergy) { msg = "CHARGING..."; color = COLOR_WARN; }
+            else { msg = "STANDBY MODE"; color = COLOR_OFF; }
         }
         drawCenteredText(guiGraphics, msg, color, x, y, w, h);
     }
