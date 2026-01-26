@@ -30,6 +30,7 @@ import com.smogline.item.custom.food.ItemConserve;
 import com.smogline.item.custom.food.ItemEnergyDrink;
 import com.smogline.item.custom.food.ModFoods;
 import com.smogline.item.custom.tools_and_armor.*;
+import com.smogline.item.custom.weapons.turrets.TurretChipItem;
 import com.smogline.item.custom.weapons.turrets.TurretLightPlacerBlockItem;
 import com.smogline.item.tags_and_tiers.*;
 import com.smogline.item.custom.scanners.DepthOresScannerItem;
@@ -674,6 +675,9 @@ public class ModItems {
 
     public static final RegistryObject<Item> MACHINEGUN = ITEMS.register("machinegun",
             () -> new MachineGunItem(new Item.Properties()));
+
+    public static final RegistryObject<Item> TURRET_CHIP = ITEMS.register("turret_chip",
+            () -> new TurretChipItem(new Item.Properties()));
 
     // Обычный
     public static final RegistryObject<Item> AMMO_TURRET = ITEMS.register("ammo_turret",

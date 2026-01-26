@@ -1835,7 +1835,7 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModItems.AMMO_TURRET_PIERCING.get(), "20mm Turret AP Ammo");
                 add(ModItems.AMMO_TURRET_FIRE.get(), "20mm Turret Fire Ammo");
                 add(ModItems.AMMO_TURRET.get(), "20mm Turret Ammo");
-                add(ModItems.AMMO_TURRET.get(), "20mm Turret Ammo With Radio-Detonator");
+                add(ModItems.AMMO_TURRET_RADIO.get(), "20mm Turret Ammo With Radio-Detonator");
                 add(ModItems.MACHINEGUN.get(), "A.P.-17");
                 add(ModBlocks.TURRET_LIGHT.get(), "Light Landing Turret 'Nagual'");
 

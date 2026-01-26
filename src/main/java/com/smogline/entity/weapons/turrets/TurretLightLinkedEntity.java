@@ -79,6 +79,10 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             SynchedEntityData.defineId(TurretLightLinkedEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> TARGET_ID =
             SynchedEntityData.defineId(TurretLightLinkedEntity.class, EntityDataSerializers.INT);
+    // Добавь это поле к остальным EntityDataAccessor
+    private static final EntityDataAccessor<Boolean> POWERED =
+            SynchedEntityData.defineId(TurretLightLinkedEntity.class, EntityDataSerializers.BOOLEAN);
+
 
     // Balance
     private static final int DEPLOY_DURATION = 80;
@@ -93,6 +97,20 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     private int lockSoundCooldown = 0;
     private LivingEntity currentTargetCache = null;
     private int currentTargetPriority = 999;
+// Внутри класса TurretLightLinkedEntity
+
+    // Поля настроек (по умолчанию: Враги=Да, Нейтралы=Нет, Игроки=Да)
+    private boolean attackHostile = true;
+    private boolean attackNeutral = false;
+    private boolean attackPlayers = true;
+
+    // Сеттеры для BlockEntity
+    public void setAttackSettings(boolean hostile, boolean neutral, boolean players) {
+        this.attackHostile = hostile;
+        this.attackNeutral = neutral;
+        this.attackPlayers = players;
+    }
+
 
     public TurretLightLinkedEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -138,6 +156,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         this.entityData.define(OWNER_UUID, Optional.empty());
         this.entityData.define(DEPLOY_TIMER, DEPLOY_DURATION);
         this.entityData.define(TARGET_ID, -1);
+        this.entityData.define(POWERED, true); // <--- ДОБАВИТЬ ЭТО
     }
 
     // -------------------- Tick --------------------
@@ -147,7 +166,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         super.tick();
 
         if (this.level().isClientSide) {
-            // client debug (если нужно)
+            // client debug
             int tid = this.entityData.get(TARGET_ID);
             if (tid != -1) {
                 Entity e = this.level().getEntity(tid);
@@ -169,49 +188,39 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         }
 
         // ---- Validate parent block ----
+        // ЭТО ДОЛЖНО ВЫПОЛНЯТЬСЯ ВСЕГДА, ДАЖЕ ЕСЛИ НЕТ ЭНЕРГИИ
         BlockPos parent = getParentBlock();
-        if (parent == null) {
-            this.discard();
-            return;
-        }
+        if (parent == null) { this.discard(); return; }
 
         BlockState state = this.level().getBlockState(parent);
-        if (!(state.getBlock() instanceof TurretLightPlacerBlock)) {
-            this.discard();
-            return;
-        }
+        if (!(state.getBlock() instanceof TurretLightPlacerBlock)) { this.discard(); return; }
 
-        // ================== ФИКСАЦИЯ (ОДИН РАЗ) ==================
+        // ================== ФИКСАЦИЯ ==================
         if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)) {
             float fixedYaw = state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING).toYRot();
-
-            // 1. Ставим поворот энтити
             this.setYRot(fixedYaw);
-
-            // 2. Ставим поворот тела
             this.yBodyRot = fixedYaw;
-
-            // 3. Убиваем интерполяцию (рывки)
             this.yBodyRotO = fixedYaw;
             this.yRotO = fixedYaw;
-
         } else {
-            // Фолбек
             this.yBodyRot = this.getYRot();
             this.yBodyRotO = this.getYRot();
         }
-        // ========================================================
 
-        // ---- Position sync ----
         this.moveTo(parent.getX() + 0.5, parent.getY() + 1.0, parent.getZ() + 0.5, this.getYRot(), this.getXRot());
 
-        // ---- Auto heal ----
-        int last = this.entityData.get(LAST_DAMAGE_TICK);
-        if (this.tickCount - last >= HEAL_DELAY_TICKS) {
-            if (this.getHealth() < this.getMaxHealth() && (this.tickCount % HEAL_INTERVAL_TICKS == 0)) {
-                this.heal(HEAL_AMOUNT);
-            }
+        // --- 1. ПРОВЕРКА ПИТАНИЯ (ТЕПЕРЬ ТУТ) ---
+        // Если нет энергии, мы замираем, НО мы уже проверили, что блок на месте.
+        if (!isPowered()) {
+            this.setTarget(null);
+            this.getNavigation().stop();
+            this.setShooting(false);
+            this.currentTargetCache = null;
+            if (this.entityData.get(TARGET_ID) != -1) this.entityData.set(TARGET_ID, -1);
+            return;
         }
+
+        // ❌ СТАРОЕ АВТО-ЛЕЧЕНИЕ УДАЛЕНО
 
         // ---- Deploy timer ----
         int t = this.entityData.get(DEPLOY_TIMER);
@@ -258,10 +267,8 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             currentTargetCache = null;
         }
 
-        // tracking update
         computer.updateTracking(target);
 
-        // target id sync
         int targetId = target != null ? target.getId() : -1;
         if (this.entityData.get(TARGET_ID) != targetId) {
             this.entityData.set(TARGET_ID, targetId);
@@ -296,6 +303,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     }
 
 
+
     private Vec3 getAimTargetPosition(LivingEntity target) {
         Vec3 muzzle = getMuzzlePos();
         Vec3 vel = computer.calculateBallisticVelocity(target, muzzle);
@@ -325,6 +333,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
         if (!this.isDeployed()) return;
+        if (!this.isPowered()) return; // <--- ДОБАВЬ ЭТО ДЛЯ БЕЗОПАСНОСТИ
         if (this.shotCooldown > 0) return;
 
         // 0. Сначала проверяем линию огня
@@ -437,6 +446,9 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         }));
 
         controllers.add(new AnimationController<>(this, "shoot_ctrl", 0, event -> {
+            // НОВОЕ: Если нет питания -> стоп анимация
+            if (!this.isPowered()) return PlayState.STOP;
+
             if (this.isShooting()) {
                 if (event.getController().getAnimationState() == AnimationController.State.STOPPED) {
                     event.getController().forceAnimationReset();
@@ -446,6 +458,7 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             return PlayState.STOP;
         }));
     }
+
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
@@ -458,13 +471,11 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
     }
 
     // -------------------- Goals --------------------
-
     @Override
     protected void registerGoals() {
-        // Attack goal (как у обычной турели)
+        // Attack goal (стрельба) - без изменений
         this.goalSelector.addGoal(1, new Goal() {
             private final TurretLightLinkedEntity turret = TurretLightLinkedEntity.this;
-
             @Override
             public boolean canUse() {
                 LivingEntity target = turret.getTarget();
@@ -473,22 +484,12 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
                         && target.isAlive()
                         && turret.distanceToSqr(target) < 1225.0D; // 35^2
             }
-
             @Override
-            public void start() {
-                turret.getNavigation().stop();
-            }
-
+            public void start() { turret.getNavigation().stop(); }
             @Override
-            public void stop() {
-                turret.setShooting(false);
-            }
-
+            public void stop() { turret.setShooting(false); }
             @Override
-            public boolean requiresUpdateEveryTick() {
-                return true;
-            }
-
+            public boolean requiresUpdateEveryTick() { return true; }
             @Override
             public void tick() {
                 LivingEntity target = turret.getTarget();
@@ -502,13 +503,10 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false, entity -> {
             if (!this.isDeployed()) return false;
             if (computer.isAllied(entity, this.getOwnerUUID())) return false;
-
             UUID ownerUUID = this.getOwnerUUID();
             if (ownerUUID == null) return false;
-
             Player owner = this.level().getPlayerByUUID(ownerUUID);
             if (owner == null) return false;
-
             if (owner.getLastHurtByMob() == entity) return true;
             return entity instanceof Mob mob && mob.getTarget() == owner;
         }));
@@ -542,12 +540,43 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             return owner != null && owner.getLastHurtMob() == entity;
         }));
 
-        // 5–6) Пассивная агрессия: только монстры и игроки (как у обычной) [file:11]
-        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false,
-                entity -> this.isDeployed() && !this.isAlliedTo(entity)));
+        // ================= НОВЫЕ ЦЕЛИ С УЧЕТОМ НАСТРОЕК =================
 
+        // 5. МОНСТРЫ (Hostile) - Приоритет 5
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false,
+                entity -> this.isDeployed()
+                        && this.attackHostile
+                        && !this.isAlliedTo(entity)));
+
+        // 6. ИГРОКИ (Players) - Приоритет 6
         this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
-                entity -> this.isDeployed() && !this.isAlliedTo(entity)));
+                entity -> {
+                    // ПРОВЕРКА: Приводим к Player, чтобы вызвать isCreative()
+                    if (entity instanceof Player player) {
+                        return this.isDeployed()
+                                && this.attackPlayers
+                                && !this.isAlliedTo(player)
+                                && !player.isCreative()
+                                && !player.isSpectator();
+                    }
+                    return false;
+                }));
+
+        // 7. ЖИВОТНЫЕ / НЕЙТРАЛЬНЫЕ - Приоритет 7
+        this.targetSelector.addGoal(7, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false,
+                entity -> {
+                    if (!this.isDeployed()) return false;
+                    if (this.isAlliedTo(entity)) return false;
+
+                    // Исключаем Монстров и Игроков, так как для них свои правила выше
+                    if (entity instanceof Monster) return false;
+                    if (entity instanceof Player) return false;
+
+                    // Для всего остального (овцы, жители и т.д.) работает флаг attackNeutral
+                    return this.attackNeutral;
+                }));
+
+
     }
 
     // -------------------- Entity props --------------------
@@ -564,7 +593,16 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
 
     @Override
     public boolean isAlliedTo(Entity entity) {
-        return computer.isAllied(entity, getOwnerUUID());
+        if (super.isAlliedTo(entity)) return true;
+
+        if (entity instanceof Player player) {
+            UUID id = player.getUUID();
+            // Проверка основного владельца
+            if (id.equals(getOwnerUUID())) return true;
+            // Проверка списка с чипа
+            return allowedUsers.contains(id);
+        }
+        return false;
     }
 
     @Override
@@ -609,6 +647,8 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
 
     // -------------------- NBT --------------------
 
+    // -------------------- NBT --------------------
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
@@ -629,6 +669,9 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
 
         tag.putBoolean("Deployed", this.isDeployed());
         tag.putInt("DeployTimer", this.entityData.get(DEPLOY_TIMER));
+
+        // ВЫНЕСЕНО НАРУЖУ (Всегда сохраняем питание)
+        tag.putBoolean("Powered", isPowered());
     }
 
     @Override
@@ -654,7 +697,13 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
         if (tag.contains("DeployTimer")) {
             this.entityData.set(DEPLOY_TIMER, tag.getInt("DeployTimer"));
         }
+
+        // ПРАВИЛЬНОЕ ЧТЕНИЕ
+        if (tag.contains("Powered")) {
+            setPowered(tag.getBoolean("Powered"));
+        }
     }
+
 
     // -------------------- Debug access --------------------
 
@@ -679,6 +728,51 @@ public class TurretLightLinkedEntity extends Monster implements GeoEntity, Range
             }
         };
     }
+
+    // В TurretLightLinkedEntity.java
+    public void setOwnerUUIDDirect(UUID uuid) {
+        this.entityData.set(OWNER_UUID, Optional.ofNullable(uuid));
+    }
+
+    // --- Methods for Buffer Interaction ---
+
+    public void setPowered(boolean powered) {
+        this.entityData.set(POWERED, powered);
+    }
+
+    public boolean isPowered() {
+        return this.entityData.get(POWERED);
+    }
+
+    // Лечение от энергии (вызывается буфером)
+    public void healFromPower(float amount) {
+        this.heal(amount);
+    }
+
+    // Нуждается ли в лечении? (HP < MAX и прошло 5 сек после урона)
+    public boolean needsHealing() {
+        return this.getHealth() < this.getMaxHealth() &&
+                (this.tickCount - this.entityData.get(LAST_DAMAGE_TICK) >= 100);
+    }
+
+    // Ведет ли цель? (для потребления энергии)
+    public boolean isTrackingTarget() {
+        return this.getTarget() != null && this.getTarget().isAlive();
+    }
+
+    // В классе TurretLightLinkedEntity
+    private final List<UUID> allowedUsers = new java.util.ArrayList<>();
+
+    public void setAllowedUsers(List<UUID> users) {
+        this.allowedUsers.clear();
+        this.allowedUsers.addAll(users);
+    }
+
+    public void clearAllowedUsers() {
+        this.allowedUsers.clear();
+    }
+
+
 
 
 }

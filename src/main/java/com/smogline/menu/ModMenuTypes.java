@@ -33,12 +33,11 @@ public class ModMenuTypes {
 
     public static final RegistryObject<MenuType<TurretLightMenu>> TURRET_AMMO_MENU =
             MENUS.register("turret_ammo", () -> IForgeMenuType.create((windowId, inv, data) -> {
-                // 1. Создаем пустой контейнер для клиента
-                TurretAmmoContainer container = new TurretAmmoContainer();
-
-                // 2. ВОЗВРАЩАЕМ новый экземпляр меню (НЕ super!)
-                return new TurretLightMenu(windowId, inv, container);
+                // Вызываем конструктор: TurretLightMenu(int, Inventory, FriendlyByteBuf)
+                return new TurretLightMenu(windowId, inv, data);
             }));
+
+
 
 
 

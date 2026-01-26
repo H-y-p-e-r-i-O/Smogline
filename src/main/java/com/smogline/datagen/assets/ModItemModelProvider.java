@@ -140,6 +140,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.CRT_DISPLAY);
         simpleItem(ModItems.SEQUESTRUM);
         simpleItem(ModItems.MAN_CORE);
+        simpleItem(ModItems.TURRET_CHIP);
         simpleItem(ModItems.BLADE_STEEL);
         simpleItem(ModItems.BLADE_TITANIUM);
         simpleItem(ModItems.BLADE_ALLOY);

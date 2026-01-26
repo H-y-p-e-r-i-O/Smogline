@@ -1,6 +1,7 @@
 package com.smogline.network;
 
 import com.smogline.lib.RefStrings;
+import com.smogline.network.packet.PacketToggleTurret;
 import com.smogline.network.sounds.GeigerSoundPacket;
 import com.smogline.network.ToggleWoodBurnerPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -60,5 +61,37 @@ public class ModPacketHandler {
                 PacketUnloadGun::new,
                 PacketUnloadGun::handle
         );
+
+        INSTANCE.registerMessage(id++,
+                PacketToggleTurret.class,
+                PacketToggleTurret::toBytes,
+                PacketToggleTurret::new,
+                PacketToggleTurret::handle
+        );
+
+
+        // ... твои старые пакеты ...
+
+        INSTANCE.registerMessage(id++,
+                com.smogline.network.packet.PacketModifyTurretChip.class,
+                com.smogline.network.packet.PacketModifyTurretChip::toBytes,
+                com.smogline.network.packet.PacketModifyTurretChip::new,
+                com.smogline.network.packet.PacketModifyTurretChip::handle
+        );
+
+        INSTANCE.registerMessage(id++,
+                com.smogline.network.packet.PacketChipFeedback.class,
+                com.smogline.network.packet.PacketChipFeedback::toBytes,
+                com.smogline.network.packet.PacketChipFeedback::new,
+                com.smogline.network.packet.PacketChipFeedback::handle
+        );
+
+        INSTANCE.registerMessage(id++,
+                com.smogline.network.packet.PacketUpdateTurretSettings.class,
+                com.smogline.network.packet.PacketUpdateTurretSettings::toBytes,
+                com.smogline.network.packet.PacketUpdateTurretSettings::new,
+                com.smogline.network.packet.PacketUpdateTurretSettings::handle
+        );
+
     }
 }
