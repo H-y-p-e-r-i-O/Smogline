@@ -49,6 +49,10 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     private static final long DRAIN_TRACKING = 13;
     private static final long DRAIN_HEALING = 25;
     private static final float HEAL_PER_TICK = 0.05F;
+    // ... другие поля ...
+    private int killCount = 0;
+    private long lifetimeTicks = 0; // Используем long, чтобы не переполнилось веками
+
 
     // ... после cachedHealth
     private boolean isSwitchedOn = false; // По умолчанию ВЫКЛЮЧЕНА
@@ -77,7 +81,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
 
     public static void tick(Level level, BlockPos pos, BlockState state, TurretLightPlacerBlockEntity entity) {
         if (level.isClientSide) return;
-
+        entity.lifetimeTicks++;
         // Фикс сети... (без изменений)
         if (level instanceof ServerLevel serverLevel) {
             EnergyNetworkManager manager = EnergyNetworkManager.get(serverLevel);
@@ -340,6 +344,8 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         tag.putBoolean("TargetHostile", targetHostile);
         tag.putBoolean("TargetNeutral", targetNeutral);
         tag.putBoolean("TargetPlayers", targetPlayers);
+        tag.putInt("KillCount", killCount);
+        tag.putLong("Lifetime", lifetimeTicks);
     }
 
     @Override
@@ -356,6 +362,8 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         if (tag.contains("TargetHostile")) targetHostile = tag.getBoolean("TargetHostile");
         if (tag.contains("TargetNeutral")) targetNeutral = tag.getBoolean("TargetNeutral");
         if (tag.contains("TargetPlayers")) targetPlayers = tag.getBoolean("TargetPlayers");
+        if (tag.contains("KillCount")) killCount = tag.getInt("KillCount");
+        if (tag.contains("Lifetime")) lifetimeTicks = tag.getLong("Lifetime");
     }
 
     @Override public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {}
@@ -399,12 +407,13 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
                 case 5 -> TurretLightPlacerBlockEntity.this.targetHostile ? 1 : 0;
                 case 6 -> TurretLightPlacerBlockEntity.this.targetNeutral ? 1 : 0;
                 case 7 -> TurretLightPlacerBlockEntity.this.targetPlayers ? 1 : 0;
+                case 8 -> TurretLightPlacerBlockEntity.this.killCount;
+                case 9 -> (int)(TurretLightPlacerBlockEntity.this.lifetimeTicks / 20); // Передаем секунды
                 default -> 0;
             };
         }
 
-        @Override
-        public void set(int index, int value) {
+        @Override public void set(int index, int value) {
             switch (index) {
                 // ИСПРАВЛЕНИЕ: Устанавливаем энергию напрямую в поле
                 case 0 -> TurretLightPlacerBlockEntity.this.energyStored = value;
@@ -423,7 +432,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
 
         @Override
         public int getCount() {
-            return 8; // Размер данных
+            return 10; // Размер данных
         }
     };
 
@@ -442,6 +451,14 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         }
         setChanged();
     }
+
+    public void incrementKills() {
+        this.killCount++;
+        setChanged();
+    }
+
+    public int getKillCount() { return killCount; }
+    public long getLifetimeTicks() { return lifetimeTicks; }
 
 
 }

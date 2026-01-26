@@ -34,8 +34,9 @@ public class TurretLightMenu extends AbstractContainerMenu {
     public static final int DATA_TARGET_HOSTILE = 5;
     public static final int DATA_TARGET_NEUTRAL = 6;
     public static final int DATA_TARGET_PLAYERS = 7;
-
-    private static final int DATA_COUNT = 8; // Было 5, стало 8
+    private static final int DATA_COUNT = 10;
+    public static final int DATA_KILLS = 8;
+    public static final int DATA_LIFETIME = 9; // В секундах (ticks / 20)
 
     public TurretLightMenu(int containerId, Inventory playerInventory, TurretAmmoContainer ammoContainer, ContainerData data, BlockPos pos) {
         super(ModMenuTypes.TURRET_AMMO_MENU.get(), containerId);

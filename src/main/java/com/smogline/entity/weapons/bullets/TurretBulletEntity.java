@@ -321,6 +321,8 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
                 living.invulnerableTime = 0;
 
                 living.hurt(source, finalDamage);
+                checkAndCountKill(living);
+
             }
         }
     }
@@ -374,6 +376,7 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
                 livingTarget.invulnerableTime = 0;
 
                 livingTarget.hurt(source, contactDamage * 0.4f);
+                checkAndCountKill(livingTarget);
             }
             // 🚨 ВАЖНО: Всегда выходим, если это RADIO.
             return;
@@ -389,6 +392,7 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
 
         if (target.hurt(source, finalDamage)) {
             applySpecialEffect(livingTarget, currentType);
+            checkAndCountKill(livingTarget);
         }
 
         playHitSound();
@@ -590,4 +594,21 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
             // Восстановление цели по UUID (упрощенно)
         }
     }
+
+    // --- Метод для засчитывания фрага ---
+    private void checkAndCountKill(LivingEntity target) {
+        // Если цель умерла или при смерти
+        if (target.isDeadOrDying()) {
+            Entity owner = this.getOwner();
+            // Проверяем, что владелец - это связанная сущность турели
+            if (owner instanceof com.smogline.entity.weapons.turrets.TurretLightLinkedEntity turret) {
+                net.minecraft.core.BlockPos pos = turret.getParentBlock();
+                if (pos != null && this.level().getBlockEntity(pos) instanceof com.smogline.block.entity.custom.TurretLightPlacerBlockEntity be) {
+                    be.incrementKills();
+                }
+            }
+        }
+    }
+
+
 }
