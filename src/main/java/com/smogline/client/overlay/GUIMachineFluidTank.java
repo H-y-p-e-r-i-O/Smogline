@@ -19,7 +19,7 @@ import java.util.Optional;
 public class GUIMachineFluidTank extends AbstractContainerScreen<MachineFluidTankMenu> {
 
     // Путь к текстуре фона. Убедись, что файл лежит в assets/smogline/textures/gui/
-    private static final ResourceLocation TEXTURE = new ResourceLocation("smogline", "textures/gui/storage/gui_fluid_tank.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("smogline", "textures/gui/storage/gui_barrel.png");
 
     // Координаты и размеры шкалы жидкости
     private final int tankX = 71;

@@ -46,26 +46,41 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
     public GrenadeIfProjectileEntity(Level level, LivingEntity thrower, GrenadeIfType type) {
         super(ModEntities.GRENADE_IF_PROJECTILE.get(), thrower, level);
         this.grenadeType = type;
+
+        // ДОБАВИТЬ ЭТУ СТРОКУ (отправляем данные на клиент)
+        this.entityData.set(GRENADE_IF_TYPE_ID, type.name());
     }
+
+
+    // ДОБАВИТЬ ЭТУ СТРОКУ (используем String для хранения имени enum)
+    private static final EntityDataAccessor<String> GRENADE_IF_TYPE_ID = SynchedEntityData.defineId(GrenadeIfProjectileEntity.class, EntityDataSerializers.STRING);
+
+
 
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(TIMER_ACTIVATED, false);
         this.entityData.define(DETONATION_TIME, 0);
+
+        // ДОБАВИТЬ ЭТУ СТРОКУ (значение по умолчанию)
+        this.entityData.define(GRENADE_IF_TYPE_ID, GrenadeIfType.GRENADE_IF.name());
     }
+
 
     @Override
     protected Item getDefaultItem() {
         if (grenadeType == null) {
             try {
-                grenadeType = GrenadeIfType.valueOf(this.entityData.get(GRENADE_TYPE_ID));
+                // ИЗМЕНИТЬ ЗДЕСЬ: используем GRENADE_IF_TYPE_ID вместо импортированного GRENADE_TYPE_ID
+                grenadeType = GrenadeIfType.valueOf(this.entityData.get(GRENADE_IF_TYPE_ID));
             } catch (Exception e) {
                 grenadeType = GrenadeIfType.GRENADE_IF;
             }
         }
         return grenadeType != null ? grenadeType.getItem() : Items.SNOWBALL;
     }
+
 
     @Override
     public void tick() {
@@ -189,8 +204,15 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         super.readAdditionalSaveData(tag);
         this.entityData.set(TIMER_ACTIVATED, tag.getBoolean("TimerActivated"));
         this.entityData.set(DETONATION_TIME, tag.getInt("DetonationTime"));
+
         if (tag.contains("GrenadeType")) {
-            this.grenadeType = GrenadeIfType.valueOf(tag.getString("GrenadeType"));
+            // Читаем имя типа
+            String typeName = tag.getString("GrenadeType");
+            // Сохраняем в локальную переменную
+            this.grenadeType = GrenadeIfType.valueOf(typeName);
+            // ДОБАВИТЬ: Обновляем EntityData, чтобы клиент тоже узнал об этом
+            this.entityData.set(GRENADE_IF_TYPE_ID, typeName);
         }
     }
+
 }
