@@ -22,7 +22,7 @@ import java.util.List;
 
 public class GUITurretAmmo extends AbstractContainerScreen<TurretLightMenu> {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation("smogline", "textures/gui/weapon/turret_light.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("smogline", "textures/gui/turrets/turret_light_gui.png");
 
     // --- СОСТОЯНИЯ GUI ---
     private static final int STATE_NORMAL = 0;

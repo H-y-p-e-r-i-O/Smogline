@@ -187,18 +187,7 @@ public class MainRegistry {
 
         // ТАЙМЕР ЗАКАНЧИВАЕТСЯ, ВЗРЫВЕМСЯ!
         if (event.getTab() == ModCreativeTabs.NTM_WEAPONS_TAB.get()) {
-            event.accept(ModBlocks.BARBED_WIRE_FIRE);
-            event.accept(ModBlocks.BARBED_WIRE_POISON);
-            event.accept(ModBlocks.BARBED_WIRE_RAD);
-            event.accept(ModBlocks.BARBED_WIRE_WITHER);
-            event.accept(ModBlocks.BARBED_WIRE);
-            event.accept(ModItems.DETONATOR);
-            event.accept(ModItems.MULTI_DETONATOR);
-            event.accept(ModItems.RANGE_DETONATOR);
-            event.accept(ModItems.AIRSTRIKE_TEST);
-            event.accept(ModItems.AIRSTRIKE_HEAVY);
-            event.accept(ModItems.AIRSTRIKE_AGENT);
-            event.accept(ModItems.AIRSTRIKE_NUKE);
+
             event.accept(ModItems.GRENADE);
             event.accept(ModItems.GRENADEHE);
             event.accept(ModItems.GRENADEFIRE);
@@ -209,6 +198,22 @@ public class MainRegistry {
             event.accept(ModItems.GRENADE_IF_SLIME);
             event.accept(ModItems.GRENADE_IF_FIRE);
             event.accept(ModItems.GRENADE_NUC);
+
+            event.accept(ModItems.DETONATOR);
+            event.accept(ModItems.MULTI_DETONATOR);
+            event.accept(ModItems.RANGE_DETONATOR);
+            event.accept(ModItems.AIRSTRIKE_TEST);
+            event.accept(ModItems.AIRSTRIKE_HEAVY);
+            event.accept(ModItems.AIRSTRIKE_AGENT);
+            event.accept(ModItems.AIRSTRIKE_NUKE);
+
+            event.accept(ModItems.MACHINEGUN);
+            event.accept(ModItems.AMMO_TURRET);
+            event.accept(ModItems.AMMO_TURRET_HOLLOW);
+            event.accept(ModItems.AMMO_TURRET_PIERCING);
+            event.accept(ModItems.AMMO_TURRET_FIRE);
+            event.accept(ModItems.AMMO_TURRET_RADIO);
+
             event.accept(ModBlocks.MINE_AP);
             event.accept(ModBlocks.MINE_FAT);
             event.accept(ModBlocks.AIRBOMB);
@@ -226,17 +231,15 @@ public class MainRegistry {
             event.accept(ModBlocks.DUD_NUKE);
             event.accept(ModBlocks.DUD_SALTED);
 
+            event.accept(ModBlocks.BARBED_WIRE_FIRE);
+            event.accept(ModBlocks.BARBED_WIRE_POISON);
+            event.accept(ModBlocks.BARBED_WIRE_RAD);
+            event.accept(ModBlocks.BARBED_WIRE_WITHER);
+            event.accept(ModBlocks.BARBED_WIRE);
+
             event.accept(ModItems.TURRET_REMOVER);
             event.accept(ModItems.TURRET_CHIP);
-            event.accept(ModBlocks.TURRET_LIGHT);
             event.accept(ModBlocks.TURRET_LIGHT_PLACER);
-
-            event.accept(ModItems.MACHINEGUN);
-            event.accept(ModItems.AMMO_TURRET);
-            event.accept(ModItems.AMMO_TURRET_HOLLOW);
-            event.accept(ModItems.AMMO_TURRET_PIERCING);
-            event.accept(ModItems.AMMO_TURRET_FIRE);
-            event.accept(ModItems.AMMO_TURRET_RADIO);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added Alloy Sword to NTM Weapons tab");
