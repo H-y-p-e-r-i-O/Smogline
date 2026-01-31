@@ -15,6 +15,8 @@ public class ModSounds {
             DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, RefStrings.MODID);
 
     // Регистрируем звуки счетчика Гейгера
+    public static final RegistryObject<SoundEvent> AIRSTRIKE = registerSoundEvents("airstrike");
+
     public static final RegistryObject<SoundEvent> GEIGER_1 = registerSoundEvents("item.geiger1");
     public static final RegistryObject<SoundEvent> GEIGER_2 = registerSoundEvents("item.geiger2");
     public static final RegistryObject<SoundEvent> GEIGER_3 = registerSoundEvents("item.geiger3");

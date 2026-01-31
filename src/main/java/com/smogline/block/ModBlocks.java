@@ -521,6 +521,10 @@ public class ModBlocks {
     public static final RegistryObject<Block> TAPE_RECORDER = registerBlock("tape_recorder",
             () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
 
+    public static final RegistryObject<Block> OBJ_TEST = registerBlock("obj_test",
+            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
+
+
     public static final RegistryObject<Block> BARREL_LOX = registerBlock("barrel_lox",
             () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
     public static final RegistryObject<Block> BARREL_CORRODED = registerBlock("barrel_corroded",

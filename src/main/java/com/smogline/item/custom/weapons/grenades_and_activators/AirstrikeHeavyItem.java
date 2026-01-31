@@ -49,14 +49,14 @@ public class AirstrikeHeavyItem extends Item {
                 level.addFreshEntity(airplane);
 
                 player.displayClientMessage(
-                        Component.literal("Авиаудар вызван на координатах: " + targetPos.getX() + ", " + targetPos.getY() + ", " + targetPos.getZ())
+                        Component.literal("Авиаудар вызван на координаты: " + targetPos.getX() + ", " + targetPos.getY() + ", " + targetPos.getZ())
                                 .withStyle(ChatFormatting.GREEN),
                         true
                 );
 
-                ModSounds.TOOL_TECH_BLEEP.ifPresent(soundEvent ->
+                ModSounds.AIRSTRIKE.ifPresent(soundEvent ->
                         level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                                soundEvent, player.getSoundSource(), 1.0F, 1.0F)
+                                soundEvent, player.getSoundSource(), 0.8F, 1.0F)
                 );
 
                 if (!player.getAbilities().instabuild) {
