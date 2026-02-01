@@ -217,9 +217,7 @@ public class MainRegistry {
             event.accept(ModBlocks.MINE_AP);
             event.accept(ModBlocks.MINE_FAT);
             event.accept(ModBlocks.AIRBOMB);
-            event.accept(ModItems.AIRBOMB_A);
             event.accept(ModBlocks.BALEBOMB_TEST);
-            event.accept(ModItems.AIRNUKEBOMB_A);
             event.accept(ModBlocks.DET_MINER);
             event.accept(ModBlocks.GIGA_DET);
             event.accept(ModBlocks.SMOKE_BOMB);
@@ -236,7 +234,6 @@ public class MainRegistry {
             event.accept(ModBlocks.BARBED_WIRE_WITHER);
             event.accept(ModBlocks.BARBED_WIRE);
 
-            event.accept(ModItems.TURRET_REMOVER);
             event.accept(ModItems.TURRET_CHIP);
             event.accept(ModBlocks.TURRET_LIGHT_PLACER);
 
