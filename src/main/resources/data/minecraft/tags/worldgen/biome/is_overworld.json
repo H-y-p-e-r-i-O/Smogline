@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "smogline:ruined_city",
+    "smogline:wasteland",
+    "smogline:alienation_plains",
+    "smogline:coniferous_forest",
+    "smogline:oasis",
+    "smogline:wind_peaks"
+  ]
+}
