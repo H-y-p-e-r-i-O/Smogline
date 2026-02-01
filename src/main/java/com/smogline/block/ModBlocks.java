@@ -282,6 +282,12 @@ public class ModBlocks {
                     .noOcclusion() // Важно для прозрачных моделей
                     .requiresCorrectToolForDrops()));
 
+    public static final RegistryObject<Block> MINE_AP = BLOCKS.register("mine_ap",
+            () -> new MineBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
+                    .strength(5.0f, 4.0f)
+                    .noOcclusion() // Важно для прозрачных моделей
+                    .requiresCorrectToolForDrops()));
+
 
     public static final RegistryObject<Block> TURRET_LIGHT = registerBlock("turret_light",
             () -> new TurretLightBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
@@ -512,9 +518,6 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> MINE_FAT = registerBlock("mine_fat",
             () -> new MineNukeBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
-
-    public static final RegistryObject<Block> MINE_AP = registerBlock("mine_ap",
-            () -> new MineBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
 
     public static final RegistryObject<Block> CRATE_CONSERVE = registerBlock("crate_conserve",
             () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
