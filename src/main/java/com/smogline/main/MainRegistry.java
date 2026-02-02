@@ -224,9 +224,6 @@ public class MainRegistry {
             event.accept(ModBlocks.EXPLOSIVE_CHARGE);
             event.accept(ModBlocks.NUCLEAR_CHARGE);
             event.accept(ModBlocks.C4);
-            event.accept(ModBlocks.DUD_FUGAS_TONG);
-            event.accept(ModBlocks.DUD_NUKE);
-            event.accept(ModBlocks.DUD_SALTED);
 
             event.accept(ModBlocks.BARBED_WIRE_FIRE);
             event.accept(ModBlocks.BARBED_WIRE_POISON);
@@ -808,11 +805,6 @@ public class MainRegistry {
             event.accept(ModBlocks.CRT_CLEAN);
             event.accept(ModBlocks.CRT_BSOD);
             event.accept(ModBlocks.TOASTER);
-            event.accept(ModBlocks.BARREL_PINK);
-            event.accept(ModBlocks.BARREL_LOX);
-            event.accept(ModBlocks.BARREL_YELLOW);
-            event.accept(ModBlocks.BARREL_VITRIFIED);
-            event.accept(ModBlocks.BARREL_TAINT);
 
             event.accept(ModBlocks.DOOR_OFFICE);
             event.accept(ModBlocks.DOOR_BUNKER);
@@ -943,10 +935,6 @@ public class MainRegistry {
         if (event.getTab() == ModCreativeTabs.NTM_MACHINES_TAB.get()) {
             event.accept(ModBlocks.CRATE_IRON);
             event.accept(ModBlocks.CRATE_STEEL);
-            event.accept(ModBlocks.BARREL_CORRODED);
-            event.accept(ModBlocks.BARREL_IRON);
-            event.accept(ModBlocks.BARREL_STEEL);
-            event.accept(ModBlocks.BARREL_TCALLOY);
             event.accept(ModBlocks.ANVIL_IRON);
             event.accept(ModBlocks.ANVIL_LEAD);
             event.accept(ModBlocks.ANVIL_STEEL);
