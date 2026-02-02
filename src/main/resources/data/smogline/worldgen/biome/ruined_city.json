@@ -1,0 +1,24 @@
+{
+  "has_precipitation": false,
+  "temperature": 1.5,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 1908001,
+    "fog_color": 3550235,
+    "water_color": 2302755,
+    "water_fog_color": 1249295,
+    "foliage_color": 5195301,
+    "grass_color": 4012068,
+    "particle": {
+      "options": { "type": "minecraft:ash" },
+      "probability": 0.2
+    },
+    "music": "minecraft:music.overworld.basalt_deltas"
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {
+    "air": ["minecraft:cave", "minecraft:canyon"]
+  },
+  "features": []
+}

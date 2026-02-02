@@ -1,0 +1,29 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.9,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 7173741,
+    "fog_color": 8684676,
+    "water_color": 6381921,
+    "water_fog_color": 3290165,
+    "foliage_color": 7695443,
+    "grass_color": 7695443,
+    "particle": {
+      "options": { "type": "minecraft:white_ash" },
+      "probability": 0.05
+    }
+  },
+  "spawners": {}, "spawn_costs": {},
+  "carvers": { "air": ["minecraft:cave", "minecraft:canyon"] },
+  "features": [
+    [], [], [], [], [], [],
+    [ "minecraft:ore_iron_middle" ],
+    [],
+    [
+      "minecraft:patch_dead_bush",
+      "smogline:dead_tree_placed"
+    ],
+    []
+  ]
+}

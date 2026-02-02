@@ -1,0 +1,26 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.6,
+  "downfall": 0.4,
+  "effects": {
+    "sky_color": 7900603,
+    "fog_color": 10519163,
+    "water_color": 4159204,
+    "water_fog_color": 329011,
+    "foliage_color": 14246690,
+    "grass_color": 9732173,
+    "music": "minecraft:music.overworld.old_growth_taiga"
+  },
+  "spawners": {}, "spawn_costs": {},
+  "carvers": { "air": ["minecraft:cave"] },
+  "features": [
+    [], [], [], [], [], [],
+    [ "minecraft:ore_coal_upper" ],
+    [],
+    [
+      "minecraft:patch_grass_plain",
+      "minecraft:trees_sparse_jungle"
+    ],
+    []
+  ]
+}
