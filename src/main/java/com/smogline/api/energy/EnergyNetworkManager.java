@@ -25,8 +25,6 @@ public class EnergyNetworkManager extends SavedData {
         this(level);
         if (nbt.contains("nodes")) {
             long[] nodePositions = nbt.getLongArray("nodes");
-            // [🔥 ФИКС] Эта строка из твоего лога, она правильная
-            LOGGER.info("[NETWORK] Loading {} nodes for dimension {}", nodePositions.length, level.dimension().location());
 
             for (long posLong : nodePositions) {
                 BlockPos pos = BlockPos.of(posLong);
@@ -211,7 +209,6 @@ public class EnergyNetworkManager extends SavedData {
         EnergyNetwork network = node.getNetwork();
         if (network != null) {
             network.removeNode(node); // <--- Говорим сети, что узел удален
-            LOGGER.debug("[NETWORK] Removed node {} from network {}", pos, network.getId());
         }
 
         setDirty();

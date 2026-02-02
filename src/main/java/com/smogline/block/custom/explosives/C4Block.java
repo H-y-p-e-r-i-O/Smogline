@@ -2,7 +2,11 @@ package com.smogline.block.custom.explosives;
 
 import com.smogline.particle.explosions.basic.ExplosionParticleUtils;
 import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.world.item.context.BlockPlaceContext; // Важный импорт
 import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction; // Важный импорт
+import net.minecraft.world.level.block.state.StateDefinition; // Важный импорт
+import net.minecraft.world.level.block.state.properties.DirectionProperty; // Важный импорт
 
 import com.smogline.particle.ModExplosionParticles;
 import com.smogline.util.explosions.general.BlastExplosionGenerator;
@@ -15,21 +19,35 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class C4Block extends Block implements IDetonatable {
+    // Добавляем свойство вращения (Горизонтальное: Север, Юг, Запад, Восток)
+    public static final DirectionProperty FACING = DirectionProperty.create("facing", Direction.Plane.HORIZONTAL);
+
     private static final float EXPLOSION_POWER = 25.0F;
     private static final double PARTICLE_VIEW_DISTANCE = 512.0;
     private static final int DETONATION_RADIUS = 6;
-    // Параметры воронки
-    private static final int CRATER_RADIUS = 15; // Радиус воронки в блоках
-    private static final int CRATER_DEPTH = 25; // Глубина воронки в блоках
-
-    // Блоки для поверхности воронки (замени на свои)
-    private static final Block BLOCK1 = Blocks.BLACK_CONCRETE_POWDER; // Замени на свой
-    private static final Block BLOCK2 = Blocks.GRAY_CONCRETE_POWDER; // Замени на свой
-    private static final Block BLOCK3 = Blocks.BLACK_CONCRETE; // Замени на свой
+    private static final int CRATER_RADIUS = 15;
+    private static final int CRATER_DEPTH = 25;
 
     public C4Block(Properties properties) {
         super(properties);
+        // Регистрируем дефолтное состояние (обычно смотрят на Север)
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
+
+    // --- Логика вращения (Новая часть) ---
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        // Ставит блок "лицом" к игроку (противоположно взгляду игрока)
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    // -------------------------------------
 
     @Override
     public boolean onDetonate(Level level, BlockPos pos, BlockState state, Player player) {
@@ -41,27 +59,19 @@ public class C4Block extends Block implements IDetonatable {
 
             level.removeBlock(pos, false);
 
-            // Взрыв (без разрушения блоков - за это отвечает воронка)
-            level.explode(null, x, y, z, EXPLOSION_POWER,
-                    Level.ExplosionInteraction.NONE); // NONE = не разрушает блоки
+            level.explode(null, x, y, z, EXPLOSION_POWER, Level.ExplosionInteraction.NONE);
 
-            // Запускаем поэтапную систему частиц
             scheduleExplosionEffects(serverLevel, x, y, z);
-
-            // 2. Активируем соседние Detonatable блоки по цепочке
             triggerNearbyDetonations(serverLevel, pos, player);
 
-            // Создаём воронку с задержкой (после взрывной волны)
-            serverLevel.getServer().tell(new net.minecraft.server.TickTask(30, () -> {
-                // НОВЫЙ ВЫЗОВ - теперь не нужно передавать блоки
-               BlastExplosionGenerator.generateNaturalCrater(
+            serverLevel.getServer().tell(new TickTask(30, () -> {
+                BlastExplosionGenerator.generateNaturalCrater(
                         serverLevel,
                         pos,
                         CRATER_RADIUS,
                         CRATER_DEPTH
                 );
             }));
-
 
             return true;
         }
@@ -72,10 +82,11 @@ public class C4Block extends Block implements IDetonatable {
         level.sendParticles((SimpleParticleType) ModExplosionParticles.FLASH.get(),
                 x, y, z, 1, 0, 0, 0, 0);
         ExplosionParticleUtils.spawnAirBombSparks(level, x, y, z);
-        level.getServer().tell(new net.minecraft.server.TickTask(3, () ->
+        level.getServer().tell(new TickTask(3, () ->
                 ExplosionParticleUtils.spawnAirBombShockwave(level, x, y, z)));
-        level.getServer().tell(new net.minecraft.server.TickTask(8, () ->
-                ExplosionParticleUtils.spawnAirBombMushroomCloud(level, x, y, z)));}
+        level.getServer().tell(new TickTask(8, () ->
+                ExplosionParticleUtils.spawnAirBombMushroomCloud(level, x, y, z)));
+    }
 
     private void triggerNearbyDetonations(ServerLevel serverLevel, BlockPos pos, Player player) {
         for (int x = -DETONATION_RADIUS; x <= DETONATION_RADIUS; x++) {
@@ -88,7 +99,7 @@ public class C4Block extends Block implements IDetonatable {
                         Block block = checkState.getBlock();
                         if (block instanceof IDetonatable) {
                             IDetonatable detonatable = (IDetonatable) block;
-                            int delay = (int)(dist * 2); // Задержка зависит от расстояния
+                            int delay = (int)(dist * 2);
                             serverLevel.getServer().tell(new TickTask(delay, () -> {
                                 detonatable.onDetonate(serverLevel, checkPos, checkState, player);
                             }));

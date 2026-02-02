@@ -47,16 +47,7 @@
     ]
   },
   "features": [
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    []
+    "minecraft:grass_patch",
+    "minecraft:flower_patch"
   ]
 }

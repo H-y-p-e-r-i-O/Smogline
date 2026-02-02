@@ -318,6 +318,7 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModItems.AMMO_TURRET_PIERCING.get(), "20мм турельный бронебойный снаряд");
                 add(ModItems.AMMO_TURRET_FIRE.get(), "20мм турельный зажигательный снаряд");
                 add(ModItems.AMMO_TURRET.get(), "20мм турельный снаряд");
+                add(ModItems.AMMO_TURRET_RADIO.get(), "20мм турельный снаряд с радио-взрывателем");
                 add(ModItems.MACHINEGUN.get(), "А.П.-17");
                 add(ModBlocks.TURRET_LIGHT.get(), "Лёгкая десантная турель 'Нагваль'");
 
@@ -491,9 +492,7 @@ public class ModLanguageProvider extends LanguageProvider {
 
                 // ru_ru case
                 // ru_ru case
-                add(ModBlocks.BARREL_IRON.get(), "Железная бочка");
-                add(ModBlocks.BARREL_STEEL.get(), "Стальная бочка");
-                add(ModBlocks.BARREL_TCALLOY.get(), "Бочка из технециевой стали");
+
                 add(ModItems.ZIRCONIUM_SHARP.get(), "Осколок циркония");
                 add(ModBlocks.CRATE_CONSERVE.get(), "Ящик с консервами");
                 add(ModBlocks.CAGE_LAMP.get(), "Лампа в клетке");
@@ -506,12 +505,6 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModBlocks.CRT_BSOD.get(), "BSOD Монитор ");
                 add(ModBlocks.CRT_CLEAN.get(), "Монитор");
                 add(ModBlocks.TOASTER.get(), "Тостер");
-                add(ModBlocks.BARREL_CORRODED.get(), "Проржавевшая бочка");
-                add(ModBlocks.BARREL_LOX.get(), "Бочка с жидким кислородом");
-                add(ModBlocks.BARREL_PINK.get(), "Бочка с керосином");
-                add(ModBlocks.BARREL_YELLOW.get(), "Бочка с ядерными отходами");
-                add(ModBlocks.BARREL_VITRIFIED.get(), "Бочка с остеклованными ядерными отходами");
-                add(ModBlocks.BARREL_TAINT.get(), "Бочка с говном");
                 add(ModBlocks.FIRE_DOOR.get(), "Пожарная дверь");
                 add(ModBlocks.SLIDING_SEAL_DOOR.get(), "Скользящая герметичная дверь");
                 add(ModBlocks.SECURE_ACCESS_DOOR.get(), "Усиленная дверь");
@@ -522,9 +515,6 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModBlocks.SILO_HATCH_LARGE.get(), "Люк ракетной шахты");
 
 
-                add(ModBlocks.DUD_SALTED.get(), "Неразорвавшаяся солёная бомба");
-                add(ModBlocks.DUD_NUKE.get(), "Неразорвавшаяся ядерная бомба");
-                add(ModBlocks.DUD_FUGAS_TONG.get(), "Неразорвавшаяся фугасная бомба");
                 add(ModBlocks.MINE_FAT.get(), "Мина 'Толстяк'");
                 add(ModBlocks.MINE_AP.get(), "Противопехотная мина");
                 add(ModItems.GRENADE_NUC.get(), "Ядерная граната");
@@ -1834,6 +1824,7 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModItems.AMMO_TURRET_PIERCING.get(), "20mm Turret AP Ammo");
                 add(ModItems.AMMO_TURRET_FIRE.get(), "20mm Turret Fire Ammo");
                 add(ModItems.AMMO_TURRET.get(), "20mm Turret Ammo");
+                add(ModItems.AMMO_TURRET_RADIO.get(), "20mm Turret Ammo With Radio-Detonator");
                 add(ModItems.MACHINEGUN.get(), "A.P.-17");
                 add(ModBlocks.TURRET_LIGHT.get(), "Light Landing Turret 'Nagual'");
 
@@ -1988,15 +1979,6 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModBlocks.CRT_BSOD.get(), "BSOD CRT");
                 add(ModBlocks.CRT_CLEAN.get(), "Clean CRT");
                 add(ModBlocks.TOASTER.get(), "Toaster");
-                add(ModBlocks.BARREL_CORRODED.get(), "Corroded Barrel");
-                add(ModBlocks.BARREL_LOX.get(), "LOX Barrel");
-                add(ModBlocks.BARREL_PINK.get(), "Pink Barrel");
-                add(ModBlocks.BARREL_YELLOW.get(), "Yellow Barrel");
-                add(ModBlocks.BARREL_VITRIFIED.get(), "Vitrified Barrel");
-                add(ModBlocks.BARREL_TAINT.get(), "Tainted Barrel");
-                add(ModBlocks.BARREL_IRON.get(), "Iron Barrel");
-                add(ModBlocks.BARREL_STEEL.get(), "Steel Barrel");
-                add(ModBlocks.BARREL_TCALLOY.get(), "Iron Barrel");
                 add(ModBlocks.FIRE_DOOR.get(), "Fire Door");
                 add(ModBlocks.SLIDING_SEAL_DOOR.get(), "Sliding Seal Door");
                 add(ModBlocks.SECURE_ACCESS_DOOR.get(), "Secure Access Door");
@@ -2006,10 +1988,6 @@ public class ModLanguageProvider extends LanguageProvider {
                 add(ModBlocks.SILO_HATCH.get(), "Silo Hatch");
                 add(ModBlocks.SILO_HATCH_LARGE.get(), "Large Silo Hatch");
 
-
-                add(ModBlocks.DUD_SALTED.get(), "Unexploded Salted Bomb");
-                add(ModBlocks.DUD_NUKE.get(), "Unexploded Nuclear Bomb");
-                add(ModBlocks.DUD_FUGAS_TONG.get(), "Unexploded High-Explosive Bomb");
                 add(ModBlocks.MINE_FAT.get(), "FatMan Mine");
                 add(ModBlocks.MINE_AP.get(), "Anti-Personnel Mine");
                 add(ModItems.GRENADE_NUC.get(), "Nuclear Grenade");

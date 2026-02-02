@@ -1,12 +1,13 @@
 package com.smogline.item.custom.industrial;
 
 import com.smogline.block.ModBlocks;
-import com.smogline.entity.TurretLightEntity;
-import com.smogline.entity.TurretLightLinkedEntity;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
+import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -29,7 +30,7 @@ public class TurretRemoverItem extends Item {
     public InteractionResult interactLivingEntity(ItemStack stack, Player player, LivingEntity target, InteractionHand hand) {
         Level level = player.level();
 
-        // Обработка СВЯЗАННОЙ турели
+        // 1. Обработка СВЯЗАННОЙ турели
         if (target instanceof TurretLightLinkedEntity linkedTurret) {
             if (!level.isClientSide) {
                 if (isOwner(player, linkedTurret)) {
@@ -40,7 +41,7 @@ public class TurretRemoverItem extends Item {
                     }
 
                     // Удаляем турель
-                    linkedTurret.remove(TurretLightEntity.RemovalReason.DISCARDED);
+                    linkedTurret.remove(Entity.RemovalReason.DISCARDED); // Исправлено
 
                     // Даем блок обратно
                     giveItem(player, new ItemStack(ModBlocks.TURRET_LIGHT_PLACER.get()));
@@ -54,11 +55,11 @@ public class TurretRemoverItem extends Item {
             return InteractionResult.SUCCESS;
         }
 
-        // Обработка ОБЫЧНОЙ турели (старый код)
+        // 2. Обработка ОБЫЧНОЙ турели
         if (target instanceof TurretLightEntity turret) {
             if (!level.isClientSide) {
                 if (isOwner(player, turret)) {
-                    turret.remove(TurretLightEntity.RemovalReason.DISCARDED);
+                    turret.remove(Entity.RemovalReason.DISCARDED); // Исправлено
                     giveItem(player, new ItemStack(ModBlocks.TURRET_LIGHT.get()));
                     player.sendSystemMessage(Component.literal("§aТурель демонтирована!"));
                     return InteractionResult.SUCCESS;
@@ -96,14 +97,11 @@ public class TurretRemoverItem extends Item {
 
                 if (!turrets.isEmpty()) {
                     TurretLightLinkedEntity turret = turrets.get(0);
-
                     if (isOwner(player, turret)) {
                         // Удаляем блок
                         level.removeBlock(pos, false);
-
                         // Удаляем турель
-                        turret.remove(TurretLightEntity.RemovalReason.DISCARDED);
-
+                        turret.remove(Entity.RemovalReason.DISCARDED); // Исправлено
                         // Выдаем блок
                         giveItem(player, new ItemStack(ModBlocks.TURRET_LIGHT_PLACER.get()));
                         player.sendSystemMessage(Component.literal("§aТурель (блок) демонтирована!"));
@@ -120,8 +118,13 @@ public class TurretRemoverItem extends Item {
         return super.useOn(context);
     }
 
-    // Вспомогательные методы
+    // Вспомогательные методы (перегрузка для разных классов)
+
     private boolean isOwner(Player player, TurretLightEntity turret) {
+        return turret.getOwnerUUID() != null && turret.getOwnerUUID().equals(player.getUUID());
+    }
+
+    private boolean isOwner(Player player, TurretLightLinkedEntity turret) {
         return turret.getOwnerUUID() != null && turret.getOwnerUUID().equals(player.getUUID());
     }
 

@@ -1,7 +1,9 @@
 {
   "type": "minecraft:jigsaw",
   "biomes": [
-    "smogline:wasteland"
+    "minecraft:plains",
+    "minecraft:savanna",
+    "minecraft:desert"
   ],
   "spawn_overrides": {},
   "step": "surface_structures",

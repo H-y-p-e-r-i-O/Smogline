@@ -6,11 +6,11 @@ package com.smogline.main;
 import com.smogline.api.energy.EnergyNetworkManager;
 import com.smogline.api.fluids.ModFluids;
 import com.smogline.capability.ModCapabilities;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.smogline.event.BombDefuser;
 import com.smogline.event.CrateBreaker;
 import com.smogline.handler.MobGearHandler;
 import com.smogline.item.custom.fekal_electric.ModBatteryItem;
-import com.smogline.item.tags_and_tiers.AmmoRegistry;
 import com.smogline.particle.ModExplosionParticles;
 import com.smogline.world.biome.ModBiomes;
 import net.minecraft.server.level.ServerLevel;
@@ -39,7 +39,6 @@ import com.smogline.config.ModClothConfig;
 import com.smogline.effect.ModEffects;
 import com.smogline.hazard.ModHazards;
 import com.smogline.worldgen.ModWorldGen;
-import com.smogline.item.custom.liquids.ItemFluidIdentifier;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -188,18 +187,7 @@ public class MainRegistry {
 
         // ТАЙМЕР ЗАКАНЧИВАЕТСЯ, ВЗРЫВЕМСЯ!
         if (event.getTab() == ModCreativeTabs.NTM_WEAPONS_TAB.get()) {
-            event.accept(ModBlocks.BARBED_WIRE_FIRE);
-            event.accept(ModBlocks.BARBED_WIRE_POISON);
-            event.accept(ModBlocks.BARBED_WIRE_RAD);
-            event.accept(ModBlocks.BARBED_WIRE_WITHER);
-            event.accept(ModBlocks.BARBED_WIRE);
-            event.accept(ModItems.DETONATOR);
-            event.accept(ModItems.MULTI_DETONATOR);
-            event.accept(ModItems.RANGE_DETONATOR);
-            event.accept(ModItems.AIRSTRIKE_TEST);
-            event.accept(ModItems.AIRSTRIKE_HEAVY);
-            event.accept(ModItems.AIRSTRIKE_AGENT);
-            event.accept(ModItems.AIRSTRIKE_NUKE);
+
             event.accept(ModItems.GRENADE);
             event.accept(ModItems.GRENADEHE);
             event.accept(ModItems.GRENADEFIRE);
@@ -210,31 +198,41 @@ public class MainRegistry {
             event.accept(ModItems.GRENADE_IF_SLIME);
             event.accept(ModItems.GRENADE_IF_FIRE);
             event.accept(ModItems.GRENADE_NUC);
-            event.accept(ModBlocks.MINE_AP);
-            event.accept(ModBlocks.MINE_FAT);
-            event.accept(ModBlocks.AIRBOMB);
-            event.accept(ModItems.AIRBOMB_A);
-            event.accept(ModBlocks.BALEBOMB_TEST);
-            event.accept(ModItems.AIRNUKEBOMB_A);
-            event.accept(ModBlocks.DET_MINER);
-            event.accept(ModBlocks.GIGA_DET);
-            event.accept(ModBlocks.WASTE_CHARGE);
-            event.accept(ModBlocks.SMOKE_BOMB);
-            event.accept(ModBlocks.EXPLOSIVE_CHARGE);
-            event.accept(ModBlocks.NUCLEAR_CHARGE);
-            event.accept(ModBlocks.C4);
-            event.accept(ModBlocks.DUD_FUGAS_TONG);
-            event.accept(ModBlocks.DUD_NUKE);
-            event.accept(ModBlocks.DUD_SALTED);
 
-            event.accept(ModItems.TURRET_REMOVER);
-            event.accept(ModBlocks.TURRET_LIGHT);
+            event.accept(ModItems.DETONATOR);
+            event.accept(ModItems.MULTI_DETONATOR);
+            event.accept(ModItems.RANGE_DETONATOR);
+            event.accept(ModItems.AIRSTRIKE_TEST);
+            event.accept(ModItems.AIRSTRIKE_HEAVY);
+            event.accept(ModItems.AIRSTRIKE_AGENT);
+            event.accept(ModItems.AIRSTRIKE_NUKE);
 
             event.accept(ModItems.MACHINEGUN);
             event.accept(ModItems.AMMO_TURRET);
             event.accept(ModItems.AMMO_TURRET_HOLLOW);
             event.accept(ModItems.AMMO_TURRET_PIERCING);
             event.accept(ModItems.AMMO_TURRET_FIRE);
+            event.accept(ModItems.AMMO_TURRET_RADIO);
+
+            event.accept(ModBlocks.MINE_AP);
+            event.accept(ModBlocks.MINE_FAT);
+            event.accept(ModBlocks.AIRBOMB);
+            event.accept(ModBlocks.BALEBOMB_TEST);
+            event.accept(ModBlocks.DET_MINER);
+            event.accept(ModBlocks.GIGA_DET);
+            event.accept(ModBlocks.SMOKE_BOMB);
+            event.accept(ModBlocks.EXPLOSIVE_CHARGE);
+            event.accept(ModBlocks.NUCLEAR_CHARGE);
+            event.accept(ModBlocks.C4);
+
+            event.accept(ModBlocks.BARBED_WIRE_FIRE);
+            event.accept(ModBlocks.BARBED_WIRE_POISON);
+            event.accept(ModBlocks.BARBED_WIRE_RAD);
+            event.accept(ModBlocks.BARBED_WIRE_WITHER);
+            event.accept(ModBlocks.BARBED_WIRE);
+
+            event.accept(ModItems.TURRET_CHIP);
+            event.accept(ModBlocks.TURRET_LIGHT_PLACER);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added Alloy Sword to NTM Weapons tab");
@@ -807,11 +805,6 @@ public class MainRegistry {
             event.accept(ModBlocks.CRT_CLEAN);
             event.accept(ModBlocks.CRT_BSOD);
             event.accept(ModBlocks.TOASTER);
-            event.accept(ModBlocks.BARREL_PINK);
-            event.accept(ModBlocks.BARREL_LOX);
-            event.accept(ModBlocks.BARREL_YELLOW);
-            event.accept(ModBlocks.BARREL_VITRIFIED);
-            event.accept(ModBlocks.BARREL_TAINT);
 
             event.accept(ModBlocks.DOOR_OFFICE);
             event.accept(ModBlocks.DOOR_BUNKER);
@@ -942,10 +935,6 @@ public class MainRegistry {
         if (event.getTab() == ModCreativeTabs.NTM_MACHINES_TAB.get()) {
             event.accept(ModBlocks.CRATE_IRON);
             event.accept(ModBlocks.CRATE_STEEL);
-            event.accept(ModBlocks.BARREL_CORRODED);
-            event.accept(ModBlocks.BARREL_IRON);
-            event.accept(ModBlocks.BARREL_STEEL);
-            event.accept(ModBlocks.BARREL_TCALLOY);
             event.accept(ModBlocks.ANVIL_IRON);
             event.accept(ModBlocks.ANVIL_LEAD);
             event.accept(ModBlocks.ANVIL_STEEL);
@@ -1124,7 +1113,9 @@ public class MainRegistry {
     }
     // Метод регистрации атрибутов (здоровье, урон и т.д.)
     private void entityAttributeEvent(net.minecraftforge.event.entity.EntityAttributeCreationEvent event) {
-        event.put(ModEntities.TURRET_LIGHT.get(), com.smogline.entity.TurretLightEntity.createAttributes().build());
+        event.put(ModEntities.TURRET_LIGHT.get(), TurretLightEntity.createAttributes().build());
+        event.put(ModEntities.TURRET_LIGHT_LINKED.get(), TurretLightEntity.createAttributes().build());
+
     }
 
 

@@ -1,6 +1,7 @@
 package com.smogline.menu;
 
 import com.smogline.block.custom.machines.armormod.menu.ArmorTableMenu;
+import com.smogline.block.entity.custom.TurretAmmoContainer;
 import com.smogline.lib.RefStrings;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
@@ -28,6 +29,17 @@ public class ModMenuTypes {
 
     public static final RegistryObject<MenuType<BlastFurnaceMenu>> BLAST_FURNACE_MENU =
             MENUS.register("blast_furnace_menu", () -> IForgeMenuType.create(BlastFurnaceMenu::new));
+
+
+    public static final RegistryObject<MenuType<TurretLightMenu>> TURRET_AMMO_MENU =
+            MENUS.register("turret_ammo", () -> IForgeMenuType.create((windowId, inv, data) -> {
+                // Вызываем конструктор: TurretLightMenu(int, Inventory, FriendlyByteBuf)
+                return new TurretLightMenu(windowId, inv, data);
+            }));
+
+
+
+
 
     public static final RegistryObject<MenuType<MachinePressMenu>> PRESS_MENU =
             MENUS.register("press_menu", () -> IForgeMenuType.create(MachinePressMenu::new));

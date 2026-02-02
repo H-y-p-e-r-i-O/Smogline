@@ -50,8 +50,6 @@ public class CrateBreaker {
     private static final Map<RegistryObject<Block>, List<DropChance>> CRATE_DROPS = Map.of(
             ModBlocks.CRATE, List.of(
                     new DropChance(ModBlocks.CRT_BROKEN, 0.1),
-                    new DropChance(ModBlocks.BARREL_CORRODED, 0.1),
-                    new DropChance(ModBlocks.BARREL_IRON, 0.1),
                     new DropChance(ModBlocks.TAPE_RECORDER, 0.1),
                     new DropChance(ModBlocks.TOASTER, 0.1),
                     new DropChance(ModBlocks.FILE_CABINET, 0.1),

@@ -1,10 +1,11 @@
 package com.smogline.entity;
 
-import com.smogline.entity.grenades.*;
-import com.smogline.lib.RefStrings;
+import com.smogline.entity.weapons.bullets.TurretBulletEntity;
+import com.smogline.entity.weapons.turrets.TurretLightEntity;
+import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
+import com.smogline.entity.weapons.grenades.*;
 import com.smogline.main.MainRegistry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.item.FallingBlockEntity;
@@ -23,17 +24,17 @@ public class ModEntities {
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light").toString()));
 
     public static final RegistryObject<EntityType<TurretLightLinkedEntity>> TURRET_LIGHT_LINKED = ENTITY_TYPES.register("turret_light_linked",
-            () -> EntityType.Builder.of(TurretLightLinkedEntity::new, MobCategory.MONSTER) // ✅ ИСПОЛЬЗУЕМ НОВЫЙ КЛАСС
-                    .sized(0.8f, 1.5f)
+            () -> EntityType.Builder.<TurretLightLinkedEntity>of(TurretLightLinkedEntity::new, MobCategory.MONSTER)
+                    .sized(0.8f, 0.8f) // Размер такой же как у обычной турели (или поправь если надо 1.5)
                     .build(new ResourceLocation(MainRegistry.MOD_ID, "turret_light_linked").toString()));
 
 
     public static final RegistryObject<EntityType<TurretBulletEntity>> TURRET_BULLET =
             ENTITY_TYPES.register("turret_bullet",
                     () -> EntityType.Builder.<TurretBulletEntity>of(TurretBulletEntity::new, MobCategory.MISC)
-                            .sized(0.05f, 0.05f)    // Советую 0.25f (0.05f слишком мало, может проходить сквозь стены)
-                            .clientTrackingRange(8) // Увеличь до 8-10 чанков (пулемет стреляет далеко)
-                            .updateInterval(1)      // ✅ КРИТИЧНО: Обновлять позицию КАЖДЫЙ тик (или хотя бы 2)
+                            .sized(0.05f, 0.05f)
+                            .clientTrackingRange(16)
+                            .updateInterval(1)
                             .setShouldReceiveVelocityUpdates(true)
                             .build("turret_bullet"));
 

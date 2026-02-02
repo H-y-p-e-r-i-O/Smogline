@@ -14,8 +14,6 @@ import net.minecraft.nbt.Tag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.smogline.config.ModClothConfig;
-import com.smogline.main.MainRegistry;
 
 public class ChunkRadiationProvider implements ICapabilitySerializable<CompoundTag> {
     public static final Capability<IChunkRadiation> CHUNK_RADIATION_CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {});
@@ -56,10 +54,7 @@ public class ChunkRadiationProvider implements ICapabilitySerializable<CompoundT
             if (radiation.getAmbientRadiation() > 1e-6F) {
                 tag.putFloat(NBT_KEY_AMBIENT, radiation.getAmbientRadiation());
             }
-            
-            if (ModClothConfig.get().enableDebugLogging) {
-                MainRegistry.LOGGER.debug("Serializing ChunkRadiation: {}", tag);
-            }
+
             return tag;
         }
         
@@ -83,11 +78,6 @@ public class ChunkRadiationProvider implements ICapabilitySerializable<CompoundT
         } else {
             radiation.setAmbientRadiation(0);
         }
-        
-        if (ModClothConfig.get().enableDebugLogging) {
-            if (nbt.size() > 0) {
-                MainRegistry.LOGGER.debug("Deserialized ChunkRadiation: block={}, ambient={}", radiation.getBlockRadiation(), radiation.getAmbientRadiation());
-            }
-        }
+
     }
 }

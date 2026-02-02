@@ -1,6 +1,6 @@
 package com.smogline.client.render;
 
-import com.smogline.entity.grenades.AirstrikeEntity;
+import com.smogline.entity.weapons.grenades.AirstrikeEntity;
 import com.smogline.block.ModBlocks; // <-- замени на свой путь к блокам
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -10,7 +10,6 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 

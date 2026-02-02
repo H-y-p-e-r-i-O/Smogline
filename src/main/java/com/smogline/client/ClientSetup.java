@@ -2,21 +2,23 @@ package com.smogline.client;
 
 // Основной класс клиентской настройки мода. Здесь регистрируются все клиентские обработчики событий,
 // GUI, рендереры, модели и т.д.
-import com.smogline.block.entity.client.TurretBlockRenderer;
+import com.smogline.block.entity.client.MineApRenderer;
+import com.smogline.block.entity.client.TurretLightPlacerRenderer;
 import com.smogline.client.model.FluidTankModelWrapper;
 import com.smogline.client.overlay.*;
 import com.smogline.client.loader.*;
 import com.smogline.client.overlay.crates.GUIDeshCrate;
 import com.smogline.client.overlay.crates.GUIIronCrate;
 import com.smogline.client.overlay.crates.GUISteelCrate;
+import com.smogline.client.overlay.turrets.GUITurretAmmo;
 import com.smogline.client.render.*;
 import com.smogline.client.render.shader.*;
 import com.smogline.config.*;
 import com.smogline.client.tooltip.*;
 import com.smogline.entity.ModEntities;
-import com.smogline.entity.client.TurretBulletRenderer;
-import com.smogline.entity.client.TurretLightLinkedRenderer;
-import com.smogline.entity.client.TurretLightRenderer;
+import com.smogline.entity.client.bullets.TurretBulletRenderer;
+import com.smogline.entity.client.turrets.TurretLightLinkedRenderer;
+import com.smogline.entity.client.turrets.TurretLightRenderer;
 import com.smogline.item.custom.industrial.ItemAssemblyTemplate;
 import com.smogline.item.custom.industrial.ItemBlueprintFolder;
 import com.smogline.item.ModItems;
@@ -144,6 +146,7 @@ public class ClientSetup {
 
         event.enqueueWork(() -> {
             // Здесь мы связываем наш тип меню с классом экрана
+            MenuScreens.register(ModMenuTypes.TURRET_AMMO_MENU.get(), GUITurretAmmo::new);
             MenuScreens.register(ModMenuTypes.ARMOR_TABLE_MENU.get(), GUIArmorTable::new);
             MenuScreens.register(ModMenuTypes.MACHINE_ASSEMBLER_MENU.get(), GUIMachineAssembler::new);
             MenuScreens.register(ModMenuTypes.ADVANCED_ASSEMBLY_MACHINE_MENU.get(), GUIMachineAdvancedAssembler::new);
@@ -162,7 +165,11 @@ public class ClientSetup {
             BlockEntityRenderers.register(ModBlockEntities.ADVANCED_ASSEMBLY_MACHINE_BE.get(), MachineAdvancedAssemblerRenderer::new);
             BlockEntityRenderers.register(ModBlockEntities.DOOR_ENTITY.get(), DoorRenderer::new);
             BlockEntityRenderers.register(ModBlockEntities.PRESS_BE.get(), MachinePressRenderer::new);
-            BlockEntityRenderers.register(ModBlockEntities.TURRET_BLOCK_ENTITY.get(), TurretBlockRenderer::new);
+            // СТАЛО (ПРАВИЛЬНО: Берем из ModBlockEntities)
+            BlockEntityRenderers.register(ModBlockEntities.TURRET_LIGHT_PLACER_BE.get(), TurretLightPlacerRenderer::new);
+            BlockEntityRenderers.register(ModBlockEntities.MINE_BLOCK_ENTITY.get(), MineApRenderer::new);
+
+
             OcclusionCullingHelper.setTransparentBlocksTag(ModTags.Blocks.NON_OCCLUDING);
             try {
                 RenderPathManager.updateRenderPath();
@@ -237,6 +244,7 @@ public class ClientSetup {
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(ModKeyBindings.RELOAD_KEY);
+        event.register(ModKeyBindings.UNLOAD_KEY);
         ModConfigKeybindHandler.onRegisterKeyMappings(event);
         MainRegistry.LOGGER.info("Registered key mappings.");
     }
@@ -313,7 +321,8 @@ public class ClientSetup {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "geiger_counter_hud", OverlayGeiger.GEIGER_HUD_OVERLAY);
 
         event.registerAbove(VanillaGuiOverlay.PORTAL.id(), "radiation_pixels", OverlayRadiationVisuals.RADIATION_PIXELS_OVERLAY);
-        
+        // ✅ ДОБАВЛЯЕМ ВОТ ЭТО:
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "ammo_hud", OverlayAmmoHud.HUD_AMMO);
         MainRegistry.LOGGER.info("GUI overlays registered.");
     }
     

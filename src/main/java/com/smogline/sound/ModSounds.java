@@ -11,10 +11,12 @@ import com.smogline.main.MainRegistry;
 
 public class ModSounds {
     // Создаем регистр для звуков
-    public static final DeferredRegister<SoundEvent> SOUND_EVENTS = 
+    public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, RefStrings.MODID);
-    
+
     // Регистрируем звуки счетчика Гейгера
+    public static final RegistryObject<SoundEvent> AIRSTRIKE = registerSoundEvents("airstrike");
+
     public static final RegistryObject<SoundEvent> GEIGER_1 = registerSoundEvents("item.geiger1");
     public static final RegistryObject<SoundEvent> GEIGER_2 = registerSoundEvents("item.geiger2");
     public static final RegistryObject<SoundEvent> GEIGER_3 = registerSoundEvents("item.geiger3");
@@ -22,6 +24,27 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> GEIGER_5 = registerSoundEvents("item.geiger5");
     public static final RegistryObject<SoundEvent> GEIGER_6 = registerSoundEvents("item.geiger6");
 
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT1 = registerSoundEvents("bullet_impact1");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT2 = registerSoundEvents("bullet_impact2");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT3 = registerSoundEvents("bullet_impact3");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT4 = registerSoundEvents("bullet_impact4");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT5 = registerSoundEvents("bullet_impact5");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT6 = registerSoundEvents("bullet_impact6");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT7 = registerSoundEvents("bullet_impact7");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT8 = registerSoundEvents("bullet_impact8");
+    public static final RegistryObject<SoundEvent> BULLET_IMPACT9 = registerSoundEvents("bullet_impact9");
+
+    public static final RegistryObject<SoundEvent> BULLET_GROUND1 = registerSoundEvents("bullet_ground1");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND2 = registerSoundEvents("bullet_ground2");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND3 = registerSoundEvents("bullet_ground3");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND4 = registerSoundEvents("bullet_ground4");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND5 = registerSoundEvents("bullet_ground5");
+    public static final RegistryObject<SoundEvent> BULLET_GROUND6 = registerSoundEvents("bullet_ground6");
+
+    public static final RegistryObject<SoundEvent> GUNPULL = registerSoundEvents("gunpull");
+    public static final RegistryObject<SoundEvent> HEAVY_GUNCLICK = registerSoundEvents("heavy_gunclick");
+    public static final RegistryObject<SoundEvent> GUNCLICK = registerSoundEvents("gunclick");
+    public static final RegistryObject<SoundEvent> DRY_FIRE = registerSoundEvents("dry_fire");
     public static final RegistryObject<SoundEvent> BULLET_HIT2 = registerSoundEvents("bullet_hit2");
     public static final RegistryObject<SoundEvent> BULLET_HIT1 = registerSoundEvents("bullet_hit1");
     public static final RegistryObject<SoundEvent> TURRET_LOCK = registerSoundEvents("turret_lock");
@@ -108,14 +131,14 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> EXTRACT_RANDOM = registerSoundEvents("tool.extract_random");
     public static final RegistryObject<SoundEvent> ASSEMBLER_STRIKE_RANDOM = registerSoundEvents("block.assembler_strike_random");
     public static final RegistryObject<SoundEvent> BOUNCE_RANDOM = registerSoundEvents("item.bounce_random");
-    
+
     // Вспомогательный метод для регистрации
     private static RegistryObject<SoundEvent> registerSoundEvents(String name) {
         // Создаем ResourceLocation, избегая устаревших методов
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, name);
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(id));
     }
-    
+
     // Метод для регистрации в Forge EventBus
     public static void register(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);

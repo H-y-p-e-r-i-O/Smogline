@@ -49,105 +49,245 @@
     ]
   },
   "turret_fire": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.turret_fire",
     "sounds": [
       "smogline:turret_fire"
     ]
   },
   "turret_lock": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.turret_lock",
     "sounds": [
       "smogline:turret_lock"
     ]
   },
-  "bullet_hit1": {
+  "gunpull": {
     "category": "player",
+    "subtitle": "subtitles.smogline.gunpull",
+    "sounds": [
+      "smogline:reload/gunpull"
+    ]
+  },
+  "heavy_gunclick": {
+    "category": "player",
+    "subtitle": "subtitles.smogline.heavy_gunclick",
+    "sounds": [
+      "smogline:reload/heavy_gunclick"
+    ]
+  },
+  "gunclick": {
+    "category": "player",
+    "subtitle": "subtitles.smogline.gunclick",
+    "sounds": [
+      "smogline:reload/gunclick"
+    ]
+  },
+  "airstrike": {
+    "category": "player",
+    "subtitle": "subtitles.smogline.airstrike",
+    "sounds": [
+      "smogline:airstrike"
+    ]
+  },
+  "bullet_hit1": {
+    "category": "block",
     "subtitle": "sounds.smogline.bullet_hit1",
     "sounds": [
       "smogline:bullet_hit1"
     ]
   },
-  "bullet_hit2": {
+  "bullet_impact1": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact1"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact1"
+  },
+  "bullet_impact2": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact2"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact2"
+  },
+  "bullet_impact3": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact3"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact3"
+  },
+  "bullet_impact4": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact4"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact4"
+  },
+  "bullet_impact5": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact5"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact5"
+  },
+  "bullet_impact6": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact6"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact6"
+  },
+  "bullet_impact7": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact7"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact7"
+  },
+  "bullet_impact8": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact8"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact8"
+  },
+  "bullet_impact9": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_impact9"
+    ],
+    "subtitle": "sounds.smogline.bullet_impact9"
+  },
+  "bullet_ground1": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_ground1"
+    ],
+    "subtitle": "sounds.smogline.bullet_ground1"
+  },
+  "bullet_ground2": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_ground2"
+    ],
+    "subtitle": "sounds.smogline.bullet_ground2"
+  },
+  "bullet_ground3": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_ground3"
+    ],
+    "subtitle": "sounds.smogline.bullet_ground3"
+  },
+  "bullet_ground4": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_ground4"
+    ],
+    "subtitle": "sounds.smogline.bullet_ground4"
+  },
+  "bullet_ground5": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_ground5"
+    ],
+    "subtitle": "sounds.smogline.bullet_ground5"
+  },
+  "bullet_ground6": {
+    "category": "block",
+    "sounds": [
+      "smogline:impact/bullet_ground6"
+    ],
+    "subtitle": "sounds.smogline.bullet_ground6"
+  },
+  "dry_fire": {
     "category": "player",
+    "sounds": [
+      "smogline:dry_fire"
+    ],
+    "subtitle": "sounds.smogline.dry_fire"
+  },
+  "bullet_hit2": {
+    "category": "block",
     "subtitle": "sounds.smogline.bullet_hit2",
     "sounds": [
       "smogline:bullet_hit2"
     ]
   },
   "bombdet1": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.bombdet1",
     "sounds": [
       "smogline:bombdet1"
     ]
   },
   "bombdet2": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.bombdet2",
     "sounds": [
       "smogline:bombdet2"
     ]
   },
   "bombdet3": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.bombdet3",
     "sounds": [
       "smogline:bombdet3"
     ]
   },
   "bomber1": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.bomber1",
     "sounds": [
       "smogline:bomber1"
     ]
   },
   "bomber2": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.bomber2",
     "sounds": [
       "smogline:bomber3"
     ]
   },
   "bombwhistle": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.bombwhistle",
     "sounds": [
       "smogline:bombwhistle"
     ]
   },
   "crateopen": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.crateopen",
     "sounds": [
       "smogline:crateopen"
     ]
   },
   "crateclose": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.crateclose",
     "sounds": [
       "smogline:crateclose"
     ]
   },
   "explosionsmallfar1": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.explosionsmallfar1",
     "sounds": [
       "smogline:explosionsmallfar1"
     ]
   },
   "explosionsmallfar2": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.explosionsmallfar2",
     "sounds": [
       "smogline:explosionsmallfar2"
     ]
   },
   "explosionsmallnear1": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.explosionsmallnear1",
     "sounds": [
       "smogline:explosionsmallnear1"
@@ -161,51 +301,40 @@
     ]
   },
   "explosionlargenear": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.explosionlargenear",
     "sounds": [
       "smogline:explosionlargenear"
     ]
   },
   "explosionsmallnear2": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.explosionsmallnear2",
     "sounds": [
       "smogline:explosionsmallnear2"
     ]
   },
   "explosionsmallnear3": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.explosionsmallnear3",
     "sounds": [
       "smogline:explosionsmallnear3"
     ]
   },
   "grenadetrigger": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.grenadetrigger",
     "sounds": [
       "smogline:grenadetrigger"
     ]
   },
   "mukeexplosion": {
-    "category": "player",
+    "category": "block",
     "subtitle": "sounds.smogline.mukeexplosion",
     "sounds": [
       "smogline:mukeexplosion"
     ]
   },
-
-
-
-
-
-
-
-
-
-
-
 
   "techboop": {
     "category": "player",
