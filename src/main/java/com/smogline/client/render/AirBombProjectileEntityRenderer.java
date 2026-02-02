@@ -31,13 +31,15 @@ public class AirBombProjectileEntityRenderer extends EntityRenderer<AirBombProje
                        int packedLight) {
 
         poseStack.pushPose();
+        // 🆕 180° поворот (первым!)
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
 
-        // ✅ СИНХРОНИЗАЦИЯ С САМОЛЁТОМ: поворот по Yaw
+        // ✅ Поворот по самолёту
         poseStack.mulPose(Axis.YP.rotationDegrees(-entity.getSynchedYaw()));
 
-        // 🆕 ПОСТОЯННЫЙ НАКЛОН К ЗЕМЛЕ: +1° каждые 10 тиков (НАКОПИТЕЛЬНО)
-        float tiltAngle = (entity.tickCount / 10.0F) * 7.0F;  // 0° → 1° → 2° → 3°...
-        poseStack.mulPose(Axis.XP.rotationDegrees(tiltAngle));  // Наклон носом вниз
+        // 🆕 НАКЛОН НОСОМ ВНИЗ (после поворота!)
+        float tiltAngle = (entity.tickCount / 10.0F) * 7.0F;
+        poseStack.mulPose(Axis.XN.rotationDegrees(tiltAngle));  // ← XN вместо XP!
 
         // ✅ Смещение центра модели
         poseStack.translate(-0.5, 0.0, -0.5);

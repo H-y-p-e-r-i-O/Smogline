@@ -282,6 +282,12 @@ public class ModBlocks {
                     .noOcclusion() // Важно для прозрачных моделей
                     .requiresCorrectToolForDrops()));
 
+    public static final RegistryObject<Block> MINE_AP = BLOCKS.register("mine_ap",
+            () -> new MineBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
+                    .strength(5.0f, 4.0f)
+                    .noOcclusion() // Важно для прозрачных моделей
+                    .requiresCorrectToolForDrops()));
+
 
     public static final RegistryObject<Block> TURRET_LIGHT = registerBlock("turret_light",
             () -> new TurretLightBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
@@ -374,27 +380,6 @@ public class ModBlocks {
                     .strength(0.5F, 6.0F)
                     .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
-
-    public static final RegistryObject<Block> DUD_FUGAS_TONG = registerBlock("dud_fugas_tong",
-            () -> new DudFugasBlock(BlockBehaviour.Properties.of()
-                    .strength(31F, 6.0F)
-                    .sound(SoundType.STONE)
-                    .requiresCorrectToolForDrops()
-                    .noOcclusion()));
-
-    public static final RegistryObject<Block> DUD_NUKE = registerBlock("dud_nuke",
-            () -> new DudNukeBlock(BlockBehaviour.Properties.of()
-                    .strength(31F, 6.0F)
-                    .sound(SoundType.STONE)
-                    .requiresCorrectToolForDrops()
-                    .noOcclusion()));
-
-    public static final RegistryObject<Block> DUD_SALTED = registerBlock("dud_salted",
-            () -> new DudNukeBlock(BlockBehaviour.Properties.of()
-                    .strength(31F, 6.0F)
-                    .sound(SoundType.STONE)
-                    .requiresCorrectToolForDrops()
-                    .noOcclusion()));
 
     public static final RegistryObject<Block> SMOKE_BOMB = registerBlock("smoke_bomb",
             () -> new SmokeBombBlock(BlockBehaviour.Properties.of()
@@ -513,36 +498,15 @@ public class ModBlocks {
     public static final RegistryObject<Block> MINE_FAT = registerBlock("mine_fat",
             () -> new MineNukeBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
 
-    public static final RegistryObject<Block> MINE_AP = registerBlock("mine_ap",
-            () -> new MineBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
-
     public static final RegistryObject<Block> CRATE_CONSERVE = registerBlock("crate_conserve",
             () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
     public static final RegistryObject<Block> TAPE_RECORDER = registerBlock("tape_recorder",
             () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
 
-    public static final RegistryObject<Block> BARREL_LOX = registerBlock("barrel_lox",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_CORRODED = registerBlock("barrel_corroded",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_IRON = registerBlock("barrel_iron",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_PINK = registerBlock("barrel_pink",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_PLASTIC = registerBlock("barrel_plastic",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_RED = registerBlock("barrel_red",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_STEEL = registerBlock("barrel_steel",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_TAINT = registerBlock("barrel_taint",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_TCALLOY = registerBlock("barrel_tcalloy",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_VITRIFIED = registerBlock("barrel_vitrified",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
-    public static final RegistryObject<Block> BARREL_YELLOW = registerBlock("barrel_yellow",
-            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(2.0F, 6.0F).noOcclusion()));
+    public static final RegistryObject<Block> OBJ_TEST = registerBlock("obj_test",
+            () -> new CrtBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));
+
+
 
     public static final RegistryObject<Block> BARBED_WIRE = registerBlock("barbed_wire",
             () -> new BarbedWireBlock(Block.Properties.copy(Blocks.STONE).strength(1.5F, 6.0F).noOcclusion()));

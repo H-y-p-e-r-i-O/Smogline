@@ -30,6 +30,7 @@ import com.smogline.item.custom.food.ItemConserve;
 import com.smogline.item.custom.food.ItemEnergyDrink;
 import com.smogline.item.custom.food.ModFoods;
 import com.smogline.item.custom.tools_and_armor.*;
+import com.smogline.item.custom.weapons.mines.MineApBlockItem;
 import com.smogline.item.custom.weapons.turrets.TurretChipItem;
 import com.smogline.item.custom.weapons.turrets.TurretLightPlacerBlockItem;
 import com.smogline.item.tags_and_tiers.*;
@@ -461,7 +462,11 @@ public class ModItems {
                     new Item.Properties() // Свойства предмета
             ));
 
-
+    public static final RegistryObject<Item> MINE_AP = ITEMS.register("mine_ap",
+            () -> new MineApBlockItem(
+                    ModBlocks.MINE_AP.get(), // Ссылка на блок
+                    new Item.Properties() // Свойства предмета
+            ));
 
     // Модификаторы брони
     public static final RegistryObject<Item> HEART_PIECE = ITEMS.register("heart_piece",

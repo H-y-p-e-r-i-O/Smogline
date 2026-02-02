@@ -266,17 +266,6 @@ public class ModHazards {
                  new HazardEntry(HazardType.RADIATION, 0.1f)
          ));
 
-         HazardSystem.register(ModBlocks.BARREL_YELLOW.get(), new HazardData(
-                 new HazardEntry(HazardType.RADIATION, 150f)
-         ));
-
-         HazardSystem.register(ModBlocks.BARREL_VITRIFIED.get(), new HazardData(
-                 new HazardEntry(HazardType.RADIATION, 15f)
-         ));
-
-         HazardSystem.register(ModBlocks.BARREL_TAINT.get(), new HazardData(
-                 new HazardEntry(HazardType.RADIATION, 67f)
-         ));
 
         HazardSystem.register(ModBlocks.PLUTONIUM_FUEL_BLOCK.get(), new HazardData(
             new HazardEntry(HazardType.RADIATION, 42.5f)

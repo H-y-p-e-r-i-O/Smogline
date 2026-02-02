@@ -1,9 +1,25 @@
 {
-  "parent": "block/orientable",
+  "parent": "block/block",
   "textures": {
+    "particle": "smogline:block/c4",
     "top": "smogline:block/c4",
+    "bottom": "smogline:block/c4",
     "front": "smogline:block/c4block_front",
-    "side": "smogline:block/c4",
-    "bottom": "smogline:block/c4"
-  }
+    "back": "smogline:block/c4_back",
+    "side": "smogline:block/c4"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "texture": "#bottom", "cullface": "down" },
+        "up":    { "texture": "#top",    "cullface": "up" },
+        "north": { "texture": "#front",  "cullface": "north" },
+        "south": { "texture": "#back",   "cullface": "south" },
+        "west":  { "texture": "#side",   "cullface": "west" },
+        "east":  { "texture": "#side",   "cullface": "east" }
+      }
+    }
+  ]
 }

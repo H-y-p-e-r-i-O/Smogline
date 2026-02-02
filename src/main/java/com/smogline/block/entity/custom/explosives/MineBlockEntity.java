@@ -8,22 +8,47 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import software.bernie.geckolib.animatable.GeoBlockEntity;  // 🔥 ДОБАВЬ
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.AnimationState;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.List;
 
-public class MineBlockEntity extends BlockEntity {
+public class MineBlockEntity extends BlockEntity implements GeoBlockEntity {  // 🔥 implements GeoBlockEntity
 
     private static final double DETECTION_RADIUS = 10.0;
     private static final int SOUND_COOLDOWN = 1800;
     private int soundCooldown = 0;
     private boolean hasPlayedWarning = false;
 
+    // 🔥 GeckoLib instance cache
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
     public MineBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MINE_BLOCK_ENTITY.get(), pos, state);
     }
 
+    // 🔥 Обязательные методы GeoBlockEntity
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
+    }
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // 🔥 ПУСТОЙ как у буфера!
+    }
+
+
+
+    // 🔥 Твой существующий код без изменений
     public static <T extends BlockEntity> void tick(Level level, BlockPos blockPos, BlockState blockState, T blockEntity) {
         if (!(blockEntity instanceof MineBlockEntity mine)) return;
         if (level == null || level.isClientSide) return;
@@ -89,4 +114,5 @@ public class MineBlockEntity extends BlockEntity {
         this.soundCooldown = tag.getInt("SoundCooldown");
         this.hasPlayedWarning = tag.getBoolean("HasPlayedWarning");
     }
+
 }
