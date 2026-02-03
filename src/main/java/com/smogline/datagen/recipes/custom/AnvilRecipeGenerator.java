@@ -43,53 +43,6 @@ public final class AnvilRecipeGenerator {
                 stack(ModBlocks.ANVIL_STEEL.get(), 1),
                 AnvilTier.IRON);
 
-        registerCombineRecipe(writer, "iron", "anvil_desh",
-                stack(ModBlocks.ANVIL_IRON.get(), 1),
-                stack(ModItems.getIngot(ModIngots.DESH).get(), 10),
-                stack(ModBlocks.ANVIL_DESH.get(), 1),
-                AnvilTier.IRON);
-
-        registerCombineRecipe(writer, "iron", "anvil_ferrouranium",
-                stack(ModBlocks.ANVIL_IRON.get(), 1),
-                stack(ModItems.getIngot(ModIngots.FERROURANIUM).get(), 10),
-                stack(ModBlocks.ANVIL_FERROURANIUM.get(), 1),
-                AnvilTier.IRON);
-
-        registerCombineRecipe(writer, "iron", "anvil_saturnite",
-                stack(ModBlocks.ANVIL_IRON.get(), 1),
-                stack(ModItems.getIngot(ModIngots.SATURNITE).get(), 10),
-                stack(ModBlocks.ANVIL_SATURNITE.get(), 1),
-                AnvilTier.IRON);
-
-        registerCombineRecipe(writer, "iron", "anvil_bismuth_bronze",
-                stack(ModBlocks.ANVIL_IRON.get(), 1),
-                stack(ModItems.getIngot(ModIngots.BISMUTH_BRONZE).get(), 10),
-                stack(ModBlocks.ANVIL_BISMUTH_BRONZE.get(), 1),
-                AnvilTier.IRON);
-
-        registerCombineRecipe(writer, "iron", "anvil_arsenic_bronze",
-                stack(ModBlocks.ANVIL_IRON.get(), 1),
-                stack(ModItems.getIngot(ModIngots.ARSENIC_BRONZE).get(), 10),
-                stack(ModBlocks.ANVIL_ARSENIC_BRONZE.get(), 1),
-                AnvilTier.IRON);
-
-        registerCombineRecipe(writer, "iron", "anvil_schrabidate",
-                stack(ModBlocks.ANVIL_IRON.get(), 1),
-                stack(ModItems.getIngot(ModIngots.SCHRABIDATE).get(), 10),
-                stack(ModBlocks.ANVIL_SCHRABIDATE.get(), 1),
-                AnvilTier.IRON);
-
-        registerCombineRecipe(writer, "iron", "anvil_dineutronium",
-                stack(ModBlocks.ANVIL_IRON.get(), 1),
-                stack(ModItems.getIngot(ModIngots.DINEUTRONIUM).get(), 10),
-                stack(ModBlocks.ANVIL_DNT.get(), 1),
-                AnvilTier.IRON);
-
-        registerCombineRecipe(writer, "iron", "anvil_osmiridium",
-                stack(ModBlocks.ANVIL_IRON.get(), 1),
-                stack(ModItems.getIngot(ModIngots.OSMIRIDIUM).get(), 10),
-                stack(ModBlocks.ANVIL_OSMIRIDIUM.get(), 1),
-                AnvilTier.IRON);
 
 
 
@@ -159,7 +112,7 @@ public final class AnvilRecipeGenerator {
 
 
 
-       
+
     }
 
     /**

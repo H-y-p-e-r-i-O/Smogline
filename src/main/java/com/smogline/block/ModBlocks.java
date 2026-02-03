@@ -81,23 +81,7 @@ public class ModBlocks {
     private static final BlockBehaviour.Properties INGOT_BLOCK_PROPERTIES =
             BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).strength(3.0F, 6.0F).sound(SoundType.METAL).requiresCorrectToolForDrops();
 
-    // 1. СПИСОК РАЗРЕШЕННЫХ БЛОКОВ (Whitelist)
-    // Сюда добавляем только те материалы, которым нужны блоки (9 слитков = 1 блок).
-    // Скопировано и адаптировано из ModItems, убраны лишние материалы типа еды или топлива, если им не нужен блок.
-    // 1. СПИСОК РАЗРЕШЕННЫХ БЛОКОВ (Whitelist)
-    // 1. СПИСОК РАЗРЕШЕННЫХ БЛОКОВ (Whitelist)
-    public static final Set<String> ENABLED_INGOT_BLOCKS = Set.of(
-            "uranium", "plutonium", "thorium", "titanium", "aluminum", "copper",
-            "lead", "tungsten", "steel", "advanced_alloy", "schrabidium", "saturnite",
-            "beryllium", "bismuth", "desh", "cobalt", "lanthanium",
-            "niobium", "zirconium", "actinium", "ferrouranium",
-            "u233", "u235", "u238", "pu238", "pu239", "pu240", "pu241",
-            "ra226", "neptunium",
-            "australium", "dineutronium", "euphemium",
-            "combine_steel", "dura_steel", "starmetal", "red_copper",
-            "plutonium_fuel", "uranium_fuel", "thorium_fuel", "mox_fuel", "schrabidium_fuel",
-            "boron", "tcalloy", "cdalloy", "cadmium"
-    );
+
 
     // 2. КАРТА БЛОКОВ
     public static final Map<ModIngots, RegistryObject<Block>> INGOT_BLOCKS = new EnumMap<>(ModIngots.class);
@@ -107,8 +91,7 @@ public class ModBlocks {
         for (ModIngots ingot : ModIngots.values()) {
             String name = ingot.getName();
 
-            // Проверяем, есть ли этот слиток в "белом списке"
-            if (ENABLED_INGOT_BLOCKS.contains(name)) {
+
 
                 // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
                 // Раньше было: String blockName = name + "_block";
@@ -129,7 +112,7 @@ public class ModBlocks {
 
                 // Сохраняем в карту
                 INGOT_BLOCKS.put(ingot, registeredBlock);
-            }
+
         }
     }
 
@@ -146,37 +129,7 @@ public class ModBlocks {
     // Оставляем вашу логику определения радиоактивности без изменений
     private static boolean isRadioactiveIngot(ModIngots ingot) {
         String name = ingot.getName().toLowerCase();
-        return name.contains("uranium") ||
-                name.contains("plutonium") ||
-                name.contains("thorium") ||
-                name.contains("actinium") ||
-                name.contains("polonium") ||
-                name.contains("neptunium") ||
-                name.contains("americium") ||
-                name.contains("curium") ||
-                name.contains("berkelium") ||
-                name.contains("californium") ||
-                name.contains("einsteinium") ||
-                name.contains("fermium") ||
-                name.contains("mendelevium") ||
-                name.contains("nobelium") ||
-                name.contains("lawrencium") ||
-                name.contains("radium") ||
-                name.contains("radon") ||
-                name.contains("francium") ||
-                name.contains("ra226") ||
-                name.contains("co60") ||
-                name.contains("sr90") ||
-                name.contains("am241") ||
-                name.contains("am242") ||
-                name.contains("u233") ||
-                name.contains("u235") ||
-                name.contains("u238") ||
-                name.contains("th232") ||
-                name.contains("pu238") ||
-                name.contains("pu239") ||
-                name.contains("pu240") ||
-                name.contains("pu241");
+        return name.contains("uranium");
     }
 
     public static boolean hasIngotBlock(ModIngots ingot) {
@@ -184,8 +137,6 @@ public class ModBlocks {
     }
 
     public static final RegistryObject<Block> URANIUM_BLOCK = getIngotBlock(ModIngots.URANIUM);
-    public static final RegistryObject<Block> PLUTONIUM_BLOCK = getIngotBlock(ModIngots.PLUTONIUM);
-    public static final RegistryObject<Block> PLUTONIUM_FUEL_BLOCK = getIngotBlock(ModIngots.PLUTONIUM_FUEL);
 
     public static final RegistryObject<Block> POLONIUM210_BLOCK = registerBlock("polonium210_block",
             () -> new RadioactiveBlock(INGOT_BLOCK_PROPERTIES));

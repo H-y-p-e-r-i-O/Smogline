@@ -185,18 +185,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         );
 
         dropOreType2(
-                ModBlocks.ASBESTOS_ORE.get(),
-                ModBlocks.ASBESTOS_ORE.get(),
-                ModItems.getIngot(ModIngots.ASBESTOS).get(),
-                1.0f, 3.0f
-        );
-        dropOreType2(
-                ModBlocks.RESOURCE_ASBESTOS.get(),
-                ModBlocks.RESOURCE_ASBESTOS.get(),
-                ModItems.getIngot(ModIngots.ASBESTOS).get(),
-                2.0f, 5.0f
-        );
-        dropOreType2(
                 ModBlocks.RESOURCE_SULFUR.get(),
                 ModBlocks.RESOURCE_SULFUR.get(),
                 ModItems.SULFUR.get(),

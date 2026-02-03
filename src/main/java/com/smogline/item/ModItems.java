@@ -80,25 +80,7 @@ public class ModItems {
             "sr90", "steel", "xe135");
     private static final Map<String, RegistryObject<Item>> POWDER_ITEMS_BY_ID = new HashMap<>();
 
-    private static final Set<String> ENABLED_MODPOWDERS = Set.of("iron", "gold", "coal"); // Только ModPowders!
-    private static final Set<String> ENABLED_INGOT_POWDERS = Set.of(
-            "uranium", "plutonium",
-            "actinium", "steel", "advanced_alloy", "aluminum", "schrabidium", "lead",
-            "red_copper", "asbestos", "titanium", "cobalt", "tungsten",
-            "beryllium", "bismuth", "polymer", "bakelite", "desh", "les",
-            "magnetized_tungsten", "combine_steel", "dura_steel",
-            "euphemium", "dineutronium", "australium", "tantalium",
-            "meteorite", "lanthanium", "neodymium", "niobium", "cerium", "cadmium",
-            "caesium", "strontium", "tennessine", "bromide", "zirconium", "iodine",
-            "astatine", "neptunium", "polonium", "boron", "schrabidate",
-            "au198", "ra226", "thorium", "selenium", "co60",
-            "sr90", "calcium", "ferrouranium"
-    );
 
-    private static final Set<String> ENABLED_TINY_POWDERS = Set.of(
-            "actinium", "boron", "cerium", "cobalt", "cs137", "i131", "lanthanium", "lithium",
-            "meteorite", "neodymium", "niobium", "sr90", "steel", "xe135"
-    );
 
     static {
         // 1. СЛИТКИ (ВСЕГДА) ✅ OK
@@ -112,40 +94,6 @@ public class ModItems {
             INGOTS.put(ingot, registeredItem);
         }
 
-        // 2. ModPowders (ТОЛЬКО ИЗ ENABLED_MODPOWDERS) ✅ ИСПРАВЛЕНО!
-        for (ModPowders powder : ModPowders.values()) {
-            String baseName = powder.name(); // или powder.getName() если есть
-            if (ENABLED_MODPOWDERS.contains(baseName)) {
-                String powderId = baseName + "_powder";
-                RegistryObject<Item> powderItem = ITEMS.register(powderId,
-                        () -> powder == ModPowders.IRON ? new RadioactiveItem(new Item.Properties()) : new Item(new Item.Properties()));
-                POWDERS.put(powder, powderItem);
-                POWDER_ITEMS_BY_ID.put(powderId, powderItem);
-            }
-        }
-
-        // 3. Порошки из слитков (ТОЛЬКО ИЗ ENABLED_INGOT_POWDERS) ✅ ИСПРАВЛЕНО!
-        for (ModIngots ingot : ModIngots.values()) {
-            String baseName = ingot.getName();
-
-            // Основной порошок
-            if (ENABLED_INGOT_POWDERS.contains(baseName)) {
-                String powderId = baseName + "_powder";
-                RegistryObject<Item> powderItem = POWDER_ITEMS_BY_ID.get(powderId);
-                if (powderItem == null) {
-                    powderItem = ITEMS.register(powderId, () -> new Item(new Item.Properties()));
-                    POWDER_ITEMS_BY_ID.put(powderId, powderItem);
-                }
-                INGOT_POWDERS.put(ingot, powderItem);
-            }
-
-            // Маленький порошок ✅ OK
-            if (POWDER_TINY_NAMES.contains(baseName) && ENABLED_TINY_POWDERS.contains(baseName)) {
-                String tinyId = baseName + "_powder_tiny";
-                RegistryObject<Item> tinyItem = ITEMS.register(tinyId, () -> new Item(new Item.Properties()));
-                INGOT_POWDERS_TINY.put(ingot, tinyItem);
-            }
-        }
     }
 
     // УДОБНЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ СЛИТКА
@@ -158,7 +106,9 @@ public class ModItems {
     public static Optional<RegistryObject<Item>> getTinyPowder(ModIngots ingot) {
         return Optional.ofNullable(INGOT_POWDERS_TINY.get(ingot));
     }
-    
+
+
+
     public static final int SLOT_HELMET = 0;
     public static final int SLOT_CHEST = 1;
     public static final int SLOT_LEGS = 2;

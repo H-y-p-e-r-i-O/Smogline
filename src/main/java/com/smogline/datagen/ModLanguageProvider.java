@@ -19,8 +19,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.smogline.block.ModBlocks.ENABLED_INGOT_BLOCKS;
-import static com.smogline.block.ModBlocks.getIngotBlock;
 
 public class ModLanguageProvider extends LanguageProvider {
     // 1. Создаем НАШЕ СОБСТВЕННОЕ поле для хранения языка
@@ -89,17 +87,7 @@ public class ModLanguageProvider extends LanguageProvider {
                 .map(part -> Character.toUpperCase(part.charAt(0)) + part.substring(1))
                 .collect(Collectors.joining(" "));
     }
-    private void addIngotBlockTranslations(Set<ResourceLocation> translatedBlocks) {
-        for (ModIngots ingot : ModIngots.values()) {
-            if (ENABLED_INGOT_BLOCKS.contains(ingot.getName())) {
-                RegistryObject<Block> block = getIngotBlock(ingot);
-                if (block != null && !translatedBlocks.contains(block.getId())) {
-                    add(block.get(), buildBlockName(ingot));
-                }
-            }
-        }
-        // Можно добавить перевод для русской локали по умолчанию для общих блоков, если нужно
-    }
+
 
     // Метод формирования имени блока с переводом
     private String buildBlockName(ModIngots ingot) {

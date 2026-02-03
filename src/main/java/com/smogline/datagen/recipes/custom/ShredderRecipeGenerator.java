@@ -90,23 +90,7 @@ public final class ShredderRecipeGenerator {
                     .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "shredder/iron_ingot_to_powder"));
         }
 
-        if (ModItems.getPowders(ModPowders.GOLD) != null) {
-            ShredderRecipeBuilder.shredderRecipe(Items.GOLD_INGOT,
-                            new ItemStack(ModItems.getPowders(ModPowders.GOLD).get(), 1))
-                    .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "shredder/gold_ingot_to_powder"));
-        }
 
-        // ✅ Остальные с проверками
-        if (ModItems.getPowders(ModPowders.COAL) != null) {
-            if (ModItems.POWDER_COAL_SMALL != null) {
-                ShredderRecipeBuilder.shredderRecipe(ModItems.getPowders(ModPowders.COAL).get(),
-                                new ItemStack(ModItems.POWDER_COAL_SMALL.get(), 9))
-                        .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "shredder/coal_to_small_powder"));
-            }
-            ShredderRecipeBuilder.shredderRecipe(Items.COAL,
-                            new ItemStack(ModItems.getPowders(ModPowders.COAL).get(), 1))
-                    .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "shredder/coal_to_powder"));
-        }
     }
 
     private static void generatePowderProcessing(Consumer<FinishedRecipe> writer,

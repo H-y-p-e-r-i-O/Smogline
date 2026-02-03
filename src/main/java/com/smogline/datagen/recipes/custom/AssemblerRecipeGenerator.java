@@ -96,7 +96,6 @@ public final class AssemblerRecipeGenerator {
                         new ItemStack(ModBlocks.MACHINE_BATTERY.get(), 1), 80, 150)
                 .addIngredient(ModItems.PLATE_STEEL.get(), 12)
                 .addIngredient(ModItems.SULFUR.get(), 12)
-                .addIngredient(ModItems.getPowder(ModIngots.LEAD).get(), 12)
                 .save(writer, "battery");
     }
 
@@ -120,17 +119,6 @@ public final class AssemblerRecipeGenerator {
                 .withBlueprintPool("plates")
                 .save(writer, "plate_steel_from_ingots");
 
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_SATURNITE.get(), 2), 60, 100)
-                .addIngredient(ModItems.getIngot(ModIngots.SATURNITE).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_saturnite_from_ingots");
-
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_SCHRABIDIUM.get(), 2), 60, 100)
-                .addIngredient(ModItems.getIngot(ModIngots.SCHRABIDIUM).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_schrabidium_from_ingots");
 
         AssemblerRecipeBuilder.assemblerRecipe(
                         new ItemStack(ModItems.PLATE_TITANIUM.get(), 2), 60, 100)
@@ -138,17 +126,7 @@ public final class AssemblerRecipeGenerator {
                 .withBlueprintPool("plates")
                 .save(writer, "plate_titanium_from_ingots");
 
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_GUNMETAL.get(), 2), 60, 100)
-                .addIngredient(ModItems.getIngot(ModIngots.GUNMETAL).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_gunmetal_from_ingots");
 
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_GUNSTEEL.get(), 2), 60, 100)
-                .addIngredient(ModItems.getIngot(ModIngots.GUNSTEEL).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_gunsteel_from_ingots");
 
         AssemblerRecipeBuilder.assemblerRecipe(
                         new ItemStack(ModItems.PLATE_LEAD.get(), 2), 60, 100)
@@ -162,11 +140,6 @@ public final class AssemblerRecipeGenerator {
                 .withBlueprintPool("plates")
                 .save(writer, "plate_copper_from_ingots");
 
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_ADVANCED_ALLOY.get(), 2), 60, 100)
-                .addIngredient(ModItems.getIngot(ModIngots.ADVANCED_ALLOY).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_advanced_alloy_from_ingots");
 
         AssemblerRecipeBuilder.assemblerRecipe(
                         new ItemStack(ModItems.PLATE_ALUMINUM.get(), 2), 60, 100)
@@ -174,46 +147,5 @@ public final class AssemblerRecipeGenerator {
                 .withBlueprintPool("plates")
                 .save(writer, "plate_aluminum_from_ingots");
 
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_BISMUTH.get(), 2), 60, 100)
-                .addIngredient(ModItems.getIngot(ModIngots.BISMUTH).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_bismuth_from_ingots");
-
-        AssemblerRecipeBuilder.assemblerRecipe(
-                    new ItemStack(ModItems.PLATE_COMBINE_STEEL.get(), 2), 80, 150)
-                .addIngredient(ModItems.getIngot(ModIngots.COMBINE_STEEL).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_combine_steel_from_ingots");
-
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_DURA_STEEL.get(), 2), 80, 150)
-                .addIngredient(ModItems.getIngot(ModIngots.DURA_STEEL).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_dura_steel_from_ingots");
-
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_DALEKANIUM.get(), 2), 100, 200)
-                .addIngredient(ModItems.getIngot(ModIngots.DIGAMMA).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_dalekanium_from_ingots");
-
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_DESH.get(), 2), 100, 200)
-                .addIngredient(ModItems.getIngot(ModIngots.DESH).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_desh_from_ingots");
-
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_DINEUTRONIUM.get(), 1), 200, 500)
-                .addIngredient(ModItems.getIngot(ModIngots.DINEUTRONIUM).get(), 2)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_dineutronium_from_ingots");
-
-        AssemblerRecipeBuilder.assemblerRecipe(
-                        new ItemStack(ModItems.PLATE_EUPHEMIUM.get(), 2), 120, 250)
-                .addIngredient(ModItems.getIngot(ModIngots.EUPHEMIUM).get(), 3)
-                .withBlueprintPool("plates")
-                .save(writer, "plate_euphemium_from_ingots");
     }
 }
