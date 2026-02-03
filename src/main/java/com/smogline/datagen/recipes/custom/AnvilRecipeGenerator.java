@@ -159,12 +159,7 @@ public final class AnvilRecipeGenerator {
 
 
 
-        registerDisassemblyRecipe(writer, "steel", "freaky_breakdown",
-                AnvilTier.STEEL,
-                stack(ModBlocks.FREAKY_ALIEN_BLOCK),
-                stack(ModItems.CANNED_JIZZ, 1),
-                builder -> builder
-                        .addOutput(stack(ModItems.CANNED_ASBESTOS), 0.5F));
+       
     }
 
     /**

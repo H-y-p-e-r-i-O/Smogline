@@ -92,7 +92,7 @@ public class ItemEnergyDrink extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level world, LivingEntity entity) {
         ItemStack result = super.finishUsingItem(stack, world, entity);
         if (entity instanceof Player player && !player.isCreative()) {
-            ItemStack emptyCan = new ItemStack(ModItems.CAN_EMPTY.get());
+            ItemStack emptyCan = new ItemStack(ModItems.CAN_KEY.get());
             if (stack.isEmpty()) {
                 return emptyCan;
             } else {

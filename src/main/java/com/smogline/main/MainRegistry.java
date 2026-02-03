@@ -320,44 +320,7 @@ public class MainRegistry {
                 }
             }
             event.accept(ModItems.RADAWAY);
-            event.accept(ModItems.CAN_KEY);
-            event.accept(ModItems.CAN_EMPTY);
-            event.accept(ModItems.CANNED_ASBESTOS);
-            event.accept(ModItems.CANNED_ASS);
-            event.accept(ModItems.CANNED_BARK);
-            event.accept(ModItems.CANNED_BEEF);
-            event.accept(ModItems.CANNED_BHOLE);
-            event.accept(ModItems.CANNED_CHEESE);
-            event.accept(ModItems.CANNED_CHINESE);
-            event.accept(ModItems.CANNED_DIESEL);
-            event.accept(ModItems.CANNED_FIST);
-            event.accept(ModItems.CANNED_FRIED);
-            event.accept(ModItems.CANNED_HOTDOGS);
-            event.accept(ModItems.CANNED_JIZZ);
-            event.accept(ModItems.CANNED_KEROSENE);
-            event.accept(ModItems.CANNED_LEFTOVERS);
-            event.accept(ModItems.CANNED_MILK);
-            event.accept(ModItems.CANNED_MYSTERY);
-            event.accept(ModItems.CANNED_NAPALM);
-            event.accept(ModItems.CANNED_OIL);
-            event.accept(ModItems.CANNED_PASHTET);
-            event.accept(ModItems.CANNED_PIZZA);
-            event.accept(ModItems.CANNED_RECURSION);
-            event.accept(ModItems.CANNED_SPAM);
-            event.accept(ModItems.CANNED_STEW);
-            event.accept(ModItems.CANNED_TOMATO);
-            event.accept(ModItems.CANNED_TUNA);
-            event.accept(ModItems.CANNED_TUBE);
-            event.accept(ModItems.CANNED_YOGURT);
-            event.accept(ModItems.CAN_BEPIS);
-            event.accept(ModItems.CAN_BREEN);
-            event.accept(ModItems.CAN_CREATURE);
-            event.accept(ModItems.CAN_LUNA);
-            event.accept(ModItems.CAN_MRSUGAR);
-            event.accept(ModItems.CAN_MUG);
-            event.accept(ModItems.CAN_OVERCHARGE);
-            event.accept(ModItems.CAN_REDBOMB);
-            event.accept(ModItems.CAN_SMART);
+
         }
 
         // ЗАПЧАСТИ
@@ -582,30 +545,7 @@ public class MainRegistry {
 
 
             // БРОНЯ
-            event.accept(ModItems.TITANIUM_HELMET);
-            event.accept(ModItems.TITANIUM_CHESTPLATE);
-            event.accept(ModItems.TITANIUM_LEGGINGS);
-            event.accept(ModItems.TITANIUM_BOOTS);
 
-            event.accept(ModItems.COBALT_HELMET);
-            event.accept(ModItems.COBALT_CHESTPLATE);
-            event.accept(ModItems.COBALT_LEGGINGS);
-            event.accept(ModItems.COBALT_BOOTS);
-
-            event.accept(ModItems.STEEL_HELMET);
-            event.accept(ModItems.STEEL_CHESTPLATE);
-            event.accept(ModItems.STEEL_LEGGINGS);
-            event.accept(ModItems.STEEL_BOOTS);
-
-            event.accept(ModItems.ALLOY_HELMET);
-            event.accept(ModItems.ALLOY_CHESTPLATE);
-            event.accept(ModItems.ALLOY_LEGGINGS);
-            event.accept(ModItems.ALLOY_BOOTS);
-
-            event.accept(ModItems.STARMETAL_HELMET);
-            event.accept(ModItems.STARMETAL_CHESTPLATE);
-            event.accept(ModItems.STARMETAL_LEGGINGS);
-            event.accept(ModItems.STARMETAL_BOOTS);
 
             //СПЕЦ БРОНЯ
             event.accept(ModItems.SECURITY_HELMET);
@@ -613,25 +553,7 @@ public class MainRegistry {
             event.accept(ModItems.SECURITY_LEGGINGS);
             event.accept(ModItems.SECURITY_BOOTS);
 
-            event.accept(ModItems.ASBESTOS_HELMET);
-            event.accept(ModItems.ASBESTOS_CHESTPLATE);
-            event.accept(ModItems.ASBESTOS_LEGGINGS);
-            event.accept(ModItems.ASBESTOS_BOOTS);
 
-            event.accept(ModItems.HAZMAT_HELMET);
-            event.accept(ModItems.HAZMAT_CHESTPLATE);
-            event.accept(ModItems.HAZMAT_LEGGINGS);
-            event.accept(ModItems.HAZMAT_BOOTS);
-
-            event.accept(ModItems.PAA_HELMET);
-            event.accept(ModItems.PAA_CHESTPLATE);
-            event.accept(ModItems.PAA_LEGGINGS);
-            event.accept(ModItems.PAA_BOOTS);
-
-            event.accept(ModItems.LIQUIDATOR_HELMET);
-            event.accept(ModItems.LIQUIDATOR_CHESTPLATE);
-            event.accept(ModItems.LIQUIDATOR_LEGGINGS);
-            event.accept(ModItems.LIQUIDATOR_BOOTS);
 
            /* //СИЛОВАЯ БРОНЯ
             event.accept(ModItems.AJR_HELMET);
@@ -640,33 +562,23 @@ public class MainRegistry {
             event.accept(ModItems.AJR_BOOTS);*/
 
             //МЕЧИ
-            event.accept(ModItems.TITANIUM_SWORD);
-            event.accept(ModItems.STEEL_SWORD);
-            event.accept(ModItems.ALLOY_SWORD);
+
             event.accept(ModItems.STARMETAL_SWORD);
 
             //ТОПОРЫ
-            event.accept(ModItems.TITANIUM_AXE);
-            event.accept(ModItems.STEEL_AXE);
-            event.accept(ModItems.ALLOY_AXE);
+
             event.accept(ModItems.STARMETAL_AXE);
 
             //КИРКИ
-            event.accept(ModItems.TITANIUM_PICKAXE);
-            event.accept(ModItems.STEEL_PICKAXE);
-            event.accept(ModItems.ALLOY_PICKAXE);
+
             event.accept(ModItems.STARMETAL_PICKAXE);
 
             //ЛОПАТЫ
-            event.accept(ModItems.TITANIUM_SHOVEL);
-            event.accept(ModItems.STEEL_SHOVEL);
-            event.accept(ModItems.ALLOY_SHOVEL);
+
             event.accept(ModItems.STARMETAL_SHOVEL);
 
             //МОТЫГИ
-            event.accept(ModItems.TITANIUM_HOE);
-            event.accept(ModItems.STEEL_HOE);
-            event.accept(ModItems.ALLOY_HOE);
+
             event.accept(ModItems.STARMETAL_HOE);
 
             //СПЕЦ. ИНСТРУМЕНТЫ

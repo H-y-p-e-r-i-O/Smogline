@@ -26,51 +26,10 @@ public class MobGearHandler {
                 zombie.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.SECURITY_LEGGINGS.get()));
                 zombie.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.SECURITY_BOOTS.get()));
 
-                if (zombie.getRandom().nextBoolean()) {
-                    zombie.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.HAZMAT_HELMET.get()));
-                    zombie.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.HAZMAT_CHESTPLATE.get()));
-                    zombie.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.HAZMAT_LEGGINGS.get()));
-                    zombie.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.HAZMAT_BOOTS.get()));
-                }
 
-                if (zombie.getRandom().nextBoolean()) {
-                    zombie.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.TITANIUM_HELMET.get()));
-                    zombie.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.TITANIUM_CHESTPLATE.get()));
-                    zombie.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.TITANIUM_LEGGINGS.get()));
-                    zombie.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.TITANIUM_BOOTS.get()));
-                }
-
-                if (zombie.getRandom().nextBoolean()) {
-                    zombie.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.COBALT_HELMET.get()));
-                    zombie.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.COBALT_CHESTPLATE.get()));
-                    zombie.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.COBALT_LEGGINGS.get()));
-                    zombie.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.COBALT_BOOTS.get()));
-                }
-
-                if (zombie.getRandom().nextBoolean()) {
-                    zombie.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.ALLOY_HELMET.get()));
-                    zombie.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.ALLOY_CHESTPLATE.get()));
-                    zombie.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.ALLOY_LEGGINGS.get()));
-                    zombie.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.ALLOY_BOOTS.get()));
-                }
-
-                if (zombie.getRandom().nextFloat() < 0.25f) {
-                    zombie.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.STEEL_HELMET.get()));
-                    zombie.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.STEEL_CHESTPLATE.get()));
-                    zombie.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.STEEL_LEGGINGS.get()));
-                    zombie.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.STEEL_BOOTS.get()));
-                }
 
                 // Оружие
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.ALLOY_SWORD.get()));
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.ALLOY_PICKAXE.get()));
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.ALLOY_SHOVEL.get()));
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.TITANIUM_SWORD.get()));
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.TITANIUM_PICKAXE.get()));
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.TITANIUM_SHOVEL.get()));
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.STEEL_SWORD.get()));
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.STEEL_PICKAXE.get()));
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.STEEL_SHOVEL.get()));
+
                 // zombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.GUN_REX.get()));
 
                 // Дроп шанса (как у ванильных)
@@ -82,30 +41,7 @@ public class MobGearHandler {
         }
 
         if (entity instanceof Skeleton skeleton) {
-            if (skeleton.getRandom().nextFloat() < 0.07f) {
-                skeleton.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.STEEL_HELMET.get()));
-                skeleton.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.STEEL_CHESTPLATE.get()));
-                skeleton.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.STEEL_LEGGINGS.get()));
-                skeleton.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.STEEL_BOOTS.get()));
-            }
-            if (skeleton.getRandom().nextBoolean()) {
-                skeleton.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.TITANIUM_HELMET.get()));
-                skeleton.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.TITANIUM_CHESTPLATE.get()));
-                skeleton.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.TITANIUM_LEGGINGS.get()));
-                skeleton.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.TITANIUM_BOOTS.get()));
-            }
-            if (skeleton.getRandom().nextBoolean()) {
-                skeleton.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.COBALT_HELMET.get()));
-                skeleton.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.COBALT_CHESTPLATE.get()));
-                skeleton.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.COBALT_LEGGINGS.get()));
-                skeleton.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.COBALT_BOOTS.get()));
-            }
-            if (skeleton.getRandom().nextBoolean()) {
-                skeleton.setItemSlot(EquipmentSlot.HEAD,  new ItemStack(ModItems.ALLOY_HELMET.get()));
-                skeleton.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.ALLOY_CHESTPLATE.get()));
-                skeleton.setItemSlot(EquipmentSlot.LEGS,  new ItemStack(ModItems.ALLOY_LEGGINGS.get()));
-                skeleton.setItemSlot(EquipmentSlot.FEET,  new ItemStack(ModItems.ALLOY_BOOTS.get()));
-            }
+
 
             // Дроп шанса (как у ванильных)
             skeleton.setDropChance(EquipmentSlot.HEAD, 0.1f);

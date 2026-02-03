@@ -39,7 +39,6 @@ public class ModVanillaRecipeProvider extends RecipeProvider {
 
     //ЗАРЕГЕСТРИРУЙ ТУТ СВОИ РЕЦЕПТЫ, ИНАЧЕ НЕ ПРОСТИТ
     private void registerAll(@NotNull Consumer<FinishedRecipe> writer) {
-        registerToolAndArmorSets(writer);
         registerCrates(writer);
         registerCoil(writer);
         registerCoilTorus(writer);
@@ -690,50 +689,7 @@ public class ModVanillaRecipeProvider extends RecipeProvider {
                 .save(writer, recipeId("crafting/grenadesmart"));
     }
 
-    //крафты брони и инструментов
-    private void registerToolAndArmorSets(Consumer<FinishedRecipe> writer) {
-        ItemLike titaniumIngot = ModItems.getIngot(ModIngots.TITANIUM).get();
-        buildToolSet(writer, "titanium", titaniumIngot,
-                ModItems.TITANIUM_SWORD.get(), ModItems.TITANIUM_SHOVEL.get(), ModItems.TITANIUM_PICKAXE.get(),
-                ModItems.TITANIUM_HOE.get(), ModItems.TITANIUM_AXE.get());
-        buildArmorSet(writer, "titanium", titaniumIngot,
-                ModItems.TITANIUM_HELMET.get(), ModItems.TITANIUM_CHESTPLATE.get(),
-                ModItems.TITANIUM_LEGGINGS.get(), ModItems.TITANIUM_BOOTS.get());
 
-        ItemLike steelIngot = ModItems.getIngot(ModIngots.STEEL).get();
-        buildToolSet(writer, "steel", steelIngot,
-                ModItems.STEEL_SWORD.get(), ModItems.STEEL_SHOVEL.get(), ModItems.STEEL_PICKAXE.get(),
-                ModItems.STEEL_HOE.get(), ModItems.STEEL_AXE.get());
-        buildArmorSet(writer, "steel", steelIngot,
-                ModItems.STEEL_HELMET.get(), ModItems.STEEL_CHESTPLATE.get(),
-                ModItems.STEEL_LEGGINGS.get(), ModItems.STEEL_BOOTS.get());
-
-        ItemLike starmetalIngot = ModItems.getIngot(ModIngots.STARMETAL).get();
-        buildToolSet(writer, "starmetal", starmetalIngot,
-                ModItems.STARMETAL_SWORD.get(), ModItems.STARMETAL_SHOVEL.get(), ModItems.STARMETAL_PICKAXE.get(),
-                ModItems.STARMETAL_HOE.get(), ModItems.STARMETAL_AXE.get());
-        buildArmorSet(writer, "starmetal", starmetalIngot,
-                ModItems.STARMETAL_HELMET.get(), ModItems.STARMETAL_CHESTPLATE.get(),
-                ModItems.STARMETAL_LEGGINGS.get(), ModItems.STARMETAL_BOOTS.get());
-
-        ItemLike alloyIngot = ModItems.getIngot(ModIngots.ADVANCED_ALLOY).get();
-        buildToolSet(writer, "alloy", alloyIngot,
-                ModItems.ALLOY_SWORD.get(), ModItems.ALLOY_SHOVEL.get(), ModItems.ALLOY_PICKAXE.get(),
-                ModItems.ALLOY_HOE.get(), ModItems.ALLOY_AXE.get());
-        buildArmorSet(writer, "alloy", alloyIngot,
-                ModItems.ALLOY_HELMET.get(), ModItems.ALLOY_CHESTPLATE.get(),
-                ModItems.ALLOY_LEGGINGS.get(), ModItems.ALLOY_BOOTS.get());
-
-        ItemLike cobaltIngot = ModItems.getIngot(ModIngots.COBALT).get();
-        buildArmorSet(writer, "cobalt", cobaltIngot,
-                ModItems.COBALT_HELMET.get(), ModItems.COBALT_CHESTPLATE.get(),
-                ModItems.COBALT_LEGGINGS.get(), ModItems.COBALT_BOOTS.get());
-
-        ItemLike asbestosSheet = ModItems.getIngot(ModIngots.ASBESTOS).get();
-        buildArmorSet(writer, "asbestos", asbestosSheet,
-                ModItems.ASBESTOS_HELMET.get(), ModItems.ASBESTOS_CHESTPLATE.get(),
-                ModItems.ASBESTOS_LEGGINGS.get(), ModItems.ASBESTOS_BOOTS.get());
-    }
 
     //крафты катушек
     private void registerCoil(Consumer<FinishedRecipe> writer) {
