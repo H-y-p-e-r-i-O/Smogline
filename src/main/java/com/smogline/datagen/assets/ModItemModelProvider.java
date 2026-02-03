@@ -424,11 +424,6 @@ public class ModItemModelProvider extends ItemModelProvider {
         trimmedArmorItem(ModItems.COBALT_LEGGINGS);
         trimmedArmorItem(ModItems.COBALT_BOOTS);
 
-        evenSimplerBlockItem(ModBlocks.REINFORCED_STONE_STAIRS);
-        evenSimplerBlockItem(ModBlocks.REINFORCED_STONE_SLAB);
-
-        evenSimplerBlockItem(ModBlocks.CONCRETE_HAZARD_STAIRS);
-        evenSimplerBlockItem(ModBlocks.CONCRETE_HAZARD_SLAB);
         simpleBlockItem(ModBlocks.DOOR_BUNKER);
         simpleBlockItem(ModBlocks.DOOR_OFFICE);
         simpleBlockItem(ModBlocks.METAL_DOOR);

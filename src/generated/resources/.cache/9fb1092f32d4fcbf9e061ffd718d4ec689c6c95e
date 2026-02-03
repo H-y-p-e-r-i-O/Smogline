@@ -1,4 +1,4 @@
-// 1.20.1	2026-02-01T09:56:04.7437142	Recipes
+// 1.20.1	2026-02-03T17:55:20.170346	Recipes
 f934458a51f27243aa1a97c2f086fb420570a832 data/minecraft/advancements/recipes/misc/actinium_block_from_ingots.json
 05855aca42c14457105fc75bc937a6f374d06e4b data/minecraft/advancements/recipes/misc/actinium_ingots_from_block.json
 f8aeceb6b7070519b74b91d8c9ec6e74fdc70ffd data/minecraft/advancements/recipes/misc/advanced_alloy_block_from_ingots.json
@@ -540,13 +540,8 @@ f79fc1a55d65720f0f3ef6535aafe191bc11e73d data/smogline/recipes/anvil/steel/craft
 74bcc9456991e6a30e65a8ca63cbb193266059af data/smogline/recipes/anvil/steel/craft_5silicon.json
 e58f13e4486da635b6916f7ce825f77965fb84fc data/smogline/recipes/anvil/steel/craft_6motor.json
 e6dc6202bbe2b87b4c285951620286b9080b54db data/smogline/recipes/anvil/steel/craft_8advanced_assemble_machine.json
-0a630411201d0396a6a05a3633fcb19c6d16c978 data/smogline/recipes/anvil/steel/disassemble_cabinet_breakdown.json
-9a30aeb1d44e2f7a2d9a55bddcb22f2d6fe9751b data/smogline/recipes/anvil/steel/disassemble_crt_breakdown1.json
-ce7d54e51112cb69e9a85c42c06904cc817a8a7f data/smogline/recipes/anvil/steel/disassemble_crt_breakdown2.json
-aa88295b6bda4a0f485934dafae5eb4e00d60bcb data/smogline/recipes/anvil/steel/disassemble_crt_breakdown3.json
 6e9d00483d7e71b1178bb964cc31b1a297c3589b data/smogline/recipes/anvil/steel/disassemble_freaky_breakdown.json
 8405e8efa0cbc0251bc8e7433ce6eeea0871f5f5 data/smogline/recipes/anvil/steel/disassemble_tape_breakdown.json
-8dafdd89d22e5735814f8475e31f983f6d47ae0c data/smogline/recipes/anvil/steel/disassemble_toaster_breakdown.json
 ce46a208dd7d085a0a9547c945b3c33ddf00d8b5 data/smogline/recipes/asbestos_powder_blasting.json
 e18013088da96d7554ca016186ed73b23cf513a7 data/smogline/recipes/asbestos_powder_smelting.json
 ace7c0a23c2b9029128ec90e45229840b1a836ab data/smogline/recipes/astatine_powder_blasting.json

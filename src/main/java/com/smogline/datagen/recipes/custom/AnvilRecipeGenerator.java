@@ -148,39 +148,6 @@ public final class AnvilRecipeGenerator {
 
     private static void registerDisassemblyRecipes(Consumer<FinishedRecipe> writer) {
 
-        registerDisassemblyRecipe(writer, "steel", "crt_breakdown1",
-                AnvilTier.STEEL,
-                stack(ModBlocks.CRT_BROKEN),
-                stack(ModItems.PLATE_STEEL, 4),
-                builder -> builder.addOutput(stack(ModItems.PLATE_LEAD), 1.0F)
-                        .addOutput(stack(ModItems.CAPACITOR_BOARD), 0.4F)
-                        .addOutput(stack(ModItems.PCB), 1F)
-                        .addOutput(stack(ModItems.ANALOG_CIRCUIT), 0.4F)
-                        .addOutput(stack(ModItems.CAPACITOR_BOARD), 0.4F)
-                        .addOutput(stack(ModItems.MICROCHIP), 0.5F));
-
-        registerDisassemblyRecipe(writer, "steel", "crt_breakdown2",
-                AnvilTier.STEEL,
-                stack(ModBlocks.CRT_BSOD),
-                stack(ModItems.PLATE_STEEL, 4),
-                builder -> builder.addOutput(stack(ModItems.PLATE_LEAD), 1.0F)
-                        .addOutput(stack(ModItems.CAPACITOR_BOARD), 0.4F)
-                        .addOutput(stack(ModItems.PCB), 1F)
-                        .addOutput(stack(ModItems.ANALOG_CIRCUIT), 0.4F)
-                        .addOutput(stack(ModItems.CAPACITOR_BOARD), 0.4F)
-                        .addOutput(stack(ModItems.MICROCHIP), 0.5F));
-
-        registerDisassemblyRecipe(writer, "steel", "crt_breakdown3",
-                AnvilTier.STEEL,
-                stack(ModBlocks.CRT_CLEAN),
-                stack(ModItems.PLATE_STEEL, 4),
-                builder -> builder.addOutput(stack(ModItems.PLATE_LEAD), 1.0F)
-                        .addOutput(stack(ModItems.CAPACITOR_BOARD), 0.4F)
-                        .addOutput(stack(ModItems.PCB), 1F)
-                        .addOutput(stack(ModItems.ANALOG_CIRCUIT), 0.4F)
-                        .addOutput(stack(ModItems.CAPACITOR_BOARD), 0.4F)
-                        .addOutput(stack(ModItems.MICROCHIP), 0.5F));
-
         registerDisassemblyRecipe(writer, "steel", "tape_breakdown",
                 AnvilTier.STEEL,
                 stack(ModBlocks.TAPE_RECORDER),
@@ -190,18 +157,7 @@ public final class AnvilRecipeGenerator {
                         .addOutput(stack(ModItems.VACUUM_TUBE), 0.5F)
                         .addOutput(stack(ModItems.MICROCHIP), 0.1F));
 
-        registerDisassemblyRecipe(writer, "steel", "cabinet_breakdown",
-                AnvilTier.STEEL,
-                stack(ModBlocks.FILE_CABINET),
-                stack(ModItems.PLATE_STEEL, 4),
-                builder -> builder.addOutput(stack(ModItems.DUST), 1.0F));
 
-        registerDisassemblyRecipe(writer, "steel", "toaster_breakdown",
-                AnvilTier.STEEL,
-                stack(ModBlocks.TOASTER),
-                stack(ModItems.PLATE_STEEL, 2),
-                builder -> builder
-                        .addOutput(stack(ModItems.MAN_CORE), 0.001F));
 
         registerDisassemblyRecipe(writer, "steel", "freaky_breakdown",
                 AnvilTier.STEEL,

@@ -14,6 +14,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import com.smogline.block.ModBlocks;
+import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -161,6 +162,6 @@ public class OilDetectorItem extends Item {
 
     private boolean isOilBlock(Level level, BlockPos pos) {
         Block block = level.getBlockState(pos).getBlock();
-        return block == ModBlocks.ORE_OIL.get();
+        return block == Blocks.STRUCTURE_BLOCK;
     }
 }
