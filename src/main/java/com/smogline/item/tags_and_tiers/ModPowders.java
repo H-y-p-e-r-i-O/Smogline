@@ -12,19 +12,7 @@ public enum ModPowders {
 
     IRON("iron",
             "ru_ru", "Железный порошок",
-            "en_us", "Iron Powder"),
-
-    URANIUM("uranium",
-            "ru_ru", "Урановый порошок",
-            "en_us", "Uranium Powder"),
-
-    COAL("coal",
-            "ru_ru", "Угольный порошок",
-            "en_us", "Coal Powder"),
-
-    GOLD("gold",
-            "ru_ru", "Золотой порошок",
-            "en_us", "Golden Powder");
+            "en_us", "Iron Powder");
 
 
 

@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -172,6 +173,6 @@ public class DepthOresScannerItem extends Item {
 
     private boolean isDepthStoneBlock(Level level, BlockPos pos) {
         Block block = level.getBlockState(pos).getBlock();
-        return block == ModBlocks.DEPTH_STONE.get();
+        return block == Blocks.STRUCTURE_BLOCK;
     }
 }

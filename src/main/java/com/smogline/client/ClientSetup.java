@@ -35,7 +35,6 @@ import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.google.common.collect.ImmutableMap;
 import com.smogline.particle.custom.*;
 import com.smogline.block.ModBlocks;
-import com.smogline.block.entity.custom.doors.DoorDeclRegistry;
 import com.smogline.block.entity.ModBlockEntities;
 
 import net.minecraft.client.renderer.RenderType;
@@ -88,7 +87,6 @@ public class ClientSetup {
         MinecraftForge.EVENT_BUS.register(DarkParticleHandler.class);
         MinecraftForge.EVENT_BUS.register(ChunkRadiationDebugRenderer.class);
         MinecraftForge.EVENT_BUS.register(ClientRenderHandler.class);
-        MinecraftForge.EVENT_BUS.register(DoorOutlineRenderer.class);
         // MinecraftForge.EVENT_BUS.register(DoorDebugRenderer.class);
         // MinecraftForge.EVENT_BUS.register(ClientSetup.class);
 
@@ -163,7 +161,6 @@ public class ClientSetup {
 
             // Register BlockEntity renderers
             BlockEntityRenderers.register(ModBlockEntities.ADVANCED_ASSEMBLY_MACHINE_BE.get(), MachineAdvancedAssemblerRenderer::new);
-            BlockEntityRenderers.register(ModBlockEntities.DOOR_ENTITY.get(), DoorRenderer::new);
             BlockEntityRenderers.register(ModBlockEntities.PRESS_BE.get(), MachinePressRenderer::new);
             // СТАЛО (ПРАВИЛЬНО: Берем из ModBlockEntities)
             BlockEntityRenderers.register(ModBlockEntities.TURRET_LIGHT_PLACER_BE.get(), TurretLightPlacerRenderer::new);
@@ -229,12 +226,10 @@ public class ClientSetup {
 
     @SubscribeEvent
     public static void onModelRegister(ModelEvent.RegisterGeometryLoaders event) {
-        DoorDeclRegistry.init();
-        MainRegistry.LOGGER.info("DoorDeclRegistry initialized with {} doors", DoorDeclRegistry.getAll().size());
+
 
         event.register("procedural_wire", new ProceduralWireLoader());
         event.register("advanced_assembly_machine_loader", new MachineAdvancedAssemblerModelLoader());
-        event.register("door", new DoorModelLoader());
         event.register("template_loader", new TemplateModelLoader());
         event.register("press_loader", new PressModelLoader());
 
@@ -276,7 +271,6 @@ public class ClientSetup {
                 // Очищаем глобальный кэш VBO
                 MachineAdvancedAssemblerVboRenderer.clearGlobalCache();
                 ImmediateFallbackRenderer.clearGlobalCache();
-                DoorRenderer.clearAllCaches();
                 MachinePressRenderer.clearCaches();
                 
                 // ИСПРАВЛЕНО: НЕ вызываем reset(), вместо этого очищаем только кеши
@@ -297,7 +291,6 @@ public class ClientSetup {
 
     public static void onClientDisconnect(net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggingOut event) {
         MainRegistry.LOGGER.info("Client disconnecting, clearing VBO caches...");
-        DoorRenderer.clearAllCaches();
         MachineAdvancedAssemblerVboRenderer.clearGlobalCache();
         MachinePressRenderer.clearCaches();
         com.smogline.client.render.shader.ImmediateFallbackRenderer.forceReset();

@@ -1,7 +1,6 @@
 package com.smogline.event;
 
 // import com.smogline.client.render.DoorDebugRenderer;
-import com.smogline.client.render.DoorRenderer;
 import com.smogline.client.render.GlobalMeshCache;
 import com.smogline.client.render.MachineAdvancedAssemblerRenderer;
 import com.smogline.client.render.MachinePressRenderer;
@@ -15,18 +14,14 @@ import com.smogline.main.MainRegistry;
 import com.smogline.multiblock.DoorPartAABBRegistry;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -78,7 +73,6 @@ public class ClientModEvents {
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES) {
             MachineAdvancedAssemblerRenderer.flushInstancedBatches();
-            DoorRenderer.flushInstancedBatches();
             MachinePressRenderer.flushInstancedBatches();
             
             // НОВОЕ: Завершаем immediate рендер батчи
@@ -102,7 +96,6 @@ public class ClientModEvents {
                 memoryCleanupCounter = 0;
                 
                 // Очищаем кеши рендереров
-                DoorRenderer.clearAllCaches();
                 
                 // Очищаем глобальные кеши
                 GlobalMeshCache.clearAll();

@@ -35,17 +35,9 @@ public final class BlastFurnaceRecipeGenerator {
                 Ingredient.of(ItemTags.COALS)
         ).save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "blast_furnace/steel_from_ore"));
 
-        BlastFurnaceRecipeBuilder.blastFurnaceRecipe(
-                new ItemStack(ModItems.getIngot(ModIngots.RED_COPPER).get(), 2),
-                Ingredient.of(Items.COPPER_INGOT),
-                Ingredient.of(Items.REDSTONE)
-        ).save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "blast_furnace/red_copper"));
 
-        BlastFurnaceRecipeBuilder.blastFurnaceRecipe(
-                new ItemStack(ModItems.getIngot(ModIngots.ADVANCED_ALLOY).get(), 2),
-                Ingredient.of(ModItems.getIngot(ModIngots.RED_COPPER).get()),
-                Ingredient.of(ModItems.getIngot(ModIngots.STEEL).get())
-        ).save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "blast_furnace/advanced_alloy"));
+
+
     }
 }
 

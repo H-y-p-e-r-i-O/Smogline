@@ -192,174 +192,64 @@ public class BlockExplosionDefense {
      * ✅ Базовые БЕТОННЫЕ блоки - 250
      */
     private static boolean isConcreteBlock(Block block) {
-        return block == ModBlocks.CONCRETE_BLACK.get() ||
-                block == ModBlocks.CONCRETE_WHITE.get() ||
-                block == ModBlocks.CONCRETE_RED.get() ||
-                block == ModBlocks.CONCRETE_GREEN.get() ||
-                block == ModBlocks.CONCRETE_BLUE.get() ||
-                block == ModBlocks.CONCRETE_YELLOW.get() ||
-                block == ModBlocks.CONCRETE_CYAN.get() ||
-                block == ModBlocks.CONCRETE_GRAY.get() ||
-                block == ModBlocks.CONCRETE_LIGHT_BLUE.get() ||
-                block == ModBlocks.CONCRETE_LIME.get() ||
-                block == ModBlocks.CONCRETE_MAGENTA.get() ||
-                block == ModBlocks.CONCRETE_ORANGE.get() ||
-                block == ModBlocks.CONCRETE_PINK.get() ||
-                block == ModBlocks.CONCRETE_PURPLE.get() ||
-                block == ModBlocks.CONCRETE_BROWN.get() ||
-                block == ModBlocks.CONCRETE_SILVER.get() ||
-                block == ModBlocks.CONCRETE_ASBESTOS.get() ||
-                block == ModBlocks.CONCRETE_FLAT.get() ||
-                block == ModBlocks.CONCRETE_PILLAR.get() ||
-                block == ModBlocks.CONCRETE_MARKED.get() ||
-                block == ModBlocks.CONCRETE_COLORED_BRONZE.get() ||
-                block == ModBlocks.CONCRETE_COLORED_INDIGO.get() ||
-                block == ModBlocks.CONCRETE_COLORED_MACHINE.get() ||
-                block == ModBlocks.CONCRETE_COLORED_MACHINE_STRIPE.get() ||
-                block == ModBlocks.CONCRETE_COLORED_PINK.get() ||
-                block == ModBlocks.CONCRETE_COLORED_PURPLE.get() ||
-                block == ModBlocks.CONCRETE_COLORED_SAND.get();
+        return block == Blocks.SANDSTONE;
     }
 
     /**
      * ✅ УСИЛЕННЫЙ БЕТОН - 400
      */
     private static boolean isSpecialConcreteBlock(Block block) {
-        return block == ModBlocks.CONCRETE_SUPER.get() ||
-                block == ModBlocks.CONCRETE_SUPER_M0.get() ||
-                block == ModBlocks.CONCRETE_SUPER_M1.get() ||
-                block == ModBlocks.CONCRETE_SUPER_M2.get() ||
-                block == ModBlocks.CONCRETE_SUPER_M3.get() ||
-                block == ModBlocks.CONCRETE_SUPER_BROKEN.get() ||
-                block == ModBlocks.CONCRETE_REBAR.get() ||
-                block == ModBlocks.CONCRETE_REBAR_ALT.get();
+        return block == Blocks.SKELETON_SKULL;
     }
 
     /**
      * ✅ МЕТЕОРИТ - 500
      */
     private static boolean isMeteorBlock(Block block) {
-        return block == ModBlocks.METEOR.get() ||
-                block == ModBlocks.METEOR_BRICK.get() ||
-                block == ModBlocks.METEOR_BRICK_CHISELED.get() ||
-                block == ModBlocks.METEOR_BRICK_CRACKED.get() ||
-                block == ModBlocks.METEOR_BRICK_MOSSY.get() ||
-                block == ModBlocks.METEOR_COBBLE.get() ||
-                block == ModBlocks.METEOR_CRUSHED.get() ||
-                block == ModBlocks.METEOR_PILLAR.get() ||
-                block == ModBlocks.METEOR_POLISHED.get() ||
-                block == ModBlocks.METEOR_TREASURE.get();
+        return block == Blocks.JUKEBOX;
     }
 
     /**
      * ✅ БЕТОННЫЕ КИРПИЧИ - 350
      */
     private static boolean isBrickBlock(Block block) {
-        return block == ModBlocks.BRICK_BASE.get() ||
-                block == ModBlocks.BRICK_DUCRETE.get() ||
-                block == ModBlocks.BRICK_FIRE.get() ||
-                block == ModBlocks.BRICK_LIGHT.get() ||
-                block == ModBlocks.BRICK_OBSIDIAN.get();
+        return block == Blocks.STRIPPED_BAMBOO_BLOCK;
     }
 
     /**
      * ✅ КАФЕЛЬ И МОЗАИКА - 200
      */
     private static boolean isTileBlock(Block block) {
-        return block == ModBlocks.CONCRETE_TILE.get() ||
-                block == ModBlocks.CONCRETE_TILE_TREFOIL.get() ||
-                block == ModBlocks.VINYL_TILE.get() ||
-                block == ModBlocks.VINYL_TILE_SMALL.get() ||
-                block == ModBlocks.DEPTH_TILES.get() ||
-                block == ModBlocks.DEPTH_NETHER_TILES.get() ||
-                block == ModBlocks.GNEISS_TILE.get();
+        return block == Blocks.SLIME_BLOCK;
     }
 
     /**
      * ✅ DEPTH МАТЕРИАЛЫ - 280
      */
     private static boolean isDepthBlock(Block block) {
-        return block == ModBlocks.DEPTH_BRICK.get() ||
-                block == ModBlocks.DEPTH_NETHER_BRICK.get() ||
-                block == ModBlocks.DEPTH_STONE_NETHER.get();
+        return block == Blocks.ACACIA_FENCE_GATE;
     }
 
     /**
      * ✅ ГНЕЙСС - 260
      */
     private static boolean isGneissBlock(Block block) {
-        return block == ModBlocks.GNEISS_BRICK.get() ||
-                block == ModBlocks.GNEISS_CHISELED.get() ||
-                block == ModBlocks.GNEISS_STONE.get();
+        return block == Blocks.AMETHYST_BLOCK;
     }
 
     /**
      * ✅ БАЗАЛЬТ - 240
      */
     private static boolean isBasaltBlock(Block block) {
-        return block == ModBlocks.BASALT_BRICK.get() ||
-                block == ModBlocks.BASALT_POLISHED.get() ||
-                block == ModBlocks.ASPHALT.get() ||
-                block == ModBlocks.BARRICADE.get();
+        return block == Blocks.BROWN_MUSHROOM_BLOCK;
     }
 
     /**
      * ✅ ЛЕСТНИЦЫ (STAIRS) - 150 (половина от базового)
      */
     private static boolean isStairsBlock(Block block) {
-        return block == ModBlocks.CONCRETE_ASBESTOS_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_BLACK_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_BLUE_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_BROWN_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_COLORED_BRONZE_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_COLORED_INDIGO_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_COLORED_MACHINE_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_COLORED_PINK_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_COLORED_PURPLE_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_COLORED_SAND_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_CYAN_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_GRAY_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_GREEN_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_LIGHT_BLUE_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_LIME_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_MAGENTA_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_ORANGE_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_PINK_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_PURPLE_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_RED_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_SILVER_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_WHITE_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_YELLOW_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_SUPER_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_SUPER_M0_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_SUPER_M1_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_SUPER_M2_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_SUPER_M3_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_SUPER_BROKEN_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_REBAR_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_FLAT_STAIRS.get() ||
-                block == ModBlocks.CONCRETE_TILE_STAIRS.get() ||
-                block == ModBlocks.DEPTH_BRICK_STAIRS.get() ||
-                block == ModBlocks.DEPTH_TILES_STAIRS.get() ||
-                block == ModBlocks.DEPTH_NETHER_BRICK_STAIRS.get() ||
-                block == ModBlocks.DEPTH_NETHER_TILES_STAIRS.get() ||
-                block == ModBlocks.GNEISS_TILE_STAIRS.get() ||
-                block == ModBlocks.GNEISS_BRICK_STAIRS.get() ||
-                block == ModBlocks.BRICK_BASE_STAIRS.get() ||
-                block == ModBlocks.BRICK_LIGHT_STAIRS.get() ||
-                block == ModBlocks.BRICK_FIRE_STAIRS.get() ||
-                block == ModBlocks.BRICK_OBSIDIAN_STAIRS.get() ||
-                block == ModBlocks.VINYL_TILE_STAIRS.get() ||
-                block == ModBlocks.VINYL_TILE_SMALL_STAIRS.get() ||
-                block == ModBlocks.BRICK_DUCRETE_STAIRS.get() ||
-                block == ModBlocks.ASPHALT_STAIRS.get() ||
-                block == ModBlocks.BASALT_POLISHED_STAIRS.get() ||
-                block == ModBlocks.BASALT_BRICK_STAIRS.get() ||
-                block == ModBlocks.METEOR_POLISHED_STAIRS.get() ||
-                block == ModBlocks.METEOR_BRICK_STAIRS.get() ||
-                block == ModBlocks.METEOR_BRICK_CRACKED_STAIRS.get() ||
-                block == ModBlocks.METEOR_BRICK_MOSSY_STAIRS.get() ||
-                block == ModBlocks.METEOR_CRUSHED_STAIRS.get();
+        return block == Blocks.BAMBOO_BLOCK;
+
     }
 
     /**

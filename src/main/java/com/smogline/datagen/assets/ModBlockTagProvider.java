@@ -168,9 +168,6 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         this.tag(BlockTags.create(ResourceLocation.fromNamespaceAndPath("forge", "storage_blocks/uranium")))
                 .add(ModBlocks.URANIUM_BLOCK.get());
 
-        this.tag(BlockTags.create(ResourceLocation.fromNamespaceAndPath("forge", "storage_blocks/plutonium")))
-                .add(ModBlocks.PLUTONIUM_BLOCK.get());
-
         this.tag(BlockTags.create(ResourceLocation.fromNamespaceAndPath("forge", "ores/uranium")))
                 .add(ModBlocks.URANIUM_ORE.get());
     }

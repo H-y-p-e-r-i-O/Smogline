@@ -134,38 +134,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         );
 
 
-        dropOreType2(
-                ModBlocks.DEPTH_CINNABAR.get(),
-                ModBlocks.DEPTH_CINNABAR.get(),
-                ModItems.CINNABAR.get(),
-                3.0f, 5.0f
-        );
 
-        dropOreType2(
-                ModBlocks.DEPTH_BORAX.get(),
-                ModBlocks.DEPTH_BORAX.get(),
-                ModItems.BORAX.get(),
-                3.0f, 5.0f
-        );
-
-        dropOreType2(
-                ModBlocks.DEPTH_TITANIUM.get(),
-                ModBlocks.DEPTH_TITANIUM.get(),
-                ModItems.TITANIUM_RAW.get(),
-                3.0f, 5.0f
-        );
-        dropOreType2(
-                ModBlocks.DEPTH_TUNGSTEN.get(),
-                ModBlocks.DEPTH_TUNGSTEN.get(),
-                ModItems.TUNGSTEN_RAW.get(),
-                3.0f, 5.0f
-        );
-        dropOreType2(
-                ModBlocks.DEPTH_ZIRCONIUM.get(),
-                ModBlocks.DEPTH_ZIRCONIUM.get(),
-                ModItems.ZIRCONIUM_SHARP.get(),
-                3.0f, 5.0f
-        );
         dropOreType2(
                 ModBlocks.FLUORITE_ORE.get(),
                 ModBlocks.FLUORITE_ORE.get(),
@@ -214,24 +183,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                 ModItems.CINNABAR.get(),
                 1.0f, 3.0f
         );
-        dropOreType2(
-                ModBlocks.DEPTH_IRON.get(),
-                ModBlocks.DEPTH_IRON.get(),
-                Items.RAW_IRON,
-                1.0f, 3.0f
-        );
-        dropOreType2(
-                ModBlocks.ASBESTOS_ORE.get(),
-                ModBlocks.ASBESTOS_ORE.get(),
-                ModItems.getIngot(ModIngots.ASBESTOS).get(),
-                1.0f, 3.0f
-        );
-        dropOreType2(
-                ModBlocks.RESOURCE_ASBESTOS.get(),
-                ModBlocks.RESOURCE_ASBESTOS.get(),
-                ModItems.getIngot(ModIngots.ASBESTOS).get(),
-                2.0f, 5.0f
-        );
+
         dropOreType2(
                 ModBlocks.RESOURCE_SULFUR.get(),
                 ModBlocks.RESOURCE_SULFUR.get(),
