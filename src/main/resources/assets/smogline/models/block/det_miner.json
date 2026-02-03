@@ -1,9 +1,25 @@
 {
-	"parent": "block/orientable",
-	"textures": {
-		"top": "smogline:block/det_miner_top",
-		"front": "smogline:block/det_miner_side",
-		"side": "smogline:block/det_miner_side",
-		"bottom": "smogline:block/det_miner_top"
-	}
+  "parent": "block/block",
+  "textures": {
+    "particle": "smogline:block/det_miner_front",
+    "top": "smogline:block/det_miner_top",
+    "bottom": "smogline:block/det_miner_top",
+    "front": "smogline:block/det_miner_front",
+    "back": "smogline:block/det_miner_front",
+    "side": "smogline:block/det_miner_side"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "texture": "#bottom", "cullface": "down" },
+        "up":    { "texture": "#top",    "cullface": "up" },
+        "north": { "texture": "#front",  "cullface": "north" },
+        "south": { "texture": "#back",   "cullface": "south" },
+        "west":  { "texture": "#side",   "cullface": "west" },
+        "east":  { "texture": "#side",   "cullface": "east" }
+      }
+    }
+  ]
 }

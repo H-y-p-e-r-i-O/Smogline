@@ -45,7 +45,7 @@ public class ModCreativeTabs {
     public static final RegistryObject<CreativeModeTab> NTM_WEAPONS_TAB = CREATIVE_MODE_TABS.register("ntm_weapons_tab",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + RefStrings.MODID + ".ntm_weapons_tab"))
-                    .icon(() -> new ItemStack(ModItems.AIRSTRIKE_TEST.get()))
+                    .icon(() -> new ItemStack(ModItems.GRENADE_NUC.get()))
                     .build());
 
     // Метод для регистрации всех вкладок
