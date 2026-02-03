@@ -26,35 +26,6 @@ public final class PressRecipeGenerator {
     }
 
     private static void generatePlates(Consumer<FinishedRecipe> writer) {
-        PressRecipeBuilder.pressRecipe(new ItemStack(ModItems.PLATE_IRON.get()))
-                .stamp(ModItemTagProvider.STAMPS_PLATE)
-                .material(Items.IRON_INGOT)
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "plate_iron"));
-        PressRecipeBuilder.pressRecipe(new ItemStack(ModItems.PLATE_COPPER.get()))
-                .stamp(ModItemTagProvider.STAMPS_PLATE)
-                .material(Items.COPPER_INGOT)
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "plate_copper"));
-        PressRecipeBuilder.pressRecipe(new ItemStack(ModItems.PLATE_GOLD.get()))
-                .stamp(ModItemTagProvider.STAMPS_PLATE)
-                .material(Items.GOLD_INGOT)
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "plate_gold"));
-        PressRecipeBuilder.pressRecipe(new ItemStack(ModItems.PLATE_STEEL.get()))
-                .stamp(ModItemTagProvider.STAMPS_PLATE)
-                .material(ModItems.getIngot(ModIngots.STEEL).get())
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "plate_steel"));
-        PressRecipeBuilder.pressRecipe(new ItemStack(ModItems.PLATE_LEAD.get()))
-                .stamp(ModItemTagProvider.STAMPS_PLATE)
-                .material(ModItems.getIngot(ModIngots.LEAD).get())
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "plate_lead"));
-
-        PressRecipeBuilder.pressRecipe(new ItemStack(ModItems.PLATE_TITANIUM.get()))
-                .stamp(ModItemTagProvider.STAMPS_PLATE)
-                .material(ModItems.getIngot(ModIngots.TITANIUM).get())
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "plate_titanium"));
-        PressRecipeBuilder.pressRecipe(new ItemStack(ModItems.PLATE_ALUMINUM.get()))
-                .stamp(ModItemTagProvider.STAMPS_PLATE)
-                .material(ModItems.getIngot(ModIngots.ALUMINUM).get())
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "plate_aluminium"));
     }
 
     private static void generateWires(Consumer<FinishedRecipe> writer) {
@@ -82,11 +53,6 @@ public final class PressRecipeGenerator {
                 .stamp(ModItemTagProvider.STAMPS_WIRE)
                 .material(ModItems.getIngot(ModIngots.TUNGSTEN).get())
                 .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "wire_tungsten"));
-
-        PressRecipeBuilder.pressRecipe(new ItemStack(ModItems.SILICON_CIRCUIT.get()))
-                .stamp(ModItemTagProvider.STAMPS_CIRCUIT)
-                .material(ModItems.BILLET_SILICON.get())
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "silicon_circuit"));
     }
 
 

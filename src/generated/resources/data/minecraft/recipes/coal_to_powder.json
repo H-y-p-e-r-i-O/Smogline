@@ -1,9 +1,0 @@
-{
-  "type": "smogline:shredding",
-  "ingredient": {
-    "item": "minecraft:coal"
-  },
-  "result": {
-    "item": "smogline:powder_coal"
-  }
-}

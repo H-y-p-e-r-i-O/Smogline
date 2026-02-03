@@ -54,19 +54,8 @@ public class CrateBreaker {
                     new DropChance(ModItems.RADAWAY, 0.1)
             ),
             ModBlocks.CRATE_METAL, List.of(
-                    new DropChance(ModItems.PCB, 0.4),
-                    new DropChance(ModItems.VACUUM_TUBE, 0.4),
-                    new DropChance(ModItems.CAPACITOR, 0.4),
-                    new DropChance(ModItems.SILICON_CIRCUIT, 0.4),
-                    new DropChance(ModItems.MICROCHIP, 0.2),
-                    new DropChance(ModItems.CRT_DISPLAY, 0.4),
-                    new DropChance(ModItems.INSULATOR, 0.4),
-                    new DropChance(ModItems.ANALOG_CIRCUIT, 0.1),
-                    new DropChance(ModItems.CAPACITOR_BOARD, 0.1),
-                    new DropChance(ModItems.INTEGRATED_CIRCUIT, 0.1),
-                    new DropChance(ModItems.ADVANCED_CIRCUIT, 0.01),
-                    new DropChance(ModItems.MOTOR_DESH, 0.1),
-                    new DropChance(ModItems.MOTOR, 0.2)
+                    new DropChance(ModItems.RADAWAY, 0.4)
+
             ),
             ModBlocks.CRATE_WEAPON, List.of(
                     new DropChance(ModItems.DETONATOR, 0.05),

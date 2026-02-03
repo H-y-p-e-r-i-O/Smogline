@@ -30,22 +30,10 @@ public class ModCreativeTabs {
                     .icon(() -> new ItemStack(ModItems.CREATIVE_BATTERY.get())) 
                     .build());
 
-    public static final RegistryObject<CreativeModeTab> NTM_TEMPLATES_TAB = CREATIVE_MODE_TABS.register("ntm_templates_tab",
-            () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup." + RefStrings.MODID + ".ntm_templates_tab"))
-                    .icon(() -> new ItemStack(ModItems.ASSEMBLY_TEMPLATE.get()))
-                    .build());
-
     public static final RegistryObject<CreativeModeTab> NTM_ORES_TAB = CREATIVE_MODE_TABS.register("ntm_ores_tab",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + RefStrings.MODID + ".ntm_ores_tab"))
-                    .icon(() -> new ItemStack(ModBlocks.URANIUM_ORE.get()))
-                    .build());
-
-    public static final RegistryObject<CreativeModeTab> NTM_BUILDING_TAB = CREATIVE_MODE_TABS.register("ntm_building_tab",
-            () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup." + RefStrings.MODID + ".ntm_building_tab"))
-                    .icon(() -> new ItemStack(Blocks.BRICKS))
+                    .icon(() -> new ItemStack(ModBlocks.URANIUM_ORE_H.get()))
                     .build());
 
     public static final RegistryObject<CreativeModeTab> NTM_MACHINES_TAB = CREATIVE_MODE_TABS.register("ntm_machines_tab",
@@ -58,24 +46,6 @@ public class ModCreativeTabs {
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + RefStrings.MODID + ".ntm_weapons_tab"))
                     .icon(() -> new ItemStack(ModItems.AIRSTRIKE_TEST.get()))
-                    .build());
-
-    public static final RegistryObject<CreativeModeTab> NTM_CONSUMABLES_TAB = CREATIVE_MODE_TABS.register("ntm_consumables_tab",
-            () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup." + RefStrings.MODID + ".ntm_consumables_tab"))
-                    .icon(() -> new ItemStack(ModItems.RADAWAY.get()))
-                    .build());
-
-    public static final RegistryObject<CreativeModeTab> NTM_SPAREPARTS_TAB = CREATIVE_MODE_TABS.register("ntm_spareparts_tab",
-            () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup." + RefStrings.MODID + ".ntm_spareparts_tab"))
-                    .icon(() -> new ItemStack(ModItems.PLATE_DESH.get()))
-                    .build());
-
-    public static final RegistryObject<CreativeModeTab> NTM_INSTRUMENTS_TAB = CREATIVE_MODE_TABS.register("ntm_instruments_tab",
-            () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup." + RefStrings.MODID + ".ntm_instruments_tab"))
-                    .icon(() -> new ItemStack(ModItems.GEIGER_COUNTER.get()))
                     .build());
 
     // Метод для регистрации всех вкладок

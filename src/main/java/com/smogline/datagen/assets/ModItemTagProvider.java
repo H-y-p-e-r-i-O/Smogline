@@ -102,9 +102,7 @@ public class ModItemTagProvider extends ItemTagsProvider {
             });
         }
 
-        // ✅ БАЗОВЫЕ ПОРОШКИ (всегда существуют)
-        powdersTagBuilder.add(ModItems.DUST.getKey());
-        powdersTagBuilder.add(ModItems.DUST_TINY.getKey());
+
 
 
         // АВТОМАТИЧЕСКОЕ КОПИРОВАНИЕ ТЕГОВ ИЗ БЛОКОВ

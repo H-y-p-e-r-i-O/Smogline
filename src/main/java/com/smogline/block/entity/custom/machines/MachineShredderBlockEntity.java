@@ -468,7 +468,7 @@ public class MachineShredderBlockEntity extends BaseMachineBlockEntity {
 
     private ItemStack getRecipeResult(ItemStack input) {
         if (input.isEmpty() || level == null) {
-            return new ItemStack(ModItems.SCRAP.get(), 1);
+            return new ItemStack(ModItems.STRAWBERRY.get(), 1);
         }
 
         SimpleContainer container = new SimpleContainer(1);
@@ -487,7 +487,7 @@ public class MachineShredderBlockEntity extends BaseMachineBlockEntity {
         }
         
         // Если рецепта нет, возвращаем скрап (как в оригинале)
-        return new ItemStack(ModItems.SCRAP.get(), 1);
+        return new ItemStack(ModItems.STRAWBERRY.get(), 1);
     }
 
 
@@ -571,7 +571,7 @@ public class MachineShredderBlockEntity extends BaseMachineBlockEntity {
             return false;
         }
         Item item = stack.getItem();
-        if (item == ModItems.DUST.get() || item == ModItems.DUST_TINY.get()) {
+        if (item == ModItems.SEQUESTRUM.get() || item == ModItems.SCREWDRIVER.get()) {
             return true;
         }
         for (RegistryObject<Item> powder : ModItems.POWDERS.values()) {

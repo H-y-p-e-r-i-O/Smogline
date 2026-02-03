@@ -6,6 +6,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 
 import java.util.function.Supplier;
@@ -16,37 +17,37 @@ public enum ModArmorMaterials implements ArmorMaterial {
 
 
     ALLOY("alloy", 26, new int[]{ 5, 7, 5, 4 }, 25,
-            SoundEvents.ARMOR_EQUIP_IRON, 1.25f, 0.05f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_IRON, 1.25f, 0.05f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     STARMETAL("starmetal", 26, new int[]{ 8, 8, 8, 8 }, 25,
-            SoundEvents.ARMOR_EQUIP_GOLD, 2f, 0.2f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_GOLD, 2f, 0.2f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     SECURITY("security", 26, new int[]{ 4, 6, 4, 3 }, 25,
-            SoundEvents.ARMOR_EQUIP_CHAIN, 1.25f, 0.03f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_CHAIN, 1.25f, 0.03f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     HAZMAT("hazmat", 26, new int[]{ 2, 4, 2, 1 }, 25,
-            SoundEvents.ARMOR_EQUIP_LEATHER, 0f, 0f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_LEATHER, 0f, 0f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     PAA("paa", 26, new int[]{ 5, 7, 5, 4 }, 25,
-            SoundEvents.ARMOR_EQUIP_GOLD, 1.75f, 0.07f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_GOLD, 1.75f, 0.07f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     LIQUIDATOR("liquidator", 26, new int[]{ 5, 7, 6, 4 }, 25,
-            SoundEvents.ARMOR_EQUIP_IRON, 1.5f, 0.1f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_IRON, 1.5f, 0.1f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     STEEL("steel", 26, new int[]{ 4, 5, 3, 2 }, 25,
-            SoundEvents.ARMOR_EQUIP_IRON, 1f, 0.03f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_IRON, 1f, 0.03f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     COBALT("cobalt", 26, new int[]{ 2, 4, 2, 1 }, 25,
-            SoundEvents.ARMOR_EQUIP_IRON, 0.25f, 0f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_IRON, 0.25f, 0f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     AJR("ajr", 26, new int[]{ 7, 8, 6, 5 }, 25,
-            SoundEvents.ARMOR_EQUIP_IRON, 2f, 0.3f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_IRON, 2f, 0.3f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     ASBESTOS("asbestos", 26, new int[]{ 3, 5, 3, 2 }, 25,
-            SoundEvents.ARMOR_EQUIP_IRON, 0f, 0f, () -> Ingredient.of(ModItems.PLATE_STEEL.get())),
+            SoundEvents.ARMOR_EQUIP_IRON, 0f, 0f, () -> Ingredient.of(Items.IRON_INGOT)),
 
     TITANIUM("titanium", 26, new int[]{ 5, 7, 5, 4 }, 15,
-    SoundEvents.ARMOR_EQUIP_IRON, 1f, 0.05f, () -> Ingredient.of(ModItems.PLATE_IRON.get()));
+    SoundEvents.ARMOR_EQUIP_IRON, 1f, 0.05f, () -> Ingredient.of(Items.IRON_INGOT));
 
 
 

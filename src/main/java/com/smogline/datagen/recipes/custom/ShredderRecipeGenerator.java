@@ -57,9 +57,6 @@ public final class ShredderRecipeGenerator {
         ShredderRecipeBuilder.shredderRecipe(Items.STONE,
                         new ItemStack(Items.GRAVEL, 1))
                 .save(writer, "stone_to_gravel");
-        ShredderRecipeBuilder.shredderRecipe(Items.COAL,
-                        new ItemStack(ModItems.POWDER_COAL.get(), 1))
-                .save(writer, "coal_to_powder");
         ShredderRecipeBuilder.shredderRecipe(Items.COBBLESTONE,
                         new ItemStack(Items.GRAVEL, 1))
                 .save(writer, "cobblestone_to_gravel");
@@ -95,7 +92,7 @@ public final class ShredderRecipeGenerator {
 
     private static void generatePowderProcessing(Consumer<FinishedRecipe> writer,
                                                  Function<ItemLike, InventoryChangeTrigger.TriggerInstance> hasItem) {
-        ShredderRecipeBuilder.shredderRecipe(ModItems.SCRAP.get(), new ItemStack(ModItems.DUST.get(), 1))
+        ShredderRecipeBuilder.shredderRecipe(ModItems.STRAWBERRY.get(), new ItemStack(ModItems.SEQUESTRUM.get(), 1))
                 .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "shredder/scrap_to_dust"));
 
         // ✅ ЦИКЛ ТОЛЬКО по ВАШЕМУ списку ENABLED_POWDERS!
@@ -174,18 +171,5 @@ public final class ShredderRecipeGenerator {
             });
         }
 
-        // Общие рецепты пыли
-        ShapedRecipeBuilder.shaped(net.minecraft.data.recipes.RecipeCategory.MISC, ModItems.DUST.get())
-                .pattern("TTT")
-                .pattern("TTT")
-                .pattern("TTT")
-                .define('T', ModItems.DUST_TINY.get())
-                .unlockedBy("has_dust_tiny", hasItem.apply(ModItems.DUST_TINY.get()))
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "dust_from_tiny"));
 
-        ShapelessRecipeBuilder.shapeless(net.minecraft.data.recipes.RecipeCategory.MISC, ModItems.DUST_TINY.get(), 9)
-                .requires(ModItems.DUST.get())
-                .unlockedBy("has_dust", hasItem.apply(ModItems.DUST.get()))
-                .save(writer, ResourceLocation.fromNamespaceAndPath(RefStrings.MODID, "dust_tiny_from_dust"));
-    }
-}
+}}
