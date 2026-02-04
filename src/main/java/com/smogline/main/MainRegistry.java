@@ -216,12 +216,12 @@ public class MainRegistry {
             event.accept(ModBlocks.MINE_FAT);
             event.accept(ModBlocks.AIRBOMB);
             event.accept(ModBlocks.BALEBOMB_TEST);
-            event.accept(ModBlocks.DET_MINER);
-            event.accept(ModBlocks.GIGA_DET);
-            event.accept(ModBlocks.SMOKE_BOMB);
-            event.accept(ModBlocks.EXPLOSIVE_CHARGE);
-            event.accept(ModBlocks.NUCLEAR_CHARGE);
             event.accept(ModBlocks.C4);
+            event.accept(ModBlocks.SMOKE_BOMB);
+            event.accept(ModBlocks.DET_MINER);
+            event.accept(ModBlocks.NUCLEAR_CHARGE);
+            event.accept(ModBlocks.EXPLOSIVE_CHARGE);
+            event.accept(ModBlocks.GIGA_DET);
 
             event.accept(ModBlocks.BARBED_WIRE_FIRE);
             event.accept(ModBlocks.BARBED_WIRE_POISON);

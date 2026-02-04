@@ -287,7 +287,7 @@ public class ModBlocks {
     public static final RegistryObject<Block> SMOKE_BOMB = registerBlock("smoke_bomb",
             () -> new SmokeBombBlock(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F)
-                    .sound(SoundType.CHERRY_LEAVES)
+                    .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> NUCLEAR_CHARGE = registerBlock("nuclear_charge",

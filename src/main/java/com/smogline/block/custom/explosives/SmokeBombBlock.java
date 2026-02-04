@@ -37,7 +37,7 @@ public class SmokeBombBlock extends Block implements IDetonatable {
 
     public SmokeBombBlock(Properties props) {
         super(props);
-        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.EAST));
     }
 
     @Override
