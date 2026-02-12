@@ -230,13 +230,8 @@ public class TurretBulletEntity extends AbstractArrow implements GeoEntity, IEnt
 
             float newHeight = this.getBbHeight(); // 3. Получаем новую высоту
 
-            // 4. Сдвигаем "дно" вниз на половину разницы, чтобы центр остался на месте
-            // Формула: Y_new = Y_old - (Height_new - Height_old) / 2
-            this.setPos(this.getX(), this.getY() - (newHeight - oldHeight) / 2.0, this.getZ());
-
             // reapplyPosition вызывать не нужно, setPos сам пересчитает AABB
         }
-
 
         if (initialPosition != null && this.position().distanceTo(initialPosition) > MAX_FLIGHT_DISTANCE) {
             this.discard();

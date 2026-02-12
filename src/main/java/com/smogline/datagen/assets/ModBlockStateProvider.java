@@ -40,6 +40,10 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.TURRET_LIGHT_PLACER);
         blockWithItem(ModBlocks.CRATE_LEAD);
         blockWithItem(ModBlocks.DEAD_DIRT);
+        blockWithItem(ModBlocks.MOX1);
+        blockWithItem(ModBlocks.MOX2);
+        blockWithItem(ModBlocks.MOX3);
+        blockWithItem(ModBlocks.SAND_ROUGH);
         blockWithItem(ModBlocks.GEYSIR_DIRT);
         blockWithItem(ModBlocks.GEYSIR_STONE);
         blockWithItem(ModBlocks.RESOURCE_ASBESTOS);

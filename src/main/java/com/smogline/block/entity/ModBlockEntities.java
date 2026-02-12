@@ -4,6 +4,8 @@ import com.smogline.api.energy.ConverterBlockEntity;
 import com.smogline.api.energy.SwitchBlockEntity;
 import com.smogline.api.energy.WireBlockEntity;
 import com.smogline.block.ModBlocks;
+import com.smogline.block.entity.custom.MotorElectroBlockEntity;
+import com.smogline.block.entity.custom.ShaftIronBlockEntity;
 import com.smogline.block.entity.custom.TurretBlockEntity;
 import com.smogline.block.entity.custom.TurretLightPlacerBlockEntity;
 import com.smogline.block.entity.custom.crates.*;
@@ -34,7 +36,13 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("turret_light_placer",
                     () -> BlockEntityType.Builder.of(TurretLightPlacerBlockEntity::new, ModBlocks.TURRET_LIGHT_PLACER.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<MotorElectroBlockEntity>> MOTOR_ELECTRO_BE =
+            BLOCK_ENTITIES.register("motor_electro_be",
+                    () -> BlockEntityType.Builder.of(MotorElectroBlockEntity::new, ModBlocks.MOTOR_ELECTRO.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<ShaftIronBlockEntity>> SHAFT_IRON_BE =
+            BLOCK_ENTITIES.register("shaft_iron_be",
+                    () -> BlockEntityType.Builder.of(ShaftIronBlockEntity::new, ModBlocks.SHAFT_IRON.get()).build(null));
     public static final RegistryObject<BlockEntityType<MachineAssemblerBlockEntity>> MACHINE_ASSEMBLER_BE =
 		BLOCK_ENTITIES.register("machine_assembler_be", () ->
 			BlockEntityType.Builder.<MachineAssemblerBlockEntity>of(MachineAssemblerBlockEntity::new, ModBlocks.MACHINE_ASSEMBLER.get())

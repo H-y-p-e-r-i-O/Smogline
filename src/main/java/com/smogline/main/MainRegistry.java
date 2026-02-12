@@ -375,6 +375,11 @@ public class MainRegistry {
         // РУДЫ
         if (event.getTab() == ModCreativeTabs.NTM_ORES_TAB.get()) {
 
+            event.accept(ModBlocks.MOX1);
+            event.accept(ModBlocks.MOX2);
+            event.accept(ModBlocks.MOX3);
+            event.accept(ModBlocks.SAND_ROUGH);
+
             event.accept(ModBlocks.FLUORITE_ORE);
             event.accept(ModBlocks.LIGNITE_ORE);
             event.accept(ModBlocks.TUNGSTEN_ORE);
@@ -498,10 +503,12 @@ public class MainRegistry {
             event.accept(ModBlocks.MACHINE_BATTERY_DINEUTRONIUM);
             event.accept(ModBlocks.CONVERTER_BLOCK);
 
-
-
             event.accept(ModBlocks.WIRE_COATED);
             event.accept(ModBlocks.SWITCH);
+
+            event.accept(ModBlocks.MOTOR_ELECTRO);
+            event.accept(ModBlocks.SHAFT_IRON);
+
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added geiger counter BLOCK to NTM Machines tab");
                 LOGGER.info("Added assembly machine BLOCK to NTM Machines tab");

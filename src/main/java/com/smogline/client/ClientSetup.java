@@ -3,6 +3,8 @@ package com.smogline.client;
 // Основной класс клиентской настройки мода. Здесь регистрируются все клиентские обработчики событий,
 // GUI, рендереры, модели и т.д.
 import com.smogline.block.entity.client.MineApRenderer;
+import com.smogline.block.entity.client.MotorElectroRenderer;
+import com.smogline.block.entity.client.ShaftIronRenderer;
 import com.smogline.block.entity.client.TurretLightPlacerRenderer;
 import com.smogline.client.model.FluidTankModelWrapper;
 import com.smogline.client.overlay.*;
@@ -164,6 +166,8 @@ public class ClientSetup {
             BlockEntityRenderers.register(ModBlockEntities.PRESS_BE.get(), MachinePressRenderer::new);
             // СТАЛО (ПРАВИЛЬНО: Берем из ModBlockEntities)
             BlockEntityRenderers.register(ModBlockEntities.TURRET_LIGHT_PLACER_BE.get(), TurretLightPlacerRenderer::new);
+            BlockEntityRenderers.register(ModBlockEntities.MOTOR_ELECTRO_BE.get(), MotorElectroRenderer::new);
+            BlockEntityRenderers.register(ModBlockEntities.SHAFT_IRON_BE.get(), ShaftIronRenderer::new);
             BlockEntityRenderers.register(ModBlockEntities.MINE_BLOCK_ENTITY.get(), MineApRenderer::new);
 
 
