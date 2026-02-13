@@ -4,11 +4,6 @@ import com.smogline.block.entity.ModBlockEntities;
 import com.smogline.block.entity.custom.ShaftIronBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
@@ -19,11 +14,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 public class ShaftIronBlock extends BaseEntityBlock {
-    public static final DirectionProperty FACING = BlockStateProperties.FACING; // Все 6 направлений!
+    public static final DirectionProperty FACING = BlockStateProperties.FACING;
 
     public ShaftIronBlock(Properties properties) {
         super(properties);
@@ -38,13 +32,55 @@ public class ShaftIronBlock extends BaseEntityBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.ENTITYBLOCK_ANIMATED; // GeckoLib
+        return RenderShape.ENTITYBLOCK_ANIMATED;
     }
 
     @Override
+    @Nullable
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // Ставим блок стороной, которой смотрит игрок (лицевая сторона)
-        return this.defaultBlockState().setValue(FACING, context.getNearestLookingDirection().getOpposite());
+        Level level = context.getLevel();
+        BlockPos placePos = context.getClickedPos();
+        Direction clickedFace = context.getClickedFace();
+
+        BlockPos targetPos = placePos.relative(clickedFace.getOpposite());
+        BlockState targetState = level.getBlockState(targetPos);
+        Block targetBlock = targetState.getBlock();
+
+        System.out.println("=== DEBUG ===");
+        System.out.println("clickedFace: " + clickedFace);
+        System.out.println("targetBlock: " + targetBlock.getClass().getSimpleName());
+
+        boolean canPlace = false;
+        Direction shaftFacing = clickedFace; // дефолт
+
+        if (targetBlock instanceof MotorElectroBlock) {
+            Direction motorFacing = targetState.getValue(MotorElectroBlock.FACING);
+            System.out.println("motorFacing: " + motorFacing);
+            System.out.println("check: clickedFace(" + clickedFace + ") == motorFacing(" + motorFacing + ")");
+
+            if (clickedFace == motorFacing) {
+                canPlace = true;
+                shaftFacing = motorFacing;
+                System.out.println("MOTOR: shaftFacing set to " + shaftFacing);
+            }
+        } else if (targetBlock instanceof ShaftIronBlock) {
+            Direction existingFacing = targetState.getValue(ShaftIronBlock.FACING);
+            System.out.println("existingFacing: " + existingFacing);
+
+            if (clickedFace == existingFacing || clickedFace == existingFacing.getOpposite()) {
+                canPlace = true;
+                shaftFacing = clickedFace;
+                System.out.println("SHAFT: shaftFacing set to " + shaftFacing);
+            }
+        }
+
+        System.out.println("Result: canPlace=" + canPlace + ", shaftFacing=" + shaftFacing);
+
+        if (!canPlace) {
+            return null;
+        }
+
+        return this.defaultBlockState().setValue(FACING, shaftFacing);
     }
 
     @Override
@@ -60,22 +96,6 @@ public class ShaftIronBlock extends BaseEntityBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
-    }
-
-    @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos,
-                                 Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof ShaftIronBlockEntity shaft) {
-                serverPlayer.displayClientMessage(
-                        Component.literal("§7⚙ Shaft: Speed = " + shaft.getSpeed() +
-                                ", Torque = " + shaft.getTorque()),
-                        true
-                );
-            }
-        }
-        return InteractionResult.SUCCESS;
     }
 
     @Nullable

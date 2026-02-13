@@ -176,6 +176,8 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         event.getController().setAnimationSpeed(currentAnimationSpeed);
         return PlayState.CONTINUE;
     }
+    @Override
+    public double getBoneResetTime() { return 0; }
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {

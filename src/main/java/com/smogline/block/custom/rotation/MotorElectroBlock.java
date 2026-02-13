@@ -66,22 +66,6 @@ public class MotorElectroBlock extends BaseEntityBlock {
         builder.add(FACING);
     }
 
-    // ПКМ – показать скорость/момент
-    @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos,
-                                 Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof MotorElectroBlockEntity motor) {
-                serverPlayer.displayClientMessage(
-                        Component.literal("§a⚡ Motor: Speed = " + motor.getSpeed() +
-                                ", Torque = " + motor.getTorque()),
-                        true
-                );
-            }
-        }
-        return InteractionResult.SUCCESS;
-    }
 
     @Nullable
     @Override
