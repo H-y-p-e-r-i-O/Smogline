@@ -13,6 +13,8 @@ import java.util.Set;
 
 import com.smogline.api.fluids.ModFluids;
 
+import com.smogline.item.custom.rotation.MotorElectroBlockItem;
+import com.smogline.item.custom.rotation.ShaftIronBlockItem;
 import com.smogline.item.custom.weapons.ammo.AmmoTurretItem;
 import com.smogline.item.custom.weapons.grenades_and_activators.*;
 import com.smogline.item.custom.weapons.guns.MachineGunItem;
@@ -204,6 +206,17 @@ public class ModItems {
             () -> new IronCrateItem(ModBlocks.CRATE_IRON.get(), new Item.Properties()));
     public static final RegistryObject<Item> CRATE_STEEL = ITEMS.register("crate_steel",
             () -> new SteelCrateItem(ModBlocks.CRATE_STEEL.get(), new Item.Properties()));
+
+
+    // ---------- МОТОР ЭЛЕКТРО (с GeoItem) ----------
+    public static final RegistryObject<Item> MOTOR_ELECTRO_ITEM = ITEMS.register("motor_electro",
+            () -> new MotorElectroBlockItem(ModBlocks.MOTOR_ELECTRO.get(),
+                    new Item.Properties()));
+
+    // ---------- ВАЛ ЖЕЛЕЗНЫЙ (с GeoItem) ----------
+    public static final RegistryObject<Item> SHAFT_IRON_ITEM = ITEMS.register("shaft_iron",
+            () -> new ShaftIronBlockItem(ModBlocks.SHAFT_IRON.get(),
+                    new Item.Properties()));
 
 // Сначала убедись, что сам БЛОК уже зарегистрирован в ModBlocks
 // ModBlocks.TURRET_LIGHT_PLACER

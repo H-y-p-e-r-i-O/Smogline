@@ -1,5 +1,7 @@
 package com.smogline.block;
 
+import com.smogline.block.custom.rotation.MotorElectroBlock;
+import com.smogline.block.custom.rotation.ShaftIronBlock;
 import com.smogline.block.custom.weapons.TurretLightPlacerBlock;
 import com.smogline.api.energy.ConverterBlock;
 import com.smogline.api.energy.MachineBatteryBlock;
@@ -234,6 +236,17 @@ public class ModBlocks {
                     .noOcclusion() // Важно для прозрачных моделей
                     .requiresCorrectToolForDrops()));
 
+    public static final RegistryObject<Block> MOTOR_ELECTRO = BLOCKS.register("motor_electro",
+            () -> new MotorElectroBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .strength(3.0f, 4.0f)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> SHAFT_IRON = BLOCKS.register("shaft_iron",
+            () -> new ShaftIronBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .strength(3.0f, 4.0f)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> TURRET_LIGHT = registerBlock("turret_light",
             () -> new TurretLightBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
@@ -287,7 +300,7 @@ public class ModBlocks {
     public static final RegistryObject<Block> SMOKE_BOMB = registerBlock("smoke_bomb",
             () -> new SmokeBombBlock(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F)
-                    .sound(SoundType.CHERRY_LEAVES)
+                    .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> NUCLEAR_CHARGE = registerBlock("nuclear_charge",
@@ -369,6 +382,18 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> DEAD_DIRT  = registerBlock("dead_dirt",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.DIRT).strength(0.5f, 4.0f).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> MOX1  = registerBlock("mox1",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.GRASS_BLOCK).strength(0.5f, 4.0f).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> MOX2  = registerBlock("mox2",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.GRASS_BLOCK).strength(0.5f, 4.0f).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> MOX3  = registerBlock("mox3",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.GRASS_BLOCK).strength(0.5f, 4.0f).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> SAND_ROUGH  = registerBlock("sand_rough",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.SAND).strength(0.5f, 4.0f).requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> GEYSIR_DIRT  = registerBlock("geysir_dirt",
             () -> new GeysirBlock(BlockBehaviour.Properties.copy(Blocks.DIRT).strength(0.5f, 4.0f).requiresCorrectToolForDrops()));

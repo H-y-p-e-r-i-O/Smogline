@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "smogline:block/motor_electro"
+    }
+  }
+}
