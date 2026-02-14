@@ -46,35 +46,27 @@ public class ShaftIronBlock extends BaseEntityBlock {
         BlockState targetState = level.getBlockState(targetPos);
         Block targetBlock = targetState.getBlock();
 
-        System.out.println("=== DEBUG ===");
-        System.out.println("clickedFace: " + clickedFace);
-        System.out.println("targetBlock: " + targetBlock.getClass().getSimpleName());
-
         boolean canPlace = false;
-        Direction shaftFacing = clickedFace; // дефолт
+        Direction shaftFacing = clickedFace;
 
         if (targetBlock instanceof MotorElectroBlock) {
             Direction motorFacing = targetState.getValue(MotorElectroBlock.FACING);
-            System.out.println("motorFacing: " + motorFacing);
-            System.out.println("check: clickedFace(" + clickedFace + ") == motorFacing(" + motorFacing + ")");
 
             if (clickedFace == motorFacing) {
                 canPlace = true;
+                // Вал смотрит в ту же сторону что и мотор
                 shaftFacing = motorFacing;
-                System.out.println("MOTOR: shaftFacing set to " + shaftFacing);
             }
         } else if (targetBlock instanceof ShaftIronBlock) {
             Direction existingFacing = targetState.getValue(ShaftIronBlock.FACING);
-            System.out.println("existingFacing: " + existingFacing);
 
+            // Клик должен быть по торцу вала (вдоль оси)
             if (clickedFace == existingFacing || clickedFace == existingFacing.getOpposite()) {
                 canPlace = true;
-                shaftFacing = clickedFace;
-                System.out.println("SHAFT: shaftFacing set to " + shaftFacing);
+                // Вал смотрит в ту же сторону что и существующий для синхронизации анимации
+                shaftFacing = existingFacing;
             }
         }
-
-        System.out.println("Result: canPlace=" + canPlace + ", shaftFacing=" + shaftFacing);
 
         if (!canPlace) {
             return null;
