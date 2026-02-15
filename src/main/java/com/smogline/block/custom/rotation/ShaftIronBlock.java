@@ -1,6 +1,7 @@
 package com.smogline.block.custom.rotation;
 
 import com.smogline.block.entity.ModBlockEntities;
+import com.smogline.block.entity.custom.GearPortBlockEntity;
 import com.smogline.block.entity.custom.ShaftIronBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -55,20 +56,25 @@ public class ShaftIronBlock extends BaseEntityBlock {
 
         if (targetBlock instanceof MotorElectroBlock) {
             Direction motorFacing = targetState.getValue(MotorElectroBlock.FACING);
-
             if (clickedFace == motorFacing) {
                 canPlace = true;
-                // Вал смотрит в ту же сторону что и мотор
                 shaftFacing = motorFacing;
             }
         } else if (targetBlock instanceof ShaftIronBlock) {
             Direction existingFacing = targetState.getValue(ShaftIronBlock.FACING);
-
-            // Клик должен быть по торцу вала (вдоль оси)
             if (clickedFace == existingFacing || clickedFace == existingFacing.getOpposite()) {
                 canPlace = true;
-                // Вал смотрит в ту же сторону что и существующий для синхронизации анимации
                 shaftFacing = existingFacing;
+            }
+        } else if (targetBlock instanceof GearPortBlock) {
+            // Проверяем, назначен ли порт на этой стороне
+            BlockEntity be = level.getBlockEntity(targetPos);
+            if (be instanceof GearPortBlockEntity gear) {
+                if (gear.hasPortOnSide(clickedFace)) {
+                    canPlace = true;
+                    // Вал смотрит от порта наружу (в сторону клика)
+                    shaftFacing = clickedFace;
+                }
             }
         }
 
@@ -79,29 +85,27 @@ public class ShaftIronBlock extends BaseEntityBlock {
         return this.defaultBlockState().setValue(FACING, shaftFacing);
     }
 
+    private static final VoxelShape SHAPE_NORTH_SOUTH = Block.box(6.75, 6.75, 0, 9.25, 9.25, 16); // X/Z:2.5px→6.75-9.25, Y:2.5px
+    private static final VoxelShape SHAPE_EAST_WEST = Block.box(0, 6.75, 6.75, 16, 9.25, 9.25);   // X:16px, Y/Z:2.5px
+    private static final VoxelShape SHAPE_UP_DOWN = Block.box(6.75, 0, 6.75, 9.25, 16, 9.25);     // Y:16px, X/Z:2.5px
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return Shapes.block();
+        Direction facing = state.getValue(FACING);
+        return switch (facing) {
+            case NORTH, SOUTH -> SHAPE_NORTH_SOUTH;
+            case EAST, WEST -> SHAPE_EAST_WEST;
+            case UP, DOWN -> SHAPE_UP_DOWN;
+        };
     }
 
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return Shapes.block();
+        return getShape(state, level, pos, context);
     }
 
     @Override
     public VoxelShape getInteractionShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return Shapes.block();
-    }
-
-    @Override
-    public VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return Shapes.block();
-    }
-
-    @Override
-    public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return Shapes.block();
+        return getShape(state, level, pos, null);
     }
 
     @Override

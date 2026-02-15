@@ -1,8 +1,11 @@
 package com.smogline.item.custom.industrial;
 
+import com.smogline.block.custom.rotation.GearPortBlock;
 import com.smogline.block.custom.rotation.ShaftIronBlock;
+import com.smogline.block.entity.custom.GearPortBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -22,32 +25,46 @@ public class ScrewdriverItem extends Item {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         BlockState state = level.getBlockState(pos);
-
-        if (!(state.getBlock() instanceof ShaftIronBlock)) {
-            return InteractionResult.PASS;
-        }
-
         Player player = context.getPlayer();
-        boolean isSneaking = player != null && player.isShiftKeyDown();
+        if (player == null) return InteractionResult.PASS;
 
-        Direction currentFacing = state.getValue(ShaftIronBlock.FACING);
-        Direction newFacing;
+        boolean isSneaking = player.isShiftKeyDown();
 
-        if (isSneaking) {
-            newFacing = currentFacing.getOpposite();
-        } else {
-            Direction lookDir = getLookDirection(player);
-            newFacing = rotate90(currentFacing, lookDir);
+        // Обработка вала
+        if (state.getBlock() instanceof ShaftIronBlock) {
+            Direction currentFacing = state.getValue(ShaftIronBlock.FACING);
+            Direction newFacing;
+
+            if (isSneaking) {
+                newFacing = currentFacing.getOpposite();
+            } else {
+                Direction lookDir = getLookDirection(player);
+                newFacing = rotate90(currentFacing, lookDir);
+            }
+
+            BlockState newState = state.setValue(ShaftIronBlock.FACING, newFacing);
+            level.setBlock(pos, newState, 3);
+            syncWithNeighbors(level, pos, newState);
+
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        // Устанавливаем новое направление
-        BlockState newState = state.setValue(ShaftIronBlock.FACING, newFacing);
-        level.setBlock(pos, newState, 3);
+        // Обработка порта
+        else if (state.getBlock() instanceof GearPortBlock) {
+            if (!level.isClientSide) {
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof GearPortBlockEntity gear) {
+                    Direction face = context.getClickedFace();
+                    String message = gear.handleScrewdriverClick(face, isSneaking);
+                    if (message != null) {
+                        player.displayClientMessage(Component.literal(message), false);
+                    }
+                }
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
 
-        // Проверяем и синхронизируем направление с соседними валами
-        syncWithNeighbors(level, pos, newState);
-
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.PASS;
     }
 
     /**

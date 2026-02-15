@@ -368,7 +368,6 @@ public class MainRegistry {
             event.accept(ModItems.OIL_DETECTOR);
             event.accept(ModItems.DEPTH_ORES_SCANNER);
 
-            event.accept(ModItems.SCREWDRIVER.get());
         }
 
 
@@ -507,7 +506,9 @@ public class MainRegistry {
             event.accept(ModBlocks.SWITCH);
 
             event.accept(ModBlocks.MOTOR_ELECTRO);
+            event.accept(ModItems.SCREWDRIVER.get());
             event.accept(ModBlocks.SHAFT_IRON);
+            event.accept(ModBlocks.GEAR_PORT);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added geiger counter BLOCK to NTM Machines tab");

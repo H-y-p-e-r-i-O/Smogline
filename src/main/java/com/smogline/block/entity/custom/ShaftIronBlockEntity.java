@@ -44,6 +44,7 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         super(ModBlockEntities.SHAFT_IRON_BE.get(), pos, state);
     }
 
+    // ========== NBT and sync ==========
     @Override
     public CompoundTag getUpdateTag() {
         CompoundTag tag = super.getUpdateTag();
@@ -71,13 +72,90 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         }
     }
 
+    // ========== Rotational ==========
+    @Override public long getSpeed() { return speed; }
+    @Override public long getTorque() { return torque; }
+    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); }
+    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); }
+    @Override public long getMaxSpeed() { return 0; }
+    @Override public long getMaxTorque() { return 0; }
+
+    // ========== SourceInfo (public static) ==========
+    public static class SourceInfo {
+        public final long speed;
+        public final long torque;
+        public SourceInfo(long speed, long torque) {
+            this.speed = speed;
+            this.torque = torque;
+        }
+    }
+
+    // ========== Поиск источника ==========
+    @Nullable
+    public SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir) {
+        return findSource(visited, fromDir, 0);
+    }
+
+    @Nullable
+    private SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir, int depth) {
+        if (depth > MAX_SEARCH_DEPTH || visited.contains(worldPosition)) {
+            return null;
+        }
+        visited.add(worldPosition);
+
+        Direction myFacing = getBlockState().getValue(ShaftIronBlock.FACING);
+
+        Direction[] searchDirs;
+        if (fromDir != null) {
+            // Мы пришли с определённого направления – проверяем, что оно совпадает с осью вала
+            if (fromDir == myFacing || fromDir == myFacing.getOpposite()) {
+                // Идём в противоположную сторону
+                searchDirs = new Direction[]{fromDir.getOpposite()};
+            } else {
+                // Пришли не по оси – тупик
+                return null;
+            }
+        } else {
+            // Начало поиска – проверяем обе стороны вдоль оси
+            searchDirs = new Direction[]{myFacing, myFacing.getOpposite()};
+        }
+
+        for (Direction dir : searchDirs) {
+            BlockPos neighborPos = worldPosition.relative(dir);
+            BlockEntity neighbor = level.getBlockEntity(neighborPos);
+
+            if (neighbor instanceof MotorElectroBlockEntity motor) {
+                Direction motorFacing = motor.getBlockState().getValue(MotorElectroBlock.FACING);
+                if (motorFacing == dir.getOpposite()) {
+                    return new SourceInfo(motor.getSpeed(), motor.getTorque());
+                }
+            } else if (neighbor instanceof ShaftIronBlockEntity shaft) {
+                Direction neighborFacing = shaft.getBlockState().getValue(ShaftIronBlock.FACING);
+                if (neighborFacing == dir || neighborFacing == dir.getOpposite()) {
+                    SourceInfo found = shaft.findSource(visited, dir.getOpposite(), depth + 1);
+                    if (found != null) {
+                        return found;
+                    }
+                }
+            } else if (neighbor instanceof GearPortBlockEntity gear) {
+                // Добавляем поддержку GearPort
+                SourceInfo found = gear.findSource(visited, dir.getOpposite()); // предполагаем, что у GearPort есть такой метод
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    // ========== Тик ==========
     public static void tick(Level level, BlockPos pos, BlockState state, ShaftIronBlockEntity be) {
         if (level.isClientSide) {
             be.handleClientAnimation();
             return;
         }
 
-        SourceInfo source = be.findSource(new HashSet<>(), 0);
+        SourceInfo source = be.findSource(new HashSet<>(), null);
 
         long newSpeed = (source != null) ? source.speed : 0;
         long newTorque = (source != null) ? source.torque : 0;
@@ -92,52 +170,11 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         }
     }
 
-    private SourceInfo findSource(Set<BlockPos> visited, int depth) {
-        if (depth > MAX_SEARCH_DEPTH || visited.contains(worldPosition)) {
-            return null;
-        }
-        visited.add(worldPosition);
-
-        Direction myFacing = getBlockState().getValue(ShaftIronBlock.FACING);
-
-        for (Direction dir : new Direction[]{myFacing, myFacing.getOpposite()}) {
-            BlockPos neighborPos = worldPosition.relative(dir);
-            BlockEntity neighbor = level.getBlockEntity(neighborPos);
-
-            if (neighbor instanceof MotorElectroBlockEntity motor) {
-                Direction motorFacing = motor.getBlockState().getValue(MotorElectroBlock.FACING);
-                if (motorFacing == dir.getOpposite()) {
-                    return new SourceInfo(motor.getSpeed(), motor.getTorque());
-                }
-            } else if (neighbor instanceof ShaftIronBlockEntity shaft) {
-                Direction neighborFacing = shaft.getBlockState().getValue(ShaftIronBlock.FACING);
-                if (neighborFacing == myFacing || neighborFacing == myFacing.getOpposite()) {
-                    SourceInfo found = shaft.findSource(visited, depth + 1);
-                    if (found != null) {
-                        return found;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private static class SourceInfo {
-        final long speed;
-        final long torque;
-
-        SourceInfo(long speed, long torque) {
-            this.speed = speed;
-            this.torque = torque;
-        }
-    }
-
+    // ========== Анимация (клиент) ==========
     private void handleClientAnimation() {
         float targetSpeed = (speed > 0) ? Math.max(0.1f, speed / 100f) : 0f;
 
         if (targetSpeed > 0) {
-            // Есть питание - ускоряемся
             ticksWithoutPower = 0;
             if (currentAnimationSpeed < targetSpeed) {
                 currentAnimationSpeed = Math.min(currentAnimationSpeed + ACCELERATION, targetSpeed);
@@ -145,10 +182,8 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
                 currentAnimationSpeed = Math.max(currentAnimationSpeed - ACCELERATION, targetSpeed);
             }
         } else {
-            // Нет питания - замедляемся после задержки
             if (currentAnimationSpeed > 0) {
                 ticksWithoutPower++;
-
                 if (ticksWithoutPower > STOP_DELAY_TICKS) {
                     currentAnimationSpeed = Math.max(currentAnimationSpeed - DECELERATION, 0f);
                 }
@@ -158,12 +193,28 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         }
     }
 
-    @Override public long getSpeed() { return speed; }
-    @Override public long getTorque() { return torque; }
-    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); }
-    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); }
-    @Override public long getMaxSpeed() { return 0; }
-    @Override public long getMaxTorque() { return 0; }
+    // ========== GeckoLib ==========
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "shaft_controller", 0, this::animationPredicate));
+    }
+
+    private <E extends GeoBlockEntity> PlayState animationPredicate(AnimationState<E> event) {
+        if (currentAnimationSpeed < MIN_ANIM_SPEED) {
+            return PlayState.STOP;
+        }
+        event.getController().setAnimation(ROTATION);
+        event.getController().setAnimationSpeed(currentAnimationSpeed);
+        return PlayState.CONTINUE;
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
+    }
+
+    @Override
+    public double getBoneResetTime() { return 0; }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
@@ -177,29 +228,5 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         super.load(tag);
         speed = tag.getLong("Speed");
         torque = tag.getLong("Torque");
-    }
-
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "shaft_controller", 0, this::animationPredicate));
-    }
-
-    private <E extends GeoBlockEntity> PlayState animationPredicate(AnimationState<E> event) {
-        // Просто останавливаем без сброса, когда скорость достаточно мала
-        if (currentAnimationSpeed < MIN_ANIM_SPEED) {
-            return PlayState.STOP;
-        }
-
-        event.getController().setAnimation(ROTATION);
-        event.getController().setAnimationSpeed(currentAnimationSpeed);
-        return PlayState.CONTINUE;
-    }
-
-    @Override
-    public double getBoneResetTime() { return 0; }
-
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return cache;
     }
 }
