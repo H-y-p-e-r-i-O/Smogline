@@ -1,4 +1,3 @@
-# ☢️ Smogline: The String Collapse
 
 ![Smogline Banner](docs/images/banner_placeholder.png)
 
