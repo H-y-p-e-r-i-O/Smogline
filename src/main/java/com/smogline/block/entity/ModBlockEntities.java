@@ -4,10 +4,7 @@ import com.smogline.api.energy.ConverterBlockEntity;
 import com.smogline.api.energy.SwitchBlockEntity;
 import com.smogline.api.energy.WireBlockEntity;
 import com.smogline.block.ModBlocks;
-import com.smogline.block.entity.custom.MotorElectroBlockEntity;
-import com.smogline.block.entity.custom.ShaftIronBlockEntity;
-import com.smogline.block.entity.custom.TurretBlockEntity;
-import com.smogline.block.entity.custom.TurretLightPlacerBlockEntity;
+import com.smogline.block.entity.custom.*;
 import com.smogline.block.entity.custom.crates.*;
 import com.smogline.block.entity.custom.machines.*;
 import com.smogline.block.entity.custom.explosives.MineBlockEntity;
@@ -65,6 +62,10 @@ public class ModBlockEntities {
                 return BlockEntityType.Builder.<MachineBatteryBlockEntity>of(MachineBatteryBlockEntity::new, validBlocks)
                         .build(null);
             });
+
+    public static final RegistryObject<BlockEntityType<GearPortBlockEntity>> GEAR_PORT_BE =
+            BLOCK_ENTITIES.register("gear_port_be",
+                    () -> BlockEntityType.Builder.of(GearPortBlockEntity::new, ModBlocks.GEAR_PORT.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<AnvilBlockEntity>> ANVIL_BE =
         BLOCK_ENTITIES.register("anvil_be", () ->

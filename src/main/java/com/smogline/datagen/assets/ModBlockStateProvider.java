@@ -42,6 +42,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.DEAD_DIRT);
         blockWithItem(ModBlocks.MOX1);
         blockWithItem(ModBlocks.MOX2);
+        blockWithItem(ModBlocks.GEAR_PORT);
         blockWithItem(ModBlocks.MOX3);
         blockWithItem(ModBlocks.SAND_ROUGH);
         blockWithItem(ModBlocks.GEYSIR_DIRT);

@@ -1,10 +1,12 @@
 package com.smogline.block.custom.rotation;
 
 import com.smogline.block.entity.ModBlockEntities;
+import com.smogline.block.entity.custom.GearPortBlockEntity;
 import com.smogline.block.entity.custom.ShaftIronBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -14,6 +16,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public class ShaftIronBlock extends BaseEntityBlock {
@@ -46,41 +51,61 @@ public class ShaftIronBlock extends BaseEntityBlock {
         BlockState targetState = level.getBlockState(targetPos);
         Block targetBlock = targetState.getBlock();
 
-        System.out.println("=== DEBUG ===");
-        System.out.println("clickedFace: " + clickedFace);
-        System.out.println("targetBlock: " + targetBlock.getClass().getSimpleName());
-
         boolean canPlace = false;
-        Direction shaftFacing = clickedFace; // дефолт
+        Direction shaftFacing = clickedFace;
 
         if (targetBlock instanceof MotorElectroBlock) {
             Direction motorFacing = targetState.getValue(MotorElectroBlock.FACING);
-            System.out.println("motorFacing: " + motorFacing);
-            System.out.println("check: clickedFace(" + clickedFace + ") == motorFacing(" + motorFacing + ")");
-
             if (clickedFace == motorFacing) {
                 canPlace = true;
                 shaftFacing = motorFacing;
-                System.out.println("MOTOR: shaftFacing set to " + shaftFacing);
             }
         } else if (targetBlock instanceof ShaftIronBlock) {
             Direction existingFacing = targetState.getValue(ShaftIronBlock.FACING);
-            System.out.println("existingFacing: " + existingFacing);
-
             if (clickedFace == existingFacing || clickedFace == existingFacing.getOpposite()) {
                 canPlace = true;
-                shaftFacing = clickedFace;
-                System.out.println("SHAFT: shaftFacing set to " + shaftFacing);
+                shaftFacing = existingFacing;
+            }
+        } else if (targetBlock instanceof GearPortBlock) {
+            // Проверяем, назначен ли порт на этой стороне
+            BlockEntity be = level.getBlockEntity(targetPos);
+            if (be instanceof GearPortBlockEntity gear) {
+                if (gear.hasPortOnSide(clickedFace)) {
+                    canPlace = true;
+                    // Вал смотрит от порта наружу (в сторону клика)
+                    shaftFacing = clickedFace;
+                }
             }
         }
-
-        System.out.println("Result: canPlace=" + canPlace + ", shaftFacing=" + shaftFacing);
 
         if (!canPlace) {
             return null;
         }
 
         return this.defaultBlockState().setValue(FACING, shaftFacing);
+    }
+
+    private static final VoxelShape SHAPE_NORTH_SOUTH = Block.box(6.75, 6.75, 0, 9.25, 9.25, 16); // X/Z:2.5px→6.75-9.25, Y:2.5px
+    private static final VoxelShape SHAPE_EAST_WEST = Block.box(0, 6.75, 6.75, 16, 9.25, 9.25);   // X:16px, Y/Z:2.5px
+    private static final VoxelShape SHAPE_UP_DOWN = Block.box(6.75, 0, 6.75, 9.25, 16, 9.25);     // Y:16px, X/Z:2.5px
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        Direction facing = state.getValue(FACING);
+        return switch (facing) {
+            case NORTH, SOUTH -> SHAPE_NORTH_SOUTH;
+            case EAST, WEST -> SHAPE_EAST_WEST;
+            case UP, DOWN -> SHAPE_UP_DOWN;
+        };
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return getShape(state, level, pos, context);
+    }
+
+    @Override
+    public VoxelShape getInteractionShape(BlockState state, BlockGetter level, BlockPos pos) {
+        return getShape(state, level, pos, null);
     }
 
     @Override

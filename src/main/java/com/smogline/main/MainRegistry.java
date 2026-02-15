@@ -222,7 +222,6 @@ public class MainRegistry {
             event.accept(ModBlocks.NUCLEAR_CHARGE);
             event.accept(ModBlocks.EXPLOSIVE_CHARGE);
             event.accept(ModBlocks.GIGA_DET);
-
             event.accept(ModBlocks.BARBED_WIRE_FIRE);
             event.accept(ModBlocks.BARBED_WIRE_POISON);
             event.accept(ModBlocks.BARBED_WIRE_RAD);
@@ -507,7 +506,9 @@ public class MainRegistry {
             event.accept(ModBlocks.SWITCH);
 
             event.accept(ModBlocks.MOTOR_ELECTRO);
+            event.accept(ModItems.SCREWDRIVER.get());
             event.accept(ModBlocks.SHAFT_IRON);
+            event.accept(ModBlocks.GEAR_PORT);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added geiger counter BLOCK to NTM Machines tab");
