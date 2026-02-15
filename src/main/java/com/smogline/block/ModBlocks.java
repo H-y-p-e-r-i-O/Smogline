@@ -2,6 +2,7 @@ package com.smogline.block;
 
 import com.smogline.block.custom.rotation.GearPortBlock;
 import com.smogline.block.custom.rotation.MotorElectroBlock;
+import com.smogline.block.custom.rotation.RotationMeterBlock;
 import com.smogline.block.custom.rotation.ShaftIronBlock;
 import com.smogline.block.custom.weapons.TurretLightPlacerBlock;
 import com.smogline.api.energy.ConverterBlock;
@@ -251,6 +252,9 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> GEAR_PORT = registerBlock("gear_port",
             () -> new GearPortBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> ROTATION_METER = registerBlock("rotation_meter",
+            () -> new RotationMeterBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
 
 
     public static final RegistryObject<Block> TURRET_LIGHT = registerBlock("turret_light",

@@ -97,7 +97,7 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
     }
 
     @Nullable
-    private SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir, int depth) {
+    public SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir, int depth) {
         if (depth > MAX_SEARCH_DEPTH || visited.contains(worldPosition)) {
             return null;
         }
@@ -129,6 +129,9 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
                 if (motorFacing == dir.getOpposite()) {
                     return new SourceInfo(motor.getSpeed(), motor.getTorque());
                 }
+            }else if (neighbor instanceof RotationMeterBlockEntity meter) {
+                SourceInfo found = meter.findSource(visited, dir.getOpposite(), depth + 1);
+                if (found != null) return found;
             } else if (neighbor instanceof ShaftIronBlockEntity shaft) {
                 Direction neighborFacing = shaft.getBlockState().getValue(ShaftIronBlock.FACING);
                 if (neighborFacing == dir || neighborFacing == dir.getOpposite()) {
