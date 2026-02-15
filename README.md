@@ -85,6 +85,13 @@ Next-generation base defense:
 
 ---
 
+## 💝 Credits & Acknowledgements
+
+* **Apollo (Tectonic)** — Special thanks for the open-source terrain generation algorithms that served as the foundation for our world overhaul.
+* **The Forge Team** — For the modding platform and documentation.
+
+---
+
 ## 🤝 The Team
 
 Our development team structure:
