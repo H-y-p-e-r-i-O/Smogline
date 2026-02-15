@@ -101,6 +101,22 @@ public class ShaftIronBlock extends BaseEntityBlock {
                 canPlace = true;
                 shaftFacing = clickedFace;
             }
+        } else if (targetBlock instanceof StopperBlock) {
+            Direction stopperFacing = targetState.getValue(StopperBlock.FACING);
+            Direction left, right;
+            switch (stopperFacing) {
+                case NORTH: left = Direction.WEST; right = Direction.EAST; break;
+                case SOUTH: left = Direction.EAST; right = Direction.WEST; break;
+                case EAST:  left = Direction.NORTH; right = Direction.SOUTH; break;
+                case WEST:  left = Direction.SOUTH; right = Direction.NORTH; break;
+                case UP:    left = Direction.NORTH; right = Direction.SOUTH; break;
+                case DOWN:  left = Direction.SOUTH; right = Direction.NORTH; break;
+                default: left = right = null;
+            }
+            if (clickedFace == left || clickedFace == right) {
+                canPlace = true;
+                shaftFacing = clickedFace;
+            }
         }
 
         if (!canPlace) {

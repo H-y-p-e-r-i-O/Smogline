@@ -146,6 +146,9 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
                 if (found != null) {
                     return found;
                 }
+            } else if (neighbor instanceof StopperBlockEntity stopper) {
+                SourceInfo found = stopper.findSource(visited, dir.getOpposite(), depth + 1);
+                if (found != null) return found;
             }
         }
         return null;
