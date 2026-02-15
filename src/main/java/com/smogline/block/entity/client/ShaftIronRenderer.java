@@ -18,7 +18,6 @@ public class ShaftIronRenderer extends GeoBlockRenderer<ShaftIronBlockEntity> {
         super(new ShaftIronModel());
     }
 
-    // GeckoLib 4.x использует preRender для трансформаций
     @Override
     public void preRender(PoseStack poseStack, ShaftIronBlockEntity animatable,
                           BakedGeoModel model, MultiBufferSource bufferSource,
@@ -29,10 +28,10 @@ public class ShaftIronRenderer extends GeoBlockRenderer<ShaftIronBlockEntity> {
         BlockState state = animatable.getBlockState();
         Direction facing = state.getValue(ShaftIronBlock.FACING);
 
-        // Смещаем к центру
+        // Смещаем к центру блока
         poseStack.translate(0.5f, 0.5f, 0.5f);
 
-        // Поворот только для идентификации направления
+        // Поворот в зависимости от направления
         switch (facing) {
             case NORTH:
                 break;
@@ -43,13 +42,14 @@ public class ShaftIronRenderer extends GeoBlockRenderer<ShaftIronBlockEntity> {
             case WEST:
                 break;
             case UP:
-                poseStack.mulPose(Axis.XP.rotationDegrees(45));
+                poseStack.translate(0f, 0.5f, -0.5f);
                 break;
             case DOWN:
-                poseStack.mulPose(Axis.XP.rotationDegrees(-45));
+                poseStack.translate(0f, 0.5f, 0.5f);
                 break;
         }
 
+        // Возвращаем обратно
         poseStack.translate(-0.5f, -0.5f, -0.5f);
 
         super.preRender(poseStack, animatable, model, bufferSource, buffer,

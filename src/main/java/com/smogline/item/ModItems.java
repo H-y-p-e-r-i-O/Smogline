@@ -140,9 +140,6 @@ public class ModItems {
     public static final RegistryObject<Item> STARMETAL_HOE = ITEMS.register("starmetal_hoe",
             () -> new HoeItem(ModToolTiers.STARMETAL, 0, 0f, new Item.Properties()));
 
-
-
-
     public static final RegistryObject<Item> GRENADE = ITEMS.register("grenade",
         () -> new GrenadeItem(new Item.Properties(), GrenadeType.STANDARD, ModEntities.GRENADE_PROJECTILE));
 
@@ -841,7 +838,9 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> SCREWDRIVER = ITEMS.register("screwdriver",
-            () -> new Item(new Item.Properties().stacksTo(1))); // В стаке только 1 штука
+            () -> new ScrewdriverItem(new Item.Properties()
+                    .stacksTo(1)
+                    .durability(256))); // Прочность как у железных инструментов
 
 
         // Медленный источник (500 mB/t)
