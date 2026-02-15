@@ -509,6 +509,7 @@ public class MainRegistry {
             event.accept(ModItems.SCREWDRIVER.get());
             event.accept(ModBlocks.SHAFT_IRON);
             event.accept(ModBlocks.GEAR_PORT);
+            event.accept(ModBlocks.ROTATION_METER);
 
             if (ModClothConfig.get().enableDebugLogging) {
                 LOGGER.info("Added geiger counter BLOCK to NTM Machines tab");

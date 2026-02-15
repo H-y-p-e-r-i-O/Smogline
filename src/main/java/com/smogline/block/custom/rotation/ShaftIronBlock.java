@@ -40,8 +40,8 @@ public class ShaftIronBlock extends BaseEntityBlock {
         return RenderShape.ENTITYBLOCK_ANIMATED;
     }
 
-    @Override
     @Nullable
+    @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos placePos = context.getClickedPos();
@@ -67,14 +67,39 @@ public class ShaftIronBlock extends BaseEntityBlock {
                 shaftFacing = existingFacing;
             }
         } else if (targetBlock instanceof GearPortBlock) {
-            // Проверяем, назначен ли порт на этой стороне
             BlockEntity be = level.getBlockEntity(targetPos);
             if (be instanceof GearPortBlockEntity gear) {
                 if (gear.hasPortOnSide(clickedFace)) {
                     canPlace = true;
-                    // Вал смотрит от порта наружу (в сторону клика)
                     shaftFacing = clickedFace;
                 }
+            }
+        } else if (targetBlock instanceof RotationMeterBlock) {
+            Direction meterFacing = targetState.getValue(RotationMeterBlock.FACING);
+            Direction left, right;
+            switch (meterFacing) {
+                case NORTH:
+                    left = Direction.WEST;
+                    right = Direction.EAST;
+                    break;
+                case SOUTH:
+                    left = Direction.EAST;
+                    right = Direction.WEST;
+                    break;
+                case EAST:
+                    left = Direction.NORTH;
+                    right = Direction.SOUTH;
+                    break;
+                case WEST:
+                    left = Direction.SOUTH;
+                    right = Direction.NORTH;
+                    break;
+                default:
+                    left = right = null;
+            }
+            if (clickedFace == left || clickedFace == right) {
+                canPlace = true;
+                shaftFacing = clickedFace;
             }
         }
 

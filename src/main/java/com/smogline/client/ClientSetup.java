@@ -2,10 +2,7 @@ package com.smogline.client;
 
 // Основной класс клиентской настройки мода. Здесь регистрируются все клиентские обработчики событий,
 // GUI, рендереры, модели и т.д.
-import com.smogline.block.entity.client.MineApRenderer;
-import com.smogline.block.entity.client.MotorElectroRenderer;
-import com.smogline.block.entity.client.ShaftIronRenderer;
-import com.smogline.block.entity.client.TurretLightPlacerRenderer;
+import com.smogline.block.entity.client.*;
 import com.smogline.client.model.FluidTankModelWrapper;
 import com.smogline.client.overlay.*;
 import com.smogline.client.loader.*;

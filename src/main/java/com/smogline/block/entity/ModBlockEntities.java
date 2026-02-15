@@ -52,6 +52,10 @@ public class ModBlockEntities {
 			BlockEntityType.Builder.<MachineAdvancedAssemblerBlockEntity>of(MachineAdvancedAssemblerBlockEntity::new, ModBlocks.ADVANCED_ASSEMBLY_MACHINE.get())
 				.build(null));
 
+    public static final RegistryObject<BlockEntityType<RotationMeterBlockEntity>> ROTATION_METER_BE =
+            BLOCK_ENTITIES.register("rotation_meter_be",
+                    () -> BlockEntityType.Builder.of(RotationMeterBlockEntity::new, ModBlocks.ROTATION_METER.get()).build(null));
+
     public static final RegistryObject<BlockEntityType<MachineBatteryBlockEntity>> MACHINE_BATTERY_BE =
             BLOCK_ENTITIES.register("machine_battery_be", () -> {
                 // Превращаем список RegistryObject в массив Block[]
