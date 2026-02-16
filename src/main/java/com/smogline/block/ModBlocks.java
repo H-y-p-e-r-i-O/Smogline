@@ -1,9 +1,6 @@
 package com.smogline.block;
 
-import com.smogline.block.custom.rotation.GearPortBlock;
-import com.smogline.block.custom.rotation.MotorElectroBlock;
-import com.smogline.block.custom.rotation.RotationMeterBlock;
-import com.smogline.block.custom.rotation.ShaftIronBlock;
+import com.smogline.block.custom.rotation.*;
 import com.smogline.block.custom.weapons.TurretLightPlacerBlock;
 import com.smogline.api.energy.ConverterBlock;
 import com.smogline.api.energy.MachineBatteryBlock;
@@ -252,6 +249,16 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> GEAR_PORT = registerBlock("gear_port",
             () -> new GearPortBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> STOPPER = registerBlock("stopper",
+            () -> new StopperBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> ADDER = registerBlock("adder",
+            () -> new AdderBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> TACHOMETER = registerBlock("tachometer",
+            () -> new TachometerBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
+
 
     public static final RegistryObject<Block> ROTATION_METER = registerBlock("rotation_meter",
             () -> new RotationMeterBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));

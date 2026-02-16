@@ -1,0 +1,31 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "smogline:block/tachometer_speed",
+    "top": "smogline:block/tachometer_speed",
+    "bottom": "smogline:block/tachometer_speed",
+    "front": "smogline:block/tachometer_speed",
+    "back": "smogline:block/tachometer_speed",
+    "side": "smogline:block/gear_port_alt"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "texture": "#bottom", "cullface": "down" },
+        "up":    { "texture": "#top",    "cullface": "up" },
+        "north": { "texture": "#front",  "cullface": "north" },
+        "south": { "texture": "#back",   "cullface": "south" },
+        "west":  { "texture": "#side",   "cullface": "west" },
+        "east":  { "texture": "#side",   "cullface": "east" }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [ 30, 135, 0 ],
+      "scale": [ 0.625, 0.625, 0.625 ]
+    }
+  }
+}

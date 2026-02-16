@@ -1,0 +1,31 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "smogline:block/stopper_on",
+    "top": "smogline:block/rotation_meter_top",
+    "bottom": "smogline:block/rotation_meter_top",
+    "front": "smogline:block/stopper_on",
+    "back": "smogline:block/rotation_meter_top",
+    "side": "smogline:block/gear_port_open"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "texture": "#bottom", "cullface": "down" },
+        "up":    { "texture": "#top",    "cullface": "up" },
+        "north": { "texture": "#front",  "cullface": "north" },
+        "south": { "texture": "#back",   "cullface": "south" },
+        "west":  { "texture": "#side",   "cullface": "west" },
+        "east":  { "texture": "#side",   "cullface": "east" }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [ 30, 135, 0 ],
+      "scale": [ 0.625, 0.625, 0.625 ]
+    }
+  }
+}

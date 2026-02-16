@@ -161,7 +161,8 @@ public class ModLanguageProvider extends LanguageProvider {
                 add("itemGroup.smogline.ntm_spareparts_tab", "Запчасти NTM");
                 add("itemGroup.smogline.ntm_bombs_tab", "Бомбы NTM");
                 add("itemGroup.smogline.ntm_missiles_tab", "Ракеты и спутники NTM");
-                add("itemGroup.smogline.ntm_weapons_tab", "Оружие и турели NTM");
+                add("itemGroup.smogline.smogline_weapons_tab", "Арсенал Smogline");
+                add("itemGroup.smogline.smogline_tech_tab", "Технологии Smogline");
                 add("itemGroup.smogline.ntm_consumables_tab", "Расходники и снаряжение NTM");
                 
                 // СНАРЯГА
@@ -996,7 +997,8 @@ public class ModLanguageProvider extends LanguageProvider {
                 add("itemGroup.smogline.ntm_machines_tab", "NTM Machines");
                 add("itemGroup.smogline.ntm_bombs_tab", "NTM Bombs");
                 add("itemGroup.smogline.ntm_missiles_tab", "NTM Missiles and Satellites");
-                add("itemGroup.smogline.ntm_weapons_tab", "NTM Weapons and Turrets");
+                add("itemGroup.smogline.smogline_weapons_tab", "Smogline Arsenal");
+                add("itemGroup.smogline.smogline_tech_tab", "Smogline Technologies");
                 add("itemGroup.smogline.ntm_consumables_tab", "NTM Consumables and Equipment");
                 add("itemGroup.smogline.ntm_spareparts_tab", "NTM Spare Parts");
                 add("itemGroup.smogline.ntm_instruments_tab", "NTM Instruments");
