@@ -179,6 +179,9 @@ public class GearPortBlockEntity extends BlockEntity implements Rotational {
             } else if (neighbor instanceof AdderBlockEntity adder) {
                 ShaftIronBlockEntity.SourceInfo found = adder.findSource(visited, dir.getOpposite(), MAX_SEARCH_DEPTH + 1);
                 if (found != null) return found;
+            } else if (neighbor instanceof TachometerBlockEntity tacho) {
+                ShaftIronBlockEntity.SourceInfo found = tacho.findSource(visited, dir.getOpposite(), MAX_SEARCH_DEPTH + 1);
+                if (found != null) return found;
             }
         }
         return null;

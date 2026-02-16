@@ -70,7 +70,7 @@ public class AdderBlockEntity extends BlockEntity implements Rotational {
         if (neighbor == null) return null;
 
         Set<BlockPos> visited = new HashSet<>();
-        visited.add(worldPosition); // чтобы не зациклиться, если вдруг сосед вернётся сюда
+        visited.add(worldPosition);
 
         if (neighbor instanceof MotorElectroBlockEntity motor) {
             Direction motorFacing = motor.getBlockState().getValue(MotorElectroBlock.FACING);
@@ -79,9 +79,7 @@ public class AdderBlockEntity extends BlockEntity implements Rotational {
             }
         } else if (neighbor instanceof ShaftIronBlockEntity shaft) {
             Direction shaftFacing = shaft.getBlockState().getValue(ShaftIronBlock.FACING);
-            // Вал должен быть направлен вдоль оси, совпадающей со стороной
             if (shaftFacing == side || shaftFacing == side.getOpposite()) {
-                // Ищем источник от вала в направлении, противоположном side (т.е. наружу)
                 return shaft.findSource(visited, side.getOpposite());
             }
         } else if (neighbor instanceof RotationMeterBlockEntity meter) {
@@ -90,12 +88,9 @@ public class AdderBlockEntity extends BlockEntity implements Rotational {
             return gear.findSource(visited, side.getOpposite());
         } else if (neighbor instanceof StopperBlockEntity stopper) {
             return stopper.findSource(visited, side.getOpposite(), 0);
-        } else if (neighbor instanceof AdderBlockEntity adder) {
-            // Если подключён другой сумматор боком? По идее, не должно быть, но можно разрешить
-            // Тогда нужно искать источник через выход того сумматора? Но это сложно. Лучше запретить.
-            // Пока просто игнорируем.
+        } else if (neighbor instanceof TachometerBlockEntity tacho) {   // <-- НОВАЯ СТРОКА
+            return tacho.findSource(visited, side.getOpposite(), 0);    // <-- НОВАЯ СТРОКА
         }
-
         return null;
     }
 

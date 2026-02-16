@@ -1,8 +1,11 @@
 package com.smogline.item.custom.industrial;
 
 import com.smogline.block.custom.rotation.GearPortBlock;
+import com.smogline.block.custom.rotation.Mode;
 import com.smogline.block.custom.rotation.ShaftIronBlock;
+import com.smogline.block.custom.rotation.TachometerBlock;
 import com.smogline.block.entity.custom.GearPortBlockEntity;
+import com.smogline.block.entity.custom.TachometerBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -58,6 +61,27 @@ public class ScrewdriverItem extends Item {
                     String message = gear.handleScrewdriverClick(face, isSneaking);
                     if (message != null) {
                         player.displayClientMessage(Component.literal(message), false);
+                    }
+                }
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }// Обработка тахометра
+        else if (state.getBlock() instanceof TachometerBlock) {
+            if (!level.isClientSide) {
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof TachometerBlockEntity tach) {
+                    if (isSneaking) {
+                        // Shift+click: переключить режим
+                        Mode currentMode = state.getValue(TachometerBlock.MODE);
+                        Mode newMode = (currentMode == Mode.SPEED) ? Mode.TORQUE : Mode.SPEED;
+                        level.setBlock(pos, state.setValue(TachometerBlock.MODE, newMode), 3);
+                        player.displayClientMessage(Component.literal("Mode switched to " + newMode.getSerializedName()), false);
+                    } else {
+                        // Обычный клик: изменить множитель
+                        int newMult = tach.getMultiplier() + 1;
+                        if (newMult > 3) newMult = 1;
+                        tach.setMultiplier(newMult);
+                        player.displayClientMessage(Component.literal("Multiplier set to " + newMult), false);
                     }
                 }
             }

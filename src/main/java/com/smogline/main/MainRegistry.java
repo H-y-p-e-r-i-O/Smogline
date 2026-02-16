@@ -511,6 +511,7 @@ public class MainRegistry {
             event.accept(ModBlocks.GEAR_PORT);
             event.accept(ModBlocks.ADDER);
             event.accept(ModBlocks.STOPPER);
+            event.accept(ModBlocks.TACHOMETER);
             event.accept(ModBlocks.ROTATION_METER);
 
             if (ModClothConfig.get().enableDebugLogging) {
