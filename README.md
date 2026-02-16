@@ -49,7 +49,7 @@ A complete overhaul of the vanilla terrain generator using *Tectonic* algorithms
 * **Atmosphere:** Custom fog, sky color, surface blocks, and wasteland post-effects.
 
 ### 2. 🌀 Breach to Necrosis (New Dimension)
-* **The Membrane:** As a result of the String Collapse, all bedrock was replaced by the Membrane, which, unlike bedrock, is not indestructible. Technology allows you to create a breach in reality.
+* **The Membrane:** As a result of the string collapse, tunnels lined with a membrane appeared in the bedrock, leading deep into the bowels of the Earth. Technology allows you to create a breach in reality.
 * **The Transition:** Destroying the Membrane opens a path to fall directly into the Necrosis dimension (Work in Progress).
 
 ### 3. 🎯 New Arsenal
@@ -82,6 +82,7 @@ Next-generation base defense:
 * [ ] Adding anomalous entities escaping from beneath the Membrane.
 * [ ] Introduction of the radiation system and player contamination.
 * [ ] Adding armor and armor modifications.
+* [ ] Addition of a reference book and technology tree.
 
 ---
 
