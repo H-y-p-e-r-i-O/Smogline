@@ -101,6 +101,9 @@ public class StopperBlockEntity extends BlockEntity implements Rotational {
                 // Обрабатываем следующий Stopper
                 ShaftIronBlockEntity.SourceInfo found = stopper.findSource(visited, dir.getOpposite(), depth + 1);
                 if (found != null) return found;
+            } else if (neighbor instanceof AdderBlockEntity adder) {
+                ShaftIronBlockEntity.SourceInfo found = adder.findSource(visited, dir.getOpposite(), depth + 1);
+                if (found != null) return found;
             }
         }
         return null;

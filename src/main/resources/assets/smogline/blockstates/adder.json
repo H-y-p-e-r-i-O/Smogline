@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "smogline:block/adder" },
+    "facing=east":  { "model": "smogline:block/adder", "y": 90 },
+    "facing=south": { "model": "smogline:block/adder", "y": 180 },
+    "facing=west":  { "model": "smogline:block/adder", "y": 270 }
+  }
+}

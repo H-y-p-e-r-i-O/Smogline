@@ -253,6 +253,9 @@ public class ModBlocks {
     public static final RegistryObject<Block> STOPPER = registerBlock("stopper",
             () -> new StopperBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
 
+    public static final RegistryObject<Block> ADDER = registerBlock("adder",
+            () -> new AdderBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));
+
 
     public static final RegistryObject<Block> ROTATION_METER = registerBlock("rotation_meter",
             () -> new RotationMeterBlock(BlockBehaviour.Properties.copy(Blocks.STONE).strength(5.0f, 4.0f).requiresCorrectToolForDrops()));

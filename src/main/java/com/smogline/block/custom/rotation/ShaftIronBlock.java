@@ -117,6 +117,22 @@ public class ShaftIronBlock extends BaseEntityBlock {
                 canPlace = true;
                 shaftFacing = clickedFace;
             }
+        } else if (targetBlock instanceof AdderBlock) {
+            Direction adderFacing = targetState.getValue(AdderBlock.FACING);
+            Direction left, right;
+            switch (adderFacing) {
+                case NORTH: left = Direction.WEST; right = Direction.EAST; break;
+                case SOUTH: left = Direction.EAST; right = Direction.WEST; break;
+                case EAST:  left = Direction.NORTH; right = Direction.SOUTH; break;
+                case WEST:  left = Direction.SOUTH; right = Direction.NORTH; break;
+                default: left = right = null;
+            }
+            // Вал можно ставить на заднюю сторону (выход) и на боковые стороны (входы)
+            Direction outputSide = adderFacing.getOpposite();
+            if (clickedFace == outputSide || clickedFace == left || clickedFace == right) {
+                canPlace = true;
+                shaftFacing = clickedFace;
+            }
         }
 
         if (!canPlace) {

@@ -56,6 +56,10 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("rotation_meter_be",
                     () -> BlockEntityType.Builder.of(RotationMeterBlockEntity::new, ModBlocks.ROTATION_METER.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<AdderBlockEntity>> ADDER_BE =
+            BLOCK_ENTITIES.register("adder",
+                    () -> BlockEntityType.Builder.of(AdderBlockEntity::new, ModBlocks.ADDER.get()).build(null));
+
     public static final RegistryObject<BlockEntityType<StopperBlockEntity>> STOPPER_BE =
             BLOCK_ENTITIES.register("stopper",
                     () -> BlockEntityType.Builder.of(StopperBlockEntity::new, ModBlocks.STOPPER.get()).build(null));
