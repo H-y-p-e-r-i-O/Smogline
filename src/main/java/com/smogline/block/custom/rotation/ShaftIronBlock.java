@@ -133,6 +133,22 @@ public class ShaftIronBlock extends BaseEntityBlock {
                 canPlace = true;
                 shaftFacing = clickedFace;
             }
+        } else if (targetBlock instanceof TachometerBlock) {
+            Direction tachoFacing = targetState.getValue(TachometerBlock.FACING);
+            Direction left, right;
+            switch (tachoFacing) {
+                case NORTH: left = Direction.WEST; right = Direction.EAST; break;
+                case SOUTH: left = Direction.EAST; right = Direction.WEST; break;
+                case EAST:  left = Direction.NORTH; right = Direction.SOUTH; break;
+                case WEST:  left = Direction.SOUTH; right = Direction.NORTH; break;
+                case UP:    left = Direction.NORTH; right = Direction.SOUTH; break;
+                case DOWN:  left = Direction.SOUTH; right = Direction.NORTH; break;
+                default: left = right = null;
+            }
+            if (clickedFace == left || clickedFace == right) {
+                canPlace = true;
+                shaftFacing = clickedFace;
+            }
         }
 
         if (!canPlace) {

@@ -184,7 +184,7 @@ public class MainRegistry {
         LOGGER.info("Building creative tab contents for: " + event.getTabKey());
 
         // ТАЙМЕР ЗАКАНЧИВАЕТСЯ, ВЗРЫВЕМСЯ!
-        if (event.getTab() == ModCreativeTabs.NTM_WEAPONS_TAB.get()) {
+        if (event.getTab() == ModCreativeTabs.SMOGLINE_WEAPONS_TAB.get()) {
 
             event.accept(ModItems.GRENADE);
             event.accept(ModItems.GRENADEHE);
@@ -231,13 +231,256 @@ public class MainRegistry {
             event.accept(ModItems.TURRET_CHIP);
             event.accept(ModBlocks.TURRET_LIGHT_PLACER);
 
-            if (ModClothConfig.get().enableDebugLogging) {
-                LOGGER.info("Added Alloy Sword to NTM Weapons tab");
-            }
-        }
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                ClientSetup.addTemplatesClient(event);
+            });
 
-        //СЛИТКИ И РЕСУРСЫ...
-        if (event.getTab() == ModCreativeTabs.NTM_RESOURCES_TAB.get()) {
+          }
+
+            if (event.getTab() == ModCreativeTabs.SMOGLINE_TECH_TAB.get()) {
+
+                event.accept(ModItems.SCREWDRIVER.get());
+                event.accept(ModBlocks.SHAFT_IRON);
+                event.accept(ModBlocks.MOTOR_ELECTRO);
+                event.accept(ModBlocks.GEAR_PORT);
+                event.accept(ModBlocks.ADDER);
+                event.accept(ModBlocks.STOPPER);
+                event.accept(ModBlocks.TACHOMETER);
+                event.accept(ModBlocks.ROTATION_METER);
+
+            }
+
+
+         // СТАНКИ
+            if (event.getTab() == ModCreativeTabs.NTM_MACHINES_TAB.get()) {
+            event.accept(ModBlocks.CRATE_IRON);
+            event.accept(ModBlocks.CRATE_STEEL);
+            event.accept(ModBlocks.ANVIL_IRON);
+            event.accept(ModBlocks.ANVIL_LEAD);
+            event.accept(ModBlocks.ANVIL_STEEL);
+            event.accept(ModBlocks.ANVIL_DESH);
+            event.accept(ModBlocks.ANVIL_FERROURANIUM);
+            event.accept(ModBlocks.ANVIL_SATURNITE);
+            event.accept(ModBlocks.ANVIL_BISMUTH_BRONZE);
+            event.accept(ModBlocks.ANVIL_ARSENIC_BRONZE);
+            event.accept(ModBlocks.ANVIL_SCHRABIDATE);
+            event.accept(ModBlocks.ANVIL_DNT);
+            event.accept(ModBlocks.ANVIL_OSMIRIDIUM);
+            event.accept(ModBlocks.ANVIL_MURKY);
+            event.accept(ModBlocks.PRESS);
+            event.accept(ModBlocks.BLAST_FURNACE);
+            event.accept(ModBlocks.BLAST_FURNACE_EXTENSION);
+            event.accept(ModBlocks.SHREDDER);
+            event.accept(ModBlocks.WOOD_BURNER);
+            event.accept(ModBlocks.MACHINE_ASSEMBLER);
+            event.accept(ModBlocks.ADVANCED_ASSEMBLY_MACHINE);
+            event.accept(ModBlocks.ARMOR_TABLE);
+
+            event.accept(ModBlocks.FLUID_TANK);
+            event.accept(ModBlocks.MACHINE_BATTERY);
+            event.accept(ModBlocks.MACHINE_BATTERY_LITHIUM);
+            event.accept(ModBlocks.MACHINE_BATTERY_SCHRABIDIUM);
+            event.accept(ModBlocks.MACHINE_BATTERY_DINEUTRONIUM);
+            event.accept(ModBlocks.CONVERTER_BLOCK);
+
+            event.accept(ModBlocks.WIRE_COATED);
+            event.accept(ModBlocks.SWITCH);
+
+            event.accept(ModItems.CREATIVE_BATTERY);
+
+            List<RegistryObject<Item>> batteriesToAdd = List.of(
+                    ModItems.BATTERY_POTATO,
+                    ModItems.BATTERY,
+                    ModItems.BATTERY_RED_CELL,
+                    ModItems.BATTERY_RED_CELL_6,
+                    ModItems.BATTERY_RED_CELL_24,
+                    ModItems.BATTERY_ADVANCED,
+                    ModItems.BATTERY_ADVANCED_CELL,
+                    ModItems.BATTERY_ADVANCED_CELL_4,
+                    ModItems.BATTERY_ADVANCED_CELL_12,
+                    ModItems.BATTERY_LITHIUM,
+                    ModItems.BATTERY_LITHIUM_CELL,
+                    ModItems.BATTERY_LITHIUM_CELL_3,
+                    ModItems.BATTERY_LITHIUM_CELL_6,
+                    ModItems.BATTERY_SCHRABIDIUM,
+                    ModItems.BATTERY_SCHRABIDIUM_CELL,
+                    ModItems.BATTERY_SCHRABIDIUM_CELL_2,
+                    ModItems.BATTERY_SCHRABIDIUM_CELL_4,
+                    ModItems.BATTERY_SPARK,
+                    ModItems.BATTERY_TRIXITE,
+                    ModItems.BATTERY_SPARK_CELL_6,
+                    ModItems.BATTERY_SPARK_CELL_25,
+                    ModItems.BATTERY_SPARK_CELL_100,
+                    ModItems.BATTERY_SPARK_CELL_1000,
+                    ModItems.BATTERY_SPARK_CELL_2500,
+                    ModItems.BATTERY_SPARK_CELL_10000,
+                    ModItems.BATTERY_SPARK_CELL_POWER
+            );
+
+// 2. Проходимся по списку и добавляем 2 версии каждой
+            for (RegistryObject<Item> batteryRegObj : batteriesToAdd) {
+                Item item = batteryRegObj.get();
+
+                // Проверка, что это ModBatteryItem
+                if (item instanceof ModBatteryItem batteryItem) {
+                    // Добавляем пустую батарею
+                    ItemStack emptyStack = new ItemStack(batteryItem);
+                    event.accept(emptyStack);
+
+                    // Создаем заряженную батарею
+                    ItemStack chargedStack = new ItemStack(batteryItem);
+                    ModBatteryItem.setEnergy(chargedStack, batteryItem.getCapacity());
+                    event.accept(chargedStack);
+
+                    if (ModClothConfig.get().enableDebugLogging) {
+                        LOGGER.debug("Added empty and charged variants of {} to creative tab",
+                                batteryRegObj.getId());
+                    }
+                } else {
+                    // На всякий случай, если в списке что-то не ModBatteryItem
+                    event.accept(item);
+                    LOGGER.warn("Item {} is not a ModBatteryItem, added as regular item",
+                            batteryRegObj.getId());
+                }
+            }
+
+            event.accept(ModItems.BLADE_STEEL);
+            event.accept(ModItems.BLADE_TITANIUM);
+            event.accept(ModItems.BLADE_ALLOY);
+            event.accept(ModItems.BLADE_TEST);
+            event.accept(ModItems.STAMP_STONE_FLAT);
+            event.accept(ModItems.STAMP_STONE_PLATE);
+            event.accept(ModItems.STAMP_STONE_WIRE);
+            event.accept(ModItems.STAMP_STONE_CIRCUIT);
+            event.accept(ModItems.STAMP_IRON_FLAT);
+            event.accept(ModItems.STAMP_IRON_PLATE);
+            event.accept(ModItems.STAMP_IRON_WIRE);
+            event.accept(ModItems.STAMP_IRON_CIRCUIT);
+            event.accept(ModItems.STAMP_IRON_9);
+            event.accept(ModItems.STAMP_IRON_44);
+            event.accept(ModItems.STAMP_IRON_50);
+            event.accept(ModItems.STAMP_IRON_357);
+            event.accept(ModItems.STAMP_STEEL_FLAT);
+            event.accept(ModItems.STAMP_STEEL_PLATE);
+            event.accept(ModItems.STAMP_STEEL_WIRE);
+            event.accept(ModItems.STAMP_STEEL_CIRCUIT);
+            event.accept(ModItems.STAMP_TITANIUM_FLAT);
+            event.accept(ModItems.STAMP_TITANIUM_PLATE);
+            event.accept(ModItems.STAMP_TITANIUM_WIRE);
+            event.accept(ModItems.STAMP_TITANIUM_FLAT);
+            event.accept(ModItems.STAMP_TITANIUM_PLATE);
+            event.accept(ModItems.STAMP_TITANIUM_WIRE);
+            event.accept(ModItems.STAMP_TITANIUM_CIRCUIT);
+            event.accept(ModItems.STAMP_OBSIDIAN_FLAT);
+            event.accept(ModItems.STAMP_OBSIDIAN_PLATE);
+            event.accept(ModItems.STAMP_OBSIDIAN_WIRE);
+            event.accept(ModItems.STAMP_OBSIDIAN_CIRCUIT);
+            event.accept(ModItems.STAMP_DESH_FLAT);
+            event.accept(ModItems.STAMP_DESH_PLATE);
+            event.accept(ModItems.STAMP_DESH_WIRE);
+            event.accept(ModItems.STAMP_DESH_CIRCUIT);
+            event.accept(ModItems.STAMP_DESH_9);
+            event.accept(ModItems.STAMP_DESH_44);
+            event.accept(ModItems.STAMP_DESH_50);
+            event.accept(ModItems.STAMP_DESH_357);
+
+            event.accept(ModItems.TEMPLATE_FOLDER);
+
+            event.accept(ModItems.FLUID_IDENTIFIER.get());
+
+            // 2. Добавляем идентификаторы для ВСЕХ жидкостей в игре
+            // Цикл проходит по реестру жидкостей Forge
+            for (net.minecraft.world.level.material.Fluid fluid : net.minecraftforge.registries.ForgeRegistries.FLUIDS) {
+                // Проверяем: жидкость не пустая И это "источник" (не течение)
+                if (fluid != net.minecraft.world.level.material.Fluids.EMPTY && fluid.isSource(fluid.defaultFluidState())) {
+
+                    // Используем статический метод, который мы создали в ItemFluidIdentifier
+                    // Убедись, что импортировал класс ItemFluidIdentifier
+                    event.accept(com.smogline.item.custom.liquids.ItemFluidIdentifier.createStackFor(fluid));
+                }
+            }
+            event.accept(ModBlocks.MOX1);
+            event.accept(ModBlocks.MOX2);
+            event.accept(ModBlocks.MOX3);
+            event.accept(ModBlocks.SAND_ROUGH);
+
+            event.accept(ModBlocks.FLUORITE_ORE);
+            event.accept(ModBlocks.LIGNITE_ORE);
+            event.accept(ModBlocks.TUNGSTEN_ORE);
+            event.accept(ModBlocks.ASBESTOS_ORE);
+            event.accept(ModBlocks.SULFUR_ORE);
+            event.accept(ModBlocks.SEQUESTRUM_ORE);
+
+            event.accept(ModBlocks.ALUMINUM_ORE);
+            event.accept(ModBlocks.ALUMINUM_ORE_DEEPSLATE);
+            event.accept(ModBlocks.TITANIUM_ORE);
+            event.accept(ModBlocks.TITANIUM_ORE_DEEPSLATE);
+            event.accept(ModBlocks.COBALT_ORE);
+            event.accept(ModBlocks.COBALT_ORE_DEEPSLATE);
+            event.accept(ModBlocks.THORIUM_ORE);
+            event.accept(ModBlocks.THORIUM_ORE_DEEPSLATE);
+            event.accept(ModBlocks.RAREGROUND_ORE);
+            event.accept(ModBlocks.RAREGROUND_ORE_DEEPSLATE);
+            event.accept(ModBlocks.BERYLLIUM_ORE);
+            event.accept(ModBlocks.BERYLLIUM_ORE_DEEPSLATE);
+            event.accept(ModBlocks.LEAD_ORE);
+            event.accept(ModBlocks.LEAD_ORE_DEEPSLATE);
+            event.accept(ModBlocks.CINNABAR_ORE);
+            event.accept(ModBlocks.CINNABAR_ORE_DEEPSLATE);
+            event.accept(ModBlocks.URANIUM_ORE_DEEPSLATE);
+
+            event.accept(ModBlocks.RESOURCE_ASBESTOS.get());
+            event.accept(ModBlocks.RESOURCE_BAUXITE.get());
+            event.accept(ModBlocks.RESOURCE_HEMATITE.get());
+            event.accept(ModBlocks.RESOURCE_LIMESTONE.get());
+            event.accept(ModBlocks.RESOURCE_MALACHITE.get());
+            event.accept(ModBlocks.RESOURCE_SULFUR.get());
+
+            event.accept(ModItems.ALUMINUM_RAW);
+            event.accept(ModItems.BERYLLIUM_RAW);
+            event.accept(ModItems.COBALT_RAW);
+            event.accept(ModItems.LEAD_RAW);
+            event.accept(ModItems.THORIUM_RAW);
+            event.accept(ModItems.TITANIUM_RAW);
+            event.accept(ModItems.TUNGSTEN_RAW);
+            event.accept(ModItems.URANIUM_RAW);
+
+
+            event.accept(ModBlocks.GEYSIR_DIRT);
+            event.accept(ModBlocks.GEYSIR_STONE);
+
+            event.accept(ModBlocks.NUCLEAR_FALLOUT);
+            event.accept(ModBlocks.SELLAFIELD_SLAKED);
+            event.accept(ModBlocks.SELLAFIELD_SLAKED1);
+            event.accept(ModBlocks.SELLAFIELD_SLAKED2);
+            event.accept(ModBlocks.SELLAFIELD_SLAKED3);
+            event.accept(ModBlocks.WASTE_LOG);
+            event.accept(ModBlocks.WASTE_PLANKS);
+            event.accept(ModBlocks.WASTE_GRASS);
+            event.accept(ModBlocks.BURNED_GRASS);
+            event.accept(ModBlocks.DEAD_DIRT);
+            event.accept(ModBlocks.WASTE_LEAVES);
+
+            event.accept(ModItems.STRAWBERRY);
+            event.accept(ModBlocks.STRAWBERRY_BUSH);
+
+            event.accept(ModBlocks.POLONIUM210_BLOCK);
+// АВТОМАТИЧЕСКОЕ ДОБАВЛЕНИЕ ВСЕХ БЛОКОВ СЛИТКОВ
+            for (ModIngots ingot : ModIngots.values()) {
+
+                // !!! ВАЖНОЕ ИСПРАВЛЕНИЕ: ПРОВЕРКА НАЛИЧИЯ БЛОКА !!!
+                if (ModBlocks.hasIngotBlock(ingot)) {
+
+                    RegistryObject<Block> ingotBlock = ModBlocks.getIngotBlock(ingot);
+                    if (ingotBlock != null) {
+                        event.accept(ingotBlock.get());
+                        if (ModClothConfig.get().enableDebugLogging) {
+                            LOGGER.info("Added {} block to NTM Ores tab", ingotBlock.getId());
+                        }
+                    }
+                }
+            }
+
 
             event.accept(new ItemStack(ModItems.CINNABAR.get()));
             event.accept(new ItemStack(ModItems.FIRECLAY_BALL.get()));
@@ -249,7 +492,7 @@ public class MainRegistry {
             event.accept(new ItemStack(ModItems.FIREBRICK.get()));
             event.accept(new ItemStack(ModItems.WOOD_ASH_POWDER.get()));
             event.accept(new ItemStack(ModItems.CRUDE_OIL_BUCKET.get()));
-                  
+
 
             // ✅ СЛИТКИ
             for (ModIngots ingot : ModIngots.values()) {
@@ -257,7 +500,7 @@ public class MainRegistry {
                 if (ingotItem != null && ingotItem.isPresent()) {
                     event.accept(new ItemStack(ingotItem.get()));
                 }
-              
+
             }
 
             // ✅ ModPowders
@@ -368,290 +611,7 @@ public class MainRegistry {
             event.accept(ModItems.OIL_DETECTOR);
             event.accept(ModItems.DEPTH_ORES_SCANNER);
 
-        }
 
-
-        // РУДЫ
-        if (event.getTab() == ModCreativeTabs.NTM_ORES_TAB.get()) {
-
-            event.accept(ModBlocks.MOX1);
-            event.accept(ModBlocks.MOX2);
-            event.accept(ModBlocks.MOX3);
-            event.accept(ModBlocks.SAND_ROUGH);
-
-            event.accept(ModBlocks.FLUORITE_ORE);
-            event.accept(ModBlocks.LIGNITE_ORE);
-            event.accept(ModBlocks.TUNGSTEN_ORE);
-            event.accept(ModBlocks.ASBESTOS_ORE);
-            event.accept(ModBlocks.SULFUR_ORE);
-            event.accept(ModBlocks.SEQUESTRUM_ORE);
-
-            event.accept(ModBlocks.ALUMINUM_ORE);
-            event.accept(ModBlocks.ALUMINUM_ORE_DEEPSLATE);
-            event.accept(ModBlocks.TITANIUM_ORE);
-            event.accept(ModBlocks.TITANIUM_ORE_DEEPSLATE);
-            event.accept(ModBlocks.COBALT_ORE);
-            event.accept(ModBlocks.COBALT_ORE_DEEPSLATE);
-            event.accept(ModBlocks.THORIUM_ORE);
-            event.accept(ModBlocks.THORIUM_ORE_DEEPSLATE);
-            event.accept(ModBlocks.RAREGROUND_ORE);
-            event.accept(ModBlocks.RAREGROUND_ORE_DEEPSLATE);
-            event.accept(ModBlocks.BERYLLIUM_ORE);
-            event.accept(ModBlocks.BERYLLIUM_ORE_DEEPSLATE);
-            event.accept(ModBlocks.LEAD_ORE);
-            event.accept(ModBlocks.LEAD_ORE_DEEPSLATE);
-            event.accept(ModBlocks.CINNABAR_ORE);
-            event.accept(ModBlocks.CINNABAR_ORE_DEEPSLATE);
-            event.accept(ModBlocks.URANIUM_ORE_DEEPSLATE);
-
-            event.accept(ModBlocks.RESOURCE_ASBESTOS.get());
-            event.accept(ModBlocks.RESOURCE_BAUXITE.get());
-            event.accept(ModBlocks.RESOURCE_HEMATITE.get());
-            event.accept(ModBlocks.RESOURCE_LIMESTONE.get());
-            event.accept(ModBlocks.RESOURCE_MALACHITE.get());
-            event.accept(ModBlocks.RESOURCE_SULFUR.get());
-
-            event.accept(ModItems.ALUMINUM_RAW);
-            event.accept(ModItems.BERYLLIUM_RAW);
-            event.accept(ModItems.COBALT_RAW);
-            event.accept(ModItems.LEAD_RAW);
-            event.accept(ModItems.THORIUM_RAW);
-            event.accept(ModItems.TITANIUM_RAW);
-            event.accept(ModItems.TUNGSTEN_RAW);
-            event.accept(ModItems.URANIUM_RAW);
-
-
-            event.accept(ModBlocks.GEYSIR_DIRT);
-            event.accept(ModBlocks.GEYSIR_STONE);
-
-            event.accept(ModBlocks.NUCLEAR_FALLOUT);
-            event.accept(ModBlocks.SELLAFIELD_SLAKED);
-            event.accept(ModBlocks.SELLAFIELD_SLAKED1);
-            event.accept(ModBlocks.SELLAFIELD_SLAKED2);
-            event.accept(ModBlocks.SELLAFIELD_SLAKED3);
-            event.accept(ModBlocks.WASTE_LOG);
-            event.accept(ModBlocks.WASTE_PLANKS);
-            event.accept(ModBlocks.WASTE_GRASS);
-            event.accept(ModBlocks.BURNED_GRASS);
-            event.accept(ModBlocks.DEAD_DIRT);
-            event.accept(ModBlocks.WASTE_LEAVES);
-
-            event.accept(ModItems.STRAWBERRY);
-            event.accept(ModBlocks.STRAWBERRY_BUSH);
-
-            event.accept(ModBlocks.POLONIUM210_BLOCK);
-// АВТОМАТИЧЕСКОЕ ДОБАВЛЕНИЕ ВСЕХ БЛОКОВ СЛИТКОВ
-            for (ModIngots ingot : ModIngots.values()) {
-
-                // !!! ВАЖНОЕ ИСПРАВЛЕНИЕ: ПРОВЕРКА НАЛИЧИЯ БЛОКА !!!
-                if (ModBlocks.hasIngotBlock(ingot)) {
-
-                    RegistryObject<Block> ingotBlock = ModBlocks.getIngotBlock(ingot);
-                    if (ingotBlock != null) {
-                        event.accept(ingotBlock.get());
-                        if (ModClothConfig.get().enableDebugLogging) {
-                            LOGGER.info("Added {} block to NTM Ores tab", ingotBlock.getId());
-                        }
-                    }
-                }
-            }
-            if (ModClothConfig.get().enableDebugLogging) {
-                LOGGER.info("Added uranium block to NTM Resources tab");
-                LOGGER.info("Added polonium210 block to NTM Resources tab");
-                LOGGER.info("Added plutonium block to NTM Resources tab");
-                LOGGER.info("Added plutonium fuel block to NTM Resources tab");
-                LOGGER.info("Added uranium ore to NTM Resources tab");
-                LOGGER.info("Added waste leaves block to NTM Resources tab");
-                LOGGER.info("Added waste grass block to NTM Resources tab");
-            }
-        }
-
-
-
-
-
-        // СТАНКИ
-        if (event.getTab() == ModCreativeTabs.NTM_MACHINES_TAB.get()) {
-            event.accept(ModBlocks.CRATE_IRON);
-            event.accept(ModBlocks.CRATE_STEEL);
-            event.accept(ModBlocks.ANVIL_IRON);
-            event.accept(ModBlocks.ANVIL_LEAD);
-            event.accept(ModBlocks.ANVIL_STEEL);
-            event.accept(ModBlocks.ANVIL_DESH);
-            event.accept(ModBlocks.ANVIL_FERROURANIUM);
-            event.accept(ModBlocks.ANVIL_SATURNITE);
-            event.accept(ModBlocks.ANVIL_BISMUTH_BRONZE);
-            event.accept(ModBlocks.ANVIL_ARSENIC_BRONZE);
-            event.accept(ModBlocks.ANVIL_SCHRABIDATE);
-            event.accept(ModBlocks.ANVIL_DNT);
-            event.accept(ModBlocks.ANVIL_OSMIRIDIUM);
-            event.accept(ModBlocks.ANVIL_MURKY);
-            event.accept(ModBlocks.PRESS);
-            event.accept(ModBlocks.BLAST_FURNACE);
-            event.accept(ModBlocks.BLAST_FURNACE_EXTENSION);
-            event.accept(ModBlocks.SHREDDER);
-            event.accept(ModBlocks.WOOD_BURNER);
-            event.accept(ModBlocks.MACHINE_ASSEMBLER);
-            event.accept(ModBlocks.ADVANCED_ASSEMBLY_MACHINE);
-            event.accept(ModBlocks.ARMOR_TABLE);
-
-            event.accept(ModBlocks.FLUID_TANK);
-            event.accept(ModBlocks.MACHINE_BATTERY);
-            event.accept(ModBlocks.MACHINE_BATTERY_LITHIUM);
-            event.accept(ModBlocks.MACHINE_BATTERY_SCHRABIDIUM);
-            event.accept(ModBlocks.MACHINE_BATTERY_DINEUTRONIUM);
-            event.accept(ModBlocks.CONVERTER_BLOCK);
-
-            event.accept(ModBlocks.WIRE_COATED);
-            event.accept(ModBlocks.SWITCH);
-
-            event.accept(ModBlocks.MOTOR_ELECTRO);
-            event.accept(ModItems.SCREWDRIVER.get());
-            event.accept(ModBlocks.SHAFT_IRON);
-            event.accept(ModBlocks.GEAR_PORT);
-            event.accept(ModBlocks.ADDER);
-            event.accept(ModBlocks.STOPPER);
-            event.accept(ModBlocks.TACHOMETER);
-            event.accept(ModBlocks.ROTATION_METER);
-
-            if (ModClothConfig.get().enableDebugLogging) {
-                LOGGER.info("Added geiger counter BLOCK to NTM Machines tab");
-                LOGGER.info("Added assembly machine BLOCK to NTM Machines tab");
-                LOGGER.info("Added advanced assembly machine BLOCK to NTM Machines tab");
-                LOGGER.info("Added battery machine BLOCK to NTM Machines tab");
-                LOGGER.info("Added wire coated BLOCK to NTM Machines tab");
-            }
-        }
-
-        // ТОПЛИВО И ЭЛЕМЕНТЫ МЕХАНИЗМОВ
-        if (event.getTab() == ModCreativeTabs.NTM_FUEL_TAB.get()) {
-            // Сначала добавляем предметы, которые НЕ батарейки
-
-
-            // Креативная батарейка - отдельный класс, добавляем ее 1 раз
-            event.accept(ModItems.CREATIVE_BATTERY);
-
-// --- Новая логика для всех ModBatteryItem ---
-
-// 1. Создаем список всех батареек
-            List<RegistryObject<Item>> batteriesToAdd = List.of(
-                    ModItems.BATTERY_POTATO,
-                    ModItems.BATTERY,
-                    ModItems.BATTERY_RED_CELL,
-                    ModItems.BATTERY_RED_CELL_6,
-                    ModItems.BATTERY_RED_CELL_24,
-                    ModItems.BATTERY_ADVANCED,
-                    ModItems.BATTERY_ADVANCED_CELL,
-                    ModItems.BATTERY_ADVANCED_CELL_4,
-                    ModItems.BATTERY_ADVANCED_CELL_12,
-                    ModItems.BATTERY_LITHIUM,
-                    ModItems.BATTERY_LITHIUM_CELL,
-                    ModItems.BATTERY_LITHIUM_CELL_3,
-                    ModItems.BATTERY_LITHIUM_CELL_6,
-                    ModItems.BATTERY_SCHRABIDIUM,
-                    ModItems.BATTERY_SCHRABIDIUM_CELL,
-                    ModItems.BATTERY_SCHRABIDIUM_CELL_2,
-                    ModItems.BATTERY_SCHRABIDIUM_CELL_4,
-                    ModItems.BATTERY_SPARK,
-                    ModItems.BATTERY_TRIXITE,
-                    ModItems.BATTERY_SPARK_CELL_6,
-                    ModItems.BATTERY_SPARK_CELL_25,
-                    ModItems.BATTERY_SPARK_CELL_100,
-                    ModItems.BATTERY_SPARK_CELL_1000,
-                    ModItems.BATTERY_SPARK_CELL_2500,
-                    ModItems.BATTERY_SPARK_CELL_10000,
-                    ModItems.BATTERY_SPARK_CELL_POWER
-            );
-
-// 2. Проходимся по списку и добавляем 2 версии каждой
-            for (RegistryObject<Item> batteryRegObj : batteriesToAdd) {
-                Item item = batteryRegObj.get();
-
-                // Проверка, что это ModBatteryItem
-                if (item instanceof ModBatteryItem batteryItem) {
-                    // Добавляем пустую батарею
-                    ItemStack emptyStack = new ItemStack(batteryItem);
-                    event.accept(emptyStack);
-
-                    // Создаем заряженную батарею
-                    ItemStack chargedStack = new ItemStack(batteryItem);
-                    ModBatteryItem.setEnergy(chargedStack, batteryItem.getCapacity());
-                    event.accept(chargedStack);
-
-                    if (ModClothConfig.get().enableDebugLogging) {
-                        LOGGER.debug("Added empty and charged variants of {} to creative tab",
-                                batteryRegObj.getId());
-                    }
-                } else {
-                    // На всякий случай, если в списке что-то не ModBatteryItem
-                    event.accept(item);
-                    LOGGER.warn("Item {} is not a ModBatteryItem, added as regular item",
-                            batteryRegObj.getId());
-                }
-            }
-
-            if (ModClothConfig.get().enableDebugLogging) {
-                LOGGER.info("Added {} battery variants to NTM Fuel tab", batteriesToAdd.size() * 2);
-            }
-            event.accept(ModItems.BLADE_STEEL);
-            event.accept(ModItems.BLADE_TITANIUM);
-            event.accept(ModItems.BLADE_ALLOY);
-            event.accept(ModItems.BLADE_TEST);
-            event.accept(ModItems.STAMP_STONE_FLAT);
-            event.accept(ModItems.STAMP_STONE_PLATE);
-            event.accept(ModItems.STAMP_STONE_WIRE);
-            event.accept(ModItems.STAMP_STONE_CIRCUIT);
-            event.accept(ModItems.STAMP_IRON_FLAT);
-            event.accept(ModItems.STAMP_IRON_PLATE);
-            event.accept(ModItems.STAMP_IRON_WIRE);
-            event.accept(ModItems.STAMP_IRON_CIRCUIT);
-            event.accept(ModItems.STAMP_IRON_9);
-            event.accept(ModItems.STAMP_IRON_44);
-            event.accept(ModItems.STAMP_IRON_50);
-            event.accept(ModItems.STAMP_IRON_357);
-            event.accept(ModItems.STAMP_STEEL_FLAT);
-            event.accept(ModItems.STAMP_STEEL_PLATE);
-            event.accept(ModItems.STAMP_STEEL_WIRE);
-            event.accept(ModItems.STAMP_STEEL_CIRCUIT);
-            event.accept(ModItems.STAMP_TITANIUM_FLAT);
-            event.accept(ModItems.STAMP_TITANIUM_PLATE);
-            event.accept(ModItems.STAMP_TITANIUM_WIRE);
-            event.accept(ModItems.STAMP_TITANIUM_FLAT);
-            event.accept(ModItems.STAMP_TITANIUM_PLATE);
-            event.accept(ModItems.STAMP_TITANIUM_WIRE);
-            event.accept(ModItems.STAMP_TITANIUM_CIRCUIT);
-            event.accept(ModItems.STAMP_OBSIDIAN_FLAT);
-            event.accept(ModItems.STAMP_OBSIDIAN_PLATE);
-            event.accept(ModItems.STAMP_OBSIDIAN_WIRE);
-            event.accept(ModItems.STAMP_OBSIDIAN_CIRCUIT);
-            event.accept(ModItems.STAMP_DESH_FLAT);
-            event.accept(ModItems.STAMP_DESH_PLATE);
-            event.accept(ModItems.STAMP_DESH_WIRE);
-            event.accept(ModItems.STAMP_DESH_CIRCUIT);
-            event.accept(ModItems.STAMP_DESH_9);
-            event.accept(ModItems.STAMP_DESH_44);
-            event.accept(ModItems.STAMP_DESH_50);
-            event.accept(ModItems.STAMP_DESH_357);
-
-            event.accept(ModItems.TEMPLATE_FOLDER);
-
-            event.accept(ModItems.FLUID_IDENTIFIER.get());
-
-            // 2. Добавляем идентификаторы для ВСЕХ жидкостей в игре
-            // Цикл проходит по реестру жидкостей Forge
-            for (net.minecraft.world.level.material.Fluid fluid : net.minecraftforge.registries.ForgeRegistries.FLUIDS) {
-                // Проверяем: жидкость не пустая И это "источник" (не течение)
-                if (fluid != net.minecraft.world.level.material.Fluids.EMPTY && fluid.isSource(fluid.defaultFluidState())) {
-
-                    // Используем статический метод, который мы создали в ItemFluidIdentifier
-                    // Убедись, что импортировал класс ItemFluidIdentifier
-                    event.accept(com.smogline.item.custom.liquids.ItemFluidIdentifier.createStackFor(fluid));
-                }
-            }
-
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                ClientSetup.addTemplatesClient(event);
-            });
         }
 
     }
@@ -661,7 +621,5 @@ public class MainRegistry {
         event.put(ModEntities.TURRET_LIGHT_LINKED.get(), TurretLightEntity.createAttributes().build());
 
     }
-
-
 }
 
