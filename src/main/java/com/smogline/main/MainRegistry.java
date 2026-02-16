@@ -242,6 +242,7 @@ public class MainRegistry {
                 event.accept(ModItems.SCREWDRIVER.get());
                 event.accept(ModBlocks.SHAFT_IRON);
                 event.accept(ModBlocks.MOTOR_ELECTRO);
+                event.accept(ModBlocks.WIND_GEN_FLUGER);
                 event.accept(ModBlocks.GEAR_PORT);
                 event.accept(ModBlocks.ADDER);
                 event.accept(ModBlocks.STOPPER);

@@ -149,6 +149,12 @@ public class ShaftIronBlock extends BaseEntityBlock {
                 canPlace = true;
                 shaftFacing = clickedFace;
             }
+        } else if (targetBlock instanceof WindGenFlugerBlock) {
+            // Вал можно ставить только снизу
+            if (clickedFace == Direction.DOWN) {
+                canPlace = true;
+                shaftFacing = Direction.DOWN;
+            }
         }
 
         if (!canPlace) {

@@ -15,6 +15,7 @@ import com.smogline.api.fluids.ModFluids;
 
 import com.smogline.item.custom.rotation.MotorElectroBlockItem;
 import com.smogline.item.custom.rotation.ShaftIronBlockItem;
+import com.smogline.item.custom.rotation.WindGenFlugerBlockItem;
 import com.smogline.item.custom.weapons.ammo.AmmoTurretItem;
 import com.smogline.item.custom.weapons.grenades_and_activators.*;
 import com.smogline.item.custom.weapons.guns.MachineGunItem;
@@ -209,6 +210,11 @@ public class ModItems {
     public static final RegistryObject<Item> MOTOR_ELECTRO_ITEM = ITEMS.register("motor_electro",
             () -> new MotorElectroBlockItem(ModBlocks.MOTOR_ELECTRO.get(),
                     new Item.Properties()));
+
+    public static final RegistryObject<Item> WIND_GEN_FLUGER = ITEMS.register("wind_gen_fluger",
+            () -> new WindGenFlugerBlockItem(ModBlocks.WIND_GEN_FLUGER.get(),
+                    new Item.Properties()));
+
 
     // ---------- ВАЛ ЖЕЛЕЗНЫЙ (с GeoItem) ----------
     public static final RegistryObject<Item> SHAFT_IRON_ITEM = ITEMS.register("shaft_iron",

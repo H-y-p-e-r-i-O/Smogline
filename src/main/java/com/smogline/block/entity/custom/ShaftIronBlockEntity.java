@@ -1,15 +1,19 @@
 package com.smogline.block.entity.custom;
 
 import com.smogline.api.rotation.Rotational;
+import com.smogline.block.ModBlocks;
 import com.smogline.block.custom.rotation.MotorElectroBlock;
 import com.smogline.block.custom.rotation.ShaftIronBlock;
 import com.smogline.block.entity.ModBlockEntities;
+import com.smogline.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.Containers;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -29,6 +33,9 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
     private long speed = 0;
     private long torque = 0;
 
+    // Добавить среди полей класса
+    private static final long MAX_SPEED = 300;
+    private static final long MAX_TORQUE = 150;
     private static final float ACCELERATION = 0.1f;
     private static final float DECELERATION = 0.03f; // Медленное замедление
     private static final int STOP_DELAY_TICKS = 5;
@@ -155,6 +162,9 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
             } else if (neighbor instanceof TachometerBlockEntity tacho) {
                 ShaftIronBlockEntity.SourceInfo found = tacho.findSource(visited, dir.getOpposite(), depth + 1);
                 if (found != null) return found;
+            } else if (neighbor instanceof WindGenFlugerBlockEntity windGen) {
+                // Генератор сам является источником
+                return new SourceInfo(windGen.getSpeed(), windGen.getTorque());
             }
         }
         return null;
@@ -171,6 +181,16 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
 
         long newSpeed = (source != null) ? source.speed : 0;
         long newTorque = (source != null) ? source.torque : 0;
+
+        // Проверка на перегрузку
+        if (newSpeed > MAX_SPEED || newTorque > MAX_TORQUE) {
+            // Удаляем блок без дропа стандартным методом (чтобы не выпадал блок сам)
+            level.removeBlock(pos, false);
+            // Выбрасываем предмет вала
+            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    new ItemStack(ModBlocks.SHAFT_IRON.get())); // замените на свой предмет
+            return; // прекращаем обработку, блок уже удалён
+        }
 
         boolean changed = false;
         if (be.speed != newSpeed) { be.speed = newSpeed; changed = true; }

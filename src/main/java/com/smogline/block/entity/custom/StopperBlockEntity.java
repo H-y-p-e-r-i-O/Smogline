@@ -107,6 +107,9 @@ public class StopperBlockEntity extends BlockEntity implements Rotational {
             } else if (neighbor instanceof TachometerBlockEntity tacho) {
                 ShaftIronBlockEntity.SourceInfo found = tacho.findSource(visited, dir.getOpposite(), depth + 1);
                 if (found != null) return found;
+            } else if (neighbor instanceof WindGenFlugerBlockEntity windGen) {
+                // Генератор сам является источником
+                return new ShaftIronBlockEntity.SourceInfo(windGen.getSpeed(), windGen.getTorque());
             }
         }
         return null;
