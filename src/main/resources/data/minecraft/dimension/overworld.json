@@ -5,14 +5,14 @@
     "settings": "minecraft:overworld",
     "biome_source": {
       "type": "minecraft:multi_noise",
-      "preset": "minecraft:overworld",
       "biomes": [
         {
           "biome": "smogline:deep_smog_ocean",
           "parameters": {
             "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
             "continentalness": [-1.5, -0.6],
-            "erosion": [-1.0, 1.0], "weirdness": [-1.0, 1.0], "depth": 0, "offset": 0
+            "erosion": [-1.0, 1.0], "weirdness": [-1.0, 1.0],
+            "depth": [-1.0, 0.1], "offset": 0
           }
         },
         {
@@ -20,7 +20,8 @@
           "parameters": {
             "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
             "continentalness": [-0.6, -0.29],
-            "erosion": [-1.0, 1.0], "weirdness": [-1.0, 1.0], "depth": 0, "offset": 0
+            "erosion": [-1.0, 1.0], "weirdness": [-1.0, 1.0],
+            "depth": [-1.0, 0.1], "offset": 0
           }
         },
         {
@@ -28,23 +29,30 @@
           "parameters": {
             "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
             "continentalness": [0.02, 1.0],
-            "erosion": [-1.0, -0.3], "weirdness": [-1.0, 0.8], "depth": 0, "offset": 0
+            "erosion": [-1.0, -0.55],
+            "weirdness": [-1.0, 1.0],
+            "depth": [-1.0, 0.1], "offset": 0.1
           }
         },
         {
           "biome": "smogline:oasis",
           "parameters": {
-            "temperature": [-1.0, 1.0], "humidity": [0.5, 1.0],
-            "continentalness": [0.02, 1.0],
-            "erosion": [-1.0, -0.85], "weirdness": [0.8, 1.0], "depth": 0, "offset": 0
+            "temperature": [0.2, 1.0],
+            "humidity": [0.3, 1.0],
+            "continentalness": [0.5, 1.0],
+            "erosion": [-1.0, -0.55],
+            "weirdness": [-1.0, 1.0],
+            "depth": [-1.0, 0.1],
+            "offset": 0
           }
         },
         {
           "biome": "smogline:ruined_city",
           "parameters": {
             "temperature": [0.6, 1.0], "humidity": [-1.0, 1.0],
-            "continentalness": [0.02, 1.0],
-            "erosion": [0.4, 1.0], "weirdness": [-1.0, 1.0], "depth": 0, "offset": 0
+            "continentalness": [0.02, 0.5],
+            "erosion": [0.55, 1.0], "weirdness": [-1.0, 1.0],
+            "depth": [-1.0, 0.1], "offset": 0
           }
         },
         {
@@ -52,15 +60,17 @@
           "parameters": {
             "temperature": [0.2, 0.6], "humidity": [-1.0, 1.0],
             "continentalness": [0.02, 1.0],
-            "erosion": [0.0, 0.4], "weirdness": [-1.0, 1.0], "depth": 0, "offset": 0
+            "erosion": [0.0, 0.3], "weirdness": [-1.0, 1.0],
+            "depth": [-1.0, 0.1], "offset": 0
           }
         },
         {
           "biome": "smogline:alienation_plains",
           "parameters": {
-            "temperature": [-0.2, 0.2], "humidity": [-1.0, 1.0],
+            "temperature": [-0.2, 0.55], "humidity": [-1.0, 1.0],
             "continentalness": [0.02, 1.0],
-            "erosion": [0.1, 0.3], "weirdness": [-1.0, 1.0], "depth": 0, "offset": 0
+            "erosion": [-0.4, 0.4], "weirdness": [-1.0, 1.0],
+            "depth": [-1.0, 0.1], "offset": 0
           }
         },
         {
@@ -68,7 +78,35 @@
           "parameters": {
             "temperature": [-1.0, -0.2], "humidity": [-1.0, 1.0],
             "continentalness": [0.02, 1.0],
-            "erosion": [-0.3, 0.1], "weirdness": [-1.0, 1.0], "depth": 0, "offset": 0
+            "erosion": [-0.3, 0.1], "weirdness": [-1.0, 1.0],
+            "depth": [-1.0, 0.1], "offset": 0
+          }
+        },
+        {
+          "biome": "minecraft:lush_caves",
+          "parameters": {
+            "temperature": [-1.0, 1.0], "humidity": [0.4, 1.0],
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-1.0, 1.0], "weirdness": [-1.0, 1.0],
+            "depth": [0.5, 1.5], "offset": 0
+          }
+        },
+        {
+          "biome": "minecraft:dripstone_caves",
+          "parameters": {
+            "temperature": [-1.0, 1.0], "humidity": [-1.0, 0.4],
+            "continentalness": [0.0, 1.0],
+            "erosion": [-1.0, 1.0], "weirdness": [-1.0, 1.0],
+            "depth": [0.5, 1.5], "offset": 0
+          }
+        },
+        {
+          "biome": "minecraft:deep_dark",
+          "parameters": {
+            "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-1.0, 1.0], "weirdness": [-1.0, 1.0],
+            "depth": [0.8, 1.5], "offset": 0
           }
         }
       ]
