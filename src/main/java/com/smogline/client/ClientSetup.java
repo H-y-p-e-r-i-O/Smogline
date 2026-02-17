@@ -103,7 +103,7 @@ public class ClientSetup {
 
 // Register Entity Renders
 
-
+        BlockEntityRenderers.register(ModBlockEntities.WIND_GEN_FLUGER_BE.get(), WindGenFlugerRenderer::new);
         // Register Entity Renders
         ModEntities.GRENADE_NUC_PROJECTILE.ifPresent(entityType ->
                 EntityRenderers.register(entityType, ThrownItemRenderer::new)

@@ -241,6 +241,13 @@ public class ModBlocks {
                     .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
+    public static final RegistryObject<Block> WIND_GEN_FLUGER = BLOCKS.register("wind_gen_fluger",
+            () -> new WindGenFlugerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .strength(3.0f, 4.0f)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+
     public static final RegistryObject<Block> SHAFT_IRON = BLOCKS.register("shaft_iron",
             () -> new ShaftIronBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                     .strength(3.0f, 4.0f)

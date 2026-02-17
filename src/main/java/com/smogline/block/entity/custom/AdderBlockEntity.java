@@ -90,6 +90,9 @@ public class AdderBlockEntity extends BlockEntity implements Rotational {
             return stopper.findSource(visited, side.getOpposite(), 0);
         } else if (neighbor instanceof TachometerBlockEntity tacho) {   // <-- НОВАЯ СТРОКА
             return tacho.findSource(visited, side.getOpposite(), 0);    // <-- НОВАЯ СТРОКА
+        } else if (neighbor instanceof WindGenFlugerBlockEntity windGen) {
+            // Генератор сам является источником
+            return new ShaftIronBlockEntity.SourceInfo(windGen.getSpeed(), windGen.getTorque());
         }
         return null;
     }

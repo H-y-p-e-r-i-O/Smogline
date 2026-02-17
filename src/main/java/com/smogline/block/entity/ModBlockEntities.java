@@ -52,6 +52,10 @@ public class ModBlockEntities {
 			BlockEntityType.Builder.<MachineAdvancedAssemblerBlockEntity>of(MachineAdvancedAssemblerBlockEntity::new, ModBlocks.ADVANCED_ASSEMBLY_MACHINE.get())
 				.build(null));
 
+    public static final RegistryObject<BlockEntityType<WindGenFlugerBlockEntity>> WIND_GEN_FLUGER_BE =
+            BLOCK_ENTITIES.register("wind_gen_fluger",
+                    () -> BlockEntityType.Builder.of(WindGenFlugerBlockEntity::new, ModBlocks.WIND_GEN_FLUGER.get()).build(null));
+
     public static final RegistryObject<BlockEntityType<TachometerBlockEntity>> TACHOMETER_BE =
             BLOCK_ENTITIES.register("tachometer",
                     () -> BlockEntityType.Builder.of(TachometerBlockEntity::new, ModBlocks.TACHOMETER.get()).build(null));
