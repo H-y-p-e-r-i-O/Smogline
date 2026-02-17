@@ -1,8 +1,12 @@
 package com.smogline.block.entity.custom;
 
 import com.smogline.api.rotation.Rotational;
+import com.smogline.api.rotation.RotationalNode;
+import com.smogline.api.rotation.RotationSource;
+import com.smogline.block.custom.rotation.WindGenFlugerBlock;
 import com.smogline.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -19,13 +23,16 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.Random;
 
-public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEntity, Rotational {
+public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEntity, Rotational, RotationalNode {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     private long speed = 0;
     private long torque = 0;
     private static final long MAX_SPEED = 100;
     private static final long MAX_TORQUE = 25;
+
+    // Выходная сторона (куда передаётся вращение) – всегда вниз
+    private static final Direction OUTPUT_SIDE = Direction.DOWN;
 
     // Интервал изменения ветра (30 секунд = 600 тиков) + случайная вариация
     private int changeCooldown = 0;
@@ -54,6 +61,11 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
     private static final RawAnimation FLUGER = RawAnimation.begin().thenLoop("fluger");
     private static final RawAnimation FLUGER_FAST = RawAnimation.begin().thenPlay("fluger_fast");
 
+    // Поля для RotationalNode (кеш источника – не используется, но требуется интерфейсом)
+    private RotationSource cachedSource;
+    private long cacheTimestamp;
+    private static final long CACHE_LIFETIME = 20;
+
     public float getCurrentWindYaw() {
         return currentWindYaw;
     }
@@ -72,7 +84,7 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
         return Math.round(spd * MAX_TORQUE / (double) MAX_SPEED);
     }
 
-    // Rotational
+    // ========== Rotational ==========
     @Override public long getSpeed() { return speed; }
     @Override public long getTorque() { return torque; }
     @Override public void setSpeed(long speed) {
@@ -80,6 +92,8 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
         this.torque = calculateTorque(this.speed);
         setChanged();
         sync();
+        // При изменении скорости инвалидируем кеш у соседей (опционально)
+        invalidateNeighborCaches();
     }
     @Override public void setTorque(long torque) {
         // torque устанавливается автоматически из speed, поэтому игнорируем
@@ -87,6 +101,58 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
     @Override public long getMaxSpeed() { return MAX_SPEED; }
     @Override public long getMaxTorque() { return MAX_TORQUE; }
 
+    // ========== RotationalNode ==========
+    @Override
+    @Nullable
+    public RotationSource getCachedSource() {
+        return cachedSource;
+    }
+
+    @Override
+    public void setCachedSource(@Nullable RotationSource source, long gameTime) {
+        this.cachedSource = source;
+        this.cacheTimestamp = gameTime;
+    }
+
+    @Override
+    public boolean isCacheValid(long currentTime) {
+        return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME;
+    }
+
+    @Override
+    public void invalidateCache() {
+        this.cachedSource = null;
+    }
+
+    /**
+     * Ветряк не передаёт поиск дальше – он сам источник.
+     */
+    @Override
+    public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
+        return new Direction[0];
+    }
+
+    /**
+     * Ветряк может предоставить источник только при запросе снизу (выходная сторона).
+     */
+    @Override
+    public boolean canProvideSource(@Nullable Direction fromDir) {
+        return fromDir == OUTPUT_SIDE;
+    }
+
+    /**
+     * Инвалидирует кеш у соседних блоков (валов), чтобы они пересчитали источник.
+     */
+    private void invalidateNeighborCaches() {
+        if (level == null || level.isClientSide) return;
+        BlockPos neighborPos = worldPosition.relative(OUTPUT_SIDE);
+        BlockEntity neighbor = level.getBlockEntity(neighborPos);
+        if (neighbor instanceof RotationalNode node) {
+            node.invalidateCache();
+        }
+    }
+
+    // ========== Тик ==========
     public static void tick(Level level, BlockPos pos, BlockState state, WindGenFlugerBlockEntity be) {
         if (level.isClientSide) {
             be.handleClientAnimation();
@@ -98,49 +164,38 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
 
     private void tickServer() {
         if (changeCooldown <= 0) {
-            // Выбираем новое направление и скорость
             updateWindParameters();
-            // Сбрасываем кулдаун со случайным интервалом
             changeCooldown = BASE_CHANGE_INTERVAL + random.nextInt(INTERVAL_VARIATION * 2 + 1) - INTERVAL_VARIATION;
-            if (changeCooldown < 20) changeCooldown = 20; // минимум 1 секунда
+            if (changeCooldown < 20) changeCooldown = 20;
         } else {
             changeCooldown--;
         }
     }
 
     private void updateWindParameters() {
-        // 1. Изменение скорости
         long currentSpeed = this.speed;
-        // Вероятность увеличения: линейно убывает от 1 при speed=0 до 0 при speed=MAX_SPEED
         double probIncrease = 1.0 - (currentSpeed / (double) MAX_SPEED);
         boolean increase = random.nextDouble() < probIncrease;
 
-        // Величина изменения (0..10)
         long maxDelta = 10;
-        long delta = (long) (random.nextDouble() * maxDelta) + 1; // минимум 1
+        long delta = (long) (random.nextDouble() * maxDelta) + 1;
         if (!increase) delta = -delta;
 
         long newSpeed = currentSpeed + delta;
-        // Ограничиваем в пределах [0, MAX_SPEED]
         newSpeed = Math.max(0, Math.min(MAX_SPEED, newSpeed));
+        setSpeed(newSpeed); // вызовет инвалидацию кеша у соседей
 
-        // Применяем
-        setSpeed(newSpeed);
-
-        // 2. Изменение направления ветра (угол)
         float currentYaw = targetWindYaw;
-        // Направление изменения тоже вероятностное (равновероятно влево/вправо)
         boolean increaseYaw = random.nextBoolean();
         float deltaYaw = (float) (random.nextDouble() * MAX_YAW_CHANGE);
         if (!increaseYaw) deltaYaw = -deltaYaw;
 
         float newYaw = currentYaw + deltaYaw;
-        // Ограничиваем в пределах [-40, 40]
         newYaw = Math.max(-40, Math.min(40, newYaw));
-
         setTargetWindYaw(newYaw);
     }
 
+    // ========== Клиент: анимация ==========
     private void handleClientAnimation() {
         float targetSpeed = (speed > 0) ? Math.max(0.1f, speed / 100f) : 0f;
         if (targetSpeed > 0) {
