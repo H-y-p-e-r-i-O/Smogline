@@ -13,7 +13,7 @@
 			"bones": [
 				{
 					"name": "wind_gen",
-					"pivot": [0.00044, 0.19989, 0.20166]
+					"pivot": [0, 0, 0]
 				},
 				{
 					"name": "shaft2",

@@ -1,5 +1,6 @@
 package com.smogline.block.custom.rotation;
 
+import com.smogline.api.rotation.RotationalNode;
 import com.smogline.block.entity.ModBlockEntities;
 import com.smogline.block.entity.custom.RotationMeterBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -87,5 +88,27 @@ public class RotationMeterBlock extends BaseEntityBlock {
         return createTickerHelper(type, ModBlockEntities.ROTATION_METER_BE.get(), RotationMeterBlockEntity::tick);
     }
 
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        if (!level.isClientSide) {
+            if (level.getBlockEntity(pos) instanceof RotationMeterBlockEntity be) {
+                be.invalidateCache();
+            }
+        }
+    }
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!level.isClientSide && state.getBlock() != newState.getBlock()) {
+            // Инвалидируем кеш у всех соседей
+            for (Direction dir : Direction.values()) {
+                BlockPos neighborPos = pos.relative(dir);
+                if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                    node.invalidateCache();
+                }
+            }
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
+    }
     // При обновлении соседей можно проверять подключение валов, но для функциональности это не обязательно
 }

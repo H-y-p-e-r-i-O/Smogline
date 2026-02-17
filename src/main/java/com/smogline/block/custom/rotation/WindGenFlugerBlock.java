@@ -1,5 +1,6 @@
 package com.smogline.block.custom.rotation;
 
+import com.smogline.api.rotation.RotationalNode;
 import com.smogline.block.entity.ModBlockEntities;
 import com.smogline.block.entity.custom.WindGenFlugerBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -52,5 +53,28 @@ public class WindGenFlugerBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(type, ModBlockEntities.WIND_GEN_FLUGER_BE.get(), WindGenFlugerBlockEntity::tick);
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        if (!level.isClientSide) {
+            if (level.getBlockEntity(pos) instanceof WindGenFlugerBlockEntity be) {
+                be.invalidateCache();
+            }
+        }
+    }
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!level.isClientSide && state.getBlock() != newState.getBlock()) {
+            // Инвалидируем кеш у всех соседей
+            for (Direction dir : Direction.values()) {
+                BlockPos neighborPos = pos.relative(dir);
+                if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                    node.invalidateCache();
+                }
+            }
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 }

@@ -1,5 +1,6 @@
 package com.smogline.block.custom.rotation;
 
+import com.smogline.api.rotation.RotationalNode;
 import com.smogline.block.entity.ModBlockEntities;
 import com.smogline.block.entity.custom.TachometerBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -101,5 +102,28 @@ public class TachometerBlock extends BaseEntityBlock {
     @Override
     public boolean isSignalSource(BlockState state) {
         return true;
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        if (!level.isClientSide) {
+            if (level.getBlockEntity(pos) instanceof TachometerBlockEntity be) {
+                be.invalidateCache();
+            }
+        }
+    }
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!level.isClientSide && state.getBlock() != newState.getBlock()) {
+            // Инвалидируем кеш у всех соседей
+            for (Direction dir : Direction.values()) {
+                BlockPos neighborPos = pos.relative(dir);
+                if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                    node.invalidateCache();
+                }
+            }
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 }
