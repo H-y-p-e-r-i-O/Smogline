@@ -37,7 +37,7 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
     // Кеш источника
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 20; // тиков (1 секунда)
+    private static final long CACHE_LIFETIME = 10;// тиков (1 секунда)
 
     // Параметры перегрузки и анимации
     private static final long MAX_SPEED = 300;
@@ -110,7 +110,18 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
 
     @Override
     public void invalidateCache() {
-        this.cachedSource = null;
+        if (this.cachedSource != null) {
+            this.cachedSource = null;
+            if (level != null && !level.isClientSide) {
+                Direction facing = getBlockState().getValue(ShaftIronBlock.FACING);
+                for (Direction dir : new Direction[]{facing, facing.getOpposite()}) {
+                    BlockPos neighborPos = worldPosition.relative(dir);
+                    if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                        node.invalidateCache();
+                    }
+                }
+            }
+        }
     }
 
     /**

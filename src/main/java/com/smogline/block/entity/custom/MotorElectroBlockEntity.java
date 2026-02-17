@@ -32,7 +32,7 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
     // Поля для RotationalNode (кеш источника – мотор сам источник, но интерфейс требует)
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 20;
+    private static final long CACHE_LIFETIME = 10;
 
     // Анимация
     private float currentAnimationSpeed = 0f;
@@ -118,7 +118,16 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
 
     @Override
     public void invalidateCache() {
-        this.cachedSource = null;
+        if (this.cachedSource != null) {
+            this.cachedSource = null;
+            if (level != null && !level.isClientSide) {
+                Direction facing = getBlockState().getValue(MotorElectroBlock.FACING);
+                BlockPos outputPos = worldPosition.relative(facing.getOpposite());
+                if (level.getBlockEntity(outputPos) instanceof RotationalNode node) {
+                    node.invalidateCache();
+                }
+            }
+        }
     }
 
     /**

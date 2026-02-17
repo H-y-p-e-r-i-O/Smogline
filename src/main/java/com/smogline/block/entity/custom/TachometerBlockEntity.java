@@ -29,7 +29,7 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
     // Кеш найденного источника
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 20; // тиков (1 секунда)
+    private static final long CACHE_LIFETIME = 10; // тиков (1 секунда)
 
     public TachometerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TACHOMETER_BE.get(), pos, state);
@@ -61,7 +61,22 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
 
     @Override
     public void invalidateCache() {
-        this.cachedSource = null;
+        if (this.cachedSource != null) {
+            this.cachedSource = null;
+            if (level != null && !level.isClientSide) {
+                Direction facing = getBlockState().getValue(TachometerBlock.FACING);
+                Direction left = TachometerBlock.getLeft(facing);
+                Direction right = TachometerBlock.getRight(facing);
+                for (Direction dir : new Direction[]{left, right}) {
+                    if (dir != null) {
+                        BlockPos neighborPos = worldPosition.relative(dir);
+                        if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                            node.invalidateCache();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

@@ -30,7 +30,7 @@ public class GearPortBlockEntity extends BlockEntity implements RotationalNode {
     // Кеш собственного значения (не используется как источник, но для совместимости)
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 20; // тиков (1 секунда)
+    private static final long CACHE_LIFETIME = 10; // тиков (1 секунда)
 
     public GearPortBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.GEAR_PORT_BE.get(), pos, state);
@@ -104,7 +104,23 @@ public class GearPortBlockEntity extends BlockEntity implements RotationalNode {
 
     @Override
     public void invalidateCache() {
-        this.cachedSource = null;
+        if (this.cachedSource != null) {
+            this.cachedSource = null;
+            if (level != null && !level.isClientSide) {
+                if (firstPort != null) {
+                    BlockPos neighborPos = worldPosition.relative(firstPort);
+                    if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                        node.invalidateCache();
+                    }
+                }
+                if (secondPort != null) {
+                    BlockPos neighborPos = worldPosition.relative(secondPort);
+                    if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                        node.invalidateCache();
+                    }
+                }
+            }
+        }
     }
 
     /**

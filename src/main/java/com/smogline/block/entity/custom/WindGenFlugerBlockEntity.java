@@ -64,7 +64,7 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
     // Поля для RotationalNode (кеш источника – не используется, но требуется интерфейсом)
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 20;
+    private static final long CACHE_LIFETIME = 10;
 
     public float getCurrentWindYaw() {
         return currentWindYaw;
@@ -121,7 +121,16 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
 
     @Override
     public void invalidateCache() {
-        this.cachedSource = null;
+        if (this.cachedSource != null) {
+            this.cachedSource = null;
+            if (level != null && !level.isClientSide) {
+                // выход всегда вниз
+                BlockPos outputPos = worldPosition.relative(Direction.DOWN);
+                if (level.getBlockEntity(outputPos) instanceof RotationalNode node) {
+                    node.invalidateCache();
+                }
+            }
+        }
     }
 
     /**

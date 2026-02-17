@@ -27,7 +27,7 @@ public class StopperBlockEntity extends BlockEntity implements RotationalNode {
     // Кеш найденного источника
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 20; // тиков (1 секунда)
+    private static final long CACHE_LIFETIME = 10;// тиков (1 секунда)
 
     public StopperBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.STOPPER_BE.get(), pos, state);
@@ -59,7 +59,30 @@ public class StopperBlockEntity extends BlockEntity implements RotationalNode {
 
     @Override
     public void invalidateCache() {
-        this.cachedSource = null;
+        if (this.cachedSource != null) {
+            this.cachedSource = null;
+            if (level != null && !level.isClientSide) {
+                Direction facing = getBlockState().getValue(StopperBlock.FACING);
+                Direction left, right;
+                switch (facing) {
+                    case NORTH: left = Direction.WEST; right = Direction.EAST; break;
+                    case SOUTH: left = Direction.EAST; right = Direction.WEST; break;
+                    case EAST:  left = Direction.NORTH; right = Direction.SOUTH; break;
+                    case WEST:  left = Direction.SOUTH; right = Direction.NORTH; break;
+                    case UP:    left = Direction.NORTH; right = Direction.SOUTH; break;
+                    case DOWN:  left = Direction.SOUTH; right = Direction.NORTH; break;
+                    default: left = right = null;
+                }
+                for (Direction dir : new Direction[]{left, right}) {
+                    if (dir != null) {
+                        BlockPos neighborPos = worldPosition.relative(dir);
+                        if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                            node.invalidateCache();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

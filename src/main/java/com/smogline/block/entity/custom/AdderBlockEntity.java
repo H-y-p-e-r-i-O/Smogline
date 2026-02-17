@@ -28,7 +28,7 @@ public class AdderBlockEntity extends BlockEntity implements RotationalNode {
     // Кеш собственного значения
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 20;
+    private static final long CACHE_LIFETIME = 10;
 
     public AdderBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ADDER_BE.get(), pos, state);
@@ -60,7 +60,17 @@ public class AdderBlockEntity extends BlockEntity implements RotationalNode {
 
     @Override
     public void invalidateCache() {
-        this.cachedSource = null;
+        if (this.cachedSource != null) {
+            this.cachedSource = null;
+            if (level != null && !level.isClientSide) {
+                Direction facing = getBlockState().getValue(AdderBlock.FACING);
+                Direction outputSide = facing.getOpposite();
+                BlockPos neighborPos = worldPosition.relative(outputSide);
+                if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                    node.invalidateCache();
+                }
+            }
+        }
     }
 
     /**
