@@ -9,16 +9,16 @@ import software.bernie.geckolib.model.GeoModel;
 public class WindGenFlugerItemModel extends GeoModel<WindGenFlugerBlockItem> {
     @Override
     public ResourceLocation getModelResource(WindGenFlugerBlockItem animatable) {
-        return new ResourceLocation(RefStrings.MODID, "geo/motor_electro.geo.json");
+        return new ResourceLocation(RefStrings.MODID, "geo/wind_gen_fluger.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(WindGenFlugerBlockItem animatable) {
-        return new ResourceLocation(RefStrings.MODID, "textures/block/motor_electro.png");
+        return new ResourceLocation(RefStrings.MODID, "textures/block/wind_gen_fluger.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(WindGenFlugerBlockItem animatable) {
-        return new ResourceLocation(RefStrings.MODID, "animations/motor_electro.animation.json");
+        return new ResourceLocation(RefStrings.MODID, "animations/wind_gen_fluger.animation.json");
     }
 }

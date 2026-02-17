@@ -2,7 +2,6 @@
 	"format_version": "1.8.0",
 	"animations": {
 		"rotation": {
-			"loop": true,
 			"animation_length": 1,
 			"bones": {
 				"fan": {
@@ -11,7 +10,7 @@
 							"vector": [0, 0, 0]
 						},
 						"1.0": {
-							"vector": [0, 0, 350]
+							"vector": [0, 0, 360]
 						}
 					}
 				},
@@ -28,7 +27,6 @@
 			}
 		},
 		"fluger": {
-			"loop": true,
 			"animation_length": 6,
 			"bones": {
 				"flug": {
@@ -56,23 +54,23 @@
 			}
 		},
 		"fluger_fast": {
-			"animation_length": 2.5,
+			"animation_length": 2,
 			"bones": {
 				"flug": {
 					"rotation": {
 						"0.0": {
 							"vector": [0, 0, 0]
 						},
-						"1.0": {
+						"0.75": {
 							"vector": [0, 27.5, 0]
 						},
-						"1.4167": {
+						"1.1667": {
 							"vector": [0, 27.5, 0]
 						},
-						"1.875": {
+						"1.625": {
 							"vector": [0, -12.5, 0]
 						},
-						"2.25": {
+						"2.0": {
 							"vector": [0, 0, 0]
 						}
 					}

@@ -39,7 +39,6 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
     private static final float ACCELERATION = 0.05f;
     private static final float DECELERATION = 0.02f;
     private static final int STOP_DELAY_TICKS = 10;
-    private static final float MIN_ANIM_SPEED = 0.005f;
     private int ticksWithoutPower = 0;
 
     // Направление ветра (поворот корпуса)
@@ -186,23 +185,35 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
     // GeckoLib
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // Контроллер вращения
         controllers.add(new AnimationController<>(this, "rotation_controller", 0, this::rotationPredicate));
-        controllers.add(new AnimationController<>(this, "fluger_controller", 0, this::flugerPredicate));
+
+        // Контроллер флюгера
+        AnimationController<WindGenFlugerBlockEntity> flugerController = new AnimationController<>(this, "fluger_controller", 0, this::flugerPredicate);
+        flugerController.setAnimation(FLUGER); // сразу задаём зацикленную анимацию
+        flugerController.setAnimationSpeed(1.0f);
+        controllers.add(flugerController);
     }
 
     private <E extends GeoBlockEntity> PlayState rotationPredicate(AnimationState<E> event) {
-        if (currentAnimationSpeed < MIN_ANIM_SPEED) {
-            return PlayState.STOP;
+        AnimationController<?> controller = event.getController();
+        // Устанавливаем анимацию только если контроллер остановлен (например, при первом запуске или после сбоя)
+        if (controller.getAnimationState() == AnimationController.State.STOPPED) {
+            controller.setAnimation(ROTATION);
         }
-        event.getController().setAnimation(ROTATION);
-        event.getController().setAnimationSpeed(currentAnimationSpeed);
+        controller.setAnimationSpeed(currentAnimationSpeed);
         return PlayState.CONTINUE;
     }
 
     private <E extends GeoBlockEntity> PlayState flugerPredicate(AnimationState<E> event) {
-        event.getController().setAnimation(FLUGER);
+        AnimationController<?> controller = event.getController();
+        // Если контроллер остановлен (после проигрывания fluger_fast), возвращаем зацикленную анимацию
+        if (controller.getAnimationState() == AnimationController.State.STOPPED) {
+            controller.setAnimation(FLUGER);
+        }
         return PlayState.CONTINUE;
     }
+
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
