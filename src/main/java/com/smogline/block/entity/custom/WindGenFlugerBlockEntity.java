@@ -24,15 +24,13 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
 
     private long speed = 0;
     private long torque = 0;
-    private static final long MAX_SPEED = 100; // максимальная скорость
-    private static final long MAX_TORQUE = 25; // максимальный момент
+    private static final long MAX_SPEED = 100;
+    private static final long MAX_TORQUE = 25;
 
-    // Для случайной генерации
     private int tickCounter = 0;
-    private static final int CHANGE_INTERVAL = 100; // менять каждые 5 секунд (20 тиков/сек)
+    private static final int CHANGE_INTERVAL = 100;
     private final Random random = new Random();
 
-    // Анимация
     private float currentAnimationSpeed = 0f;
     private static final float ACCELERATION = 0.05f;
     private static final float DECELERATION = 0.02f;
@@ -40,7 +38,20 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
     private static final float MIN_ANIM_SPEED = 0.005f;
     private int ticksWithoutPower = 0;
 
+    // Направление ветра (поворот корпуса)
+    private float currentWindYaw = 0f;
+    private float targetWindYaw = 0f;
+    private boolean shouldPlayTurnAnimation = false;
+
+    private static final float MAX_TURN_PER_TICK = 0.5f;
+
     private static final RawAnimation ROTATION = RawAnimation.begin().thenLoop("rotation");
+    private static final RawAnimation FLUGER = RawAnimation.begin().thenLoop("fluger");
+    private static final RawAnimation FLUGER_FAST = RawAnimation.begin().thenPlay("fluger_fast");
+
+    public float getCurrentWindYaw() {
+        return currentWindYaw;
+    }
 
     public WindGenFlugerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.WIND_GEN_FLUGER_BE.get(), pos, state);
@@ -54,30 +65,31 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
     @Override public long getMaxSpeed() { return MAX_SPEED; }
     @Override public long getMaxTorque() { return MAX_TORQUE; }
 
-    // Тик
     public static void tick(Level level, BlockPos pos, BlockState state, WindGenFlugerBlockEntity be) {
         if (level.isClientSide) {
             be.handleClientAnimation();
-            return;
-        }
-
-        // Генерация случайных значений с течением времени
-        be.tickCounter++;
-        if (be.tickCounter >= CHANGE_INTERVAL) {
-            be.tickCounter = 0;
-            // Генерируем случайные значения в заданных диапазонах
-            // Можно добавить зависимость от погоды, времени суток и т.п.
-            long newSpeed = (long) (be.random.nextDouble() * MAX_SPEED);
-            long newTorque = (long) (be.random.nextDouble() * MAX_TORQUE);
-            be.setSpeed(newSpeed);
-            be.setTorque(newTorque);
+            be.handleWindYawAnimation();
+        } else {
+            be.tickServer();
         }
     }
 
-    // Анимация на клиенте
+    private void tickServer() {
+        tickCounter++;
+        if (tickCounter >= CHANGE_INTERVAL) {
+            tickCounter = 0;
+            long newSpeed = (long) (random.nextDouble() * MAX_SPEED);
+            long newTorque = (long) (random.nextDouble() * MAX_TORQUE);
+            setSpeed(newSpeed);
+            setTorque(newTorque);
+
+            float newYaw = (random.nextFloat() * 80) - 40;
+            setTargetWindYaw(newYaw);
+        }
+    }
+
     private void handleClientAnimation() {
         float targetSpeed = (speed > 0) ? Math.max(0.1f, speed / 100f) : 0f;
-
         if (targetSpeed > 0) {
             ticksWithoutPower = 0;
             if (currentAnimationSpeed < targetSpeed) {
@@ -97,18 +109,44 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
         }
     }
 
+    private void handleWindYawAnimation() {
+        if (Math.abs(targetWindYaw - currentWindYaw) > 0.01f) {
+            float delta = targetWindYaw - currentWindYaw;
+            float step = Math.copySign(Math.min(Math.abs(delta), MAX_TURN_PER_TICK), delta);
+            currentWindYaw += step;
+            if (!shouldPlayTurnAnimation && Math.abs(step) > 0.01f) {
+                shouldPlayTurnAnimation = true;
+                triggerAnim("fluger_controller", "fluger_fast");
+            }
+        } else {
+            shouldPlayTurnAnimation = false;
+        }
+    }
+
+    public void setTargetWindYaw(float yaw) {
+        this.targetWindYaw = yaw;
+        setChanged();
+        sync();
+    }
+
     // GeckoLib
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "rotation_controller", 0, this::animationPredicate));
+        controllers.add(new AnimationController<>(this, "rotation_controller", 0, this::rotationPredicate));
+        controllers.add(new AnimationController<>(this, "fluger_controller", 0, this::flugerPredicate));
     }
 
-    private <E extends GeoBlockEntity> PlayState animationPredicate(AnimationState<E> event) {
+    private <E extends GeoBlockEntity> PlayState rotationPredicate(AnimationState<E> event) {
         if (currentAnimationSpeed < MIN_ANIM_SPEED) {
             return PlayState.STOP;
         }
         event.getController().setAnimation(ROTATION);
         event.getController().setAnimationSpeed(currentAnimationSpeed);
+        return PlayState.CONTINUE;
+    }
+
+    private <E extends GeoBlockEntity> PlayState flugerPredicate(AnimationState<E> event) {
+        event.getController().setAnimation(FLUGER);
         return PlayState.CONTINUE;
     }
 
@@ -126,6 +164,7 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
         super.saveAdditional(tag);
         tag.putLong("Speed", speed);
         tag.putLong("Torque", torque);
+        tag.putFloat("TargetWindYaw", targetWindYaw);
     }
 
     @Override
@@ -133,6 +172,7 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
         super.load(tag);
         speed = tag.getLong("Speed");
         torque = tag.getLong("Torque");
+        targetWindYaw = tag.getFloat("TargetWindYaw");
     }
 
     @Override
@@ -140,6 +180,7 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
         CompoundTag tag = super.getUpdateTag();
         tag.putLong("Speed", speed);
         tag.putLong("Torque", torque);
+        tag.putFloat("TargetWindYaw", targetWindYaw);
         return tag;
     }
 
@@ -148,6 +189,7 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
         super.handleUpdateTag(tag);
         speed = tag.getLong("Speed");
         torque = tag.getLong("Torque");
+        targetWindYaw = tag.getFloat("TargetWindYaw");
     }
 
     @Nullable
