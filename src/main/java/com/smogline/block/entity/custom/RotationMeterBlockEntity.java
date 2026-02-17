@@ -1,9 +1,10 @@
 package com.smogline.block.entity.custom;
 
+import com.smogline.api.rotation.RotationNetworkHelper;
+import com.smogline.api.rotation.RotationSource;
 import com.smogline.api.rotation.Rotational;
-import com.smogline.block.custom.rotation.MotorElectroBlock;
+import com.smogline.api.rotation.RotationalNode;
 import com.smogline.block.custom.rotation.RotationMeterBlock;
-import com.smogline.block.custom.rotation.ShaftIronBlock;
 import com.smogline.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,12 +20,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class RotationMeterBlockEntity extends BlockEntity implements Rotational {
+public class RotationMeterBlockEntity extends BlockEntity implements RotationalNode {
+
     private long speed = 0;
     private long torque = 0;
-    private boolean hasSource = false; // true, если найден источник вращения
 
-    private static final int MAX_SEARCH_DEPTH = 32;
+    // Кеш найденного источника
+    private RotationSource cachedSource;
+    private long cacheTimestamp;
+    private static final long CACHE_LIFETIME = 20; // тиков (1 секунда)
 
     public RotationMeterBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ROTATION_METER_BE.get(), pos, state);
@@ -38,67 +42,40 @@ public class RotationMeterBlockEntity extends BlockEntity implements Rotational 
     @Override public long getMaxSpeed() { return 0; }
     @Override public long getMaxTorque() { return 0; }
 
-    public boolean hasSource() { return hasSource; }
-
-    // ========== NBT ==========
+    // ========== RotationalNode ==========
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.putLong("Speed", speed);
-        tag.putLong("Torque", torque);
-        tag.putBoolean("HasSource", hasSource);
-    }
-
-    @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        speed = tag.getLong("Speed");
-        torque = tag.getLong("Torque");
-        hasSource = tag.getBoolean("HasSource");
-    }
-
-    @Override
-    public CompoundTag getUpdateTag() {
-        CompoundTag tag = super.getUpdateTag();
-        tag.putLong("Speed", speed);
-        tag.putLong("Torque", torque);
-        tag.putBoolean("HasSource", hasSource);
-        return tag;
-    }
-
-    @Override
-    public void handleUpdateTag(CompoundTag tag) {
-        super.handleUpdateTag(tag);
-        speed = tag.getLong("Speed");
-        torque = tag.getLong("Torque");
-        hasSource = tag.getBoolean("HasSource");
-    }
-
     @Nullable
+    public RotationSource getCachedSource() { return cachedSource; }
+
     @Override
-    public Packet<ClientGamePacketListener> getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this);
+    public void setCachedSource(@Nullable RotationSource source, long gameTime) {
+        this.cachedSource = source;
+        this.cacheTimestamp = gameTime;
     }
 
-    private void sync() {
-        if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-        }
+    @Override
+    public boolean isCacheValid(long currentTime) {
+        return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME;
     }
 
-    // ========== Поиск источника ==========
-    @Nullable
-    public ShaftIronBlockEntity.SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir) {
-        return findSource(visited, fromDir, 0);
+    @Override
+    public void invalidateCache() {
+        this.cachedSource = null;
     }
 
-    @Nullable
-    public ShaftIronBlockEntity.SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir, int depth) {
-        if (depth > MAX_SEARCH_DEPTH || visited.contains(worldPosition)) {
-            return null;
-        }
-        visited.add(worldPosition);
+    /**
+     * RotationMeter сам по себе не является источником вращения.
+     */
+    @Override
+    public boolean canProvideSource(@Nullable Direction fromDir) {
+        return false;
+    }
 
+    /**
+     * Определяет направления для продолжения поиска: левая и правая стороны относительно лицевой.
+     */
+    @Override
+    public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
         Direction facing = getBlockState().getValue(RotationMeterBlock.FACING);
         Direction left, right;
         switch (facing) {
@@ -122,70 +99,37 @@ public class RotationMeterBlockEntity extends BlockEntity implements Rotational 
                 left = right = null;
         }
 
-        Direction[] searchDirs;
         if (fromDir != null) {
+            // Если пришли с левой или правой стороны, продолжаем в противоположном направлении
             if (fromDir == left || fromDir == right) {
-                searchDirs = new Direction[]{fromDir.getOpposite()};
+                return new Direction[]{fromDir.getOpposite()};
             } else {
-                return null;
+                return new Direction[0];
             }
         } else {
-            searchDirs = new Direction[]{left, right};
+            // Начало поиска — проверяем обе стороны
+            return new Direction[]{left, right};
         }
-
-        for (Direction dir : searchDirs) {
-            if (dir == null) continue;
-            BlockPos neighborPos = worldPosition.relative(dir);
-            BlockEntity neighbor = level.getBlockEntity(neighborPos);
-
-            if (neighbor instanceof MotorElectroBlockEntity motor) {
-                Direction motorFacing = motor.getBlockState().getValue(MotorElectroBlock.FACING);
-                if (motorFacing == dir.getOpposite()) {
-                    return new ShaftIronBlockEntity.SourceInfo(motor.getSpeed(), motor.getTorque());
-                }
-            } else if (neighbor instanceof ShaftIronBlockEntity shaft) {
-                Direction shaftFacing = shaft.getBlockState().getValue(ShaftIronBlock.FACING);
-                if (shaftFacing == dir || shaftFacing == dir.getOpposite()) {
-                    ShaftIronBlockEntity.SourceInfo found = shaft.findSource(visited, dir.getOpposite(), depth + 1);
-                    if (found != null) return found;
-                }
-            } else if (neighbor instanceof GearPortBlockEntity gear) {
-                ShaftIronBlockEntity.SourceInfo found = gear.findSource(visited, dir.getOpposite());
-                if (found != null) return found;
-            } else if (neighbor instanceof RotationMeterBlockEntity meter) {
-                ShaftIronBlockEntity.SourceInfo found = meter.findSource(visited, dir.getOpposite(), depth + 1);
-                if (found != null) return found;
-            } else if (neighbor instanceof StopperBlockEntity stopper) {
-                ShaftIronBlockEntity.SourceInfo found = stopper.findSource(visited, dir.getOpposite(), depth + 1);
-                if (found != null) return found;
-            } else if (neighbor instanceof AdderBlockEntity adder) {
-                ShaftIronBlockEntity.SourceInfo found = adder.findSource(visited, dir.getOpposite(), depth + 1);
-                if (found != null) return found;
-            } else if (neighbor instanceof TachometerBlockEntity tacho) {
-                ShaftIronBlockEntity.SourceInfo found = tacho.findSource(visited, dir.getOpposite(), depth + 1);
-                if (found != null) return found;
-            } else if (neighbor instanceof WindGenFlugerBlockEntity windGen) {
-                // Генератор сам является источником
-                return new ShaftIronBlockEntity.SourceInfo(windGen.getSpeed(), windGen.getTorque());
-            }
-        }
-        return null;
     }
 
     // ========== Тик ==========
     public static void tick(Level level, BlockPos pos, BlockState state, RotationMeterBlockEntity be) {
         if (level.isClientSide) return;
 
-        ShaftIronBlockEntity.SourceInfo source = be.findSource(new HashSet<>(), null, 0);
-        boolean nowHasSource = (source != null);
-        long newSpeed = nowHasSource ? source.speed : 0;
-        long newTorque = nowHasSource ? source.torque : 0;
+        long currentTime = level.getGameTime();
+
+        // Если кеш устарел или отсутствует – выполняем поиск
+        if (!be.isCacheValid(currentTime)) {
+            // Поиск начинаем с самого метра, fromDir = null (обе стороны)
+            RotationSource source = RotationNetworkHelper.findSource(be, null, new HashSet<>(), 0);
+            be.setCachedSource(source, currentTime);
+        }
+
+        RotationSource src = be.getCachedSource();
+        long newSpeed = (src != null) ? src.speed() : 0;
+        long newTorque = (src != null) ? src.torque() : 0;
 
         boolean changed = false;
-        if (be.hasSource != nowHasSource) {
-            be.hasSource = nowHasSource;
-            changed = true;
-        }
         if (be.speed != newSpeed) {
             be.speed = newSpeed;
             changed = true;
@@ -199,5 +143,56 @@ public class RotationMeterBlockEntity extends BlockEntity implements Rotational 
             be.setChanged();
             be.sync();
         }
+    }
+
+    // ========== NBT и синхронизация ==========
+    @Override
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.putLong("Speed", speed);
+        tag.putLong("Torque", torque);
+        // Кеш не сохраняем
+    }
+
+    @Override
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        speed = tag.getLong("Speed");
+        torque = tag.getLong("Torque");
+        cachedSource = null; // сброс кеша
+    }
+
+    @Override
+    public CompoundTag getUpdateTag() {
+        CompoundTag tag = super.getUpdateTag();
+        tag.putLong("Speed", speed);
+        tag.putLong("Torque", torque);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(CompoundTag tag) {
+        super.handleUpdateTag(tag);
+        speed = tag.getLong("Speed");
+        torque = tag.getLong("Torque");
+    }
+
+    @Nullable
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    private void sync() {
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    /**
+     * Вспомогательный метод для проверки наличия источника (для удобства).
+     */
+    public boolean hasSource() {
+        return cachedSource != null;
     }
 }

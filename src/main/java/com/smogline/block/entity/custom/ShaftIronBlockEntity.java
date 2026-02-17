@@ -1,11 +1,12 @@
 package com.smogline.block.entity.custom;
 
+import com.smogline.api.rotation.RotationNetworkHelper;
+import com.smogline.api.rotation.RotationSource;
 import com.smogline.api.rotation.Rotational;
+import com.smogline.api.rotation.RotationalNode;
 import com.smogline.block.ModBlocks;
-import com.smogline.block.custom.rotation.MotorElectroBlock;
 import com.smogline.block.custom.rotation.ShaftIronBlock;
 import com.smogline.block.entity.ModBlockEntities;
-import com.smogline.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -27,25 +28,29 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity, Rotational {
+public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity, RotationalNode {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private long speed = 0;
     private long torque = 0;
 
-    // Добавить среди полей класса
+    // Кеш источника
+    private RotationSource cachedSource;
+    private long cacheTimestamp;
+    private static final long CACHE_LIFETIME = 20; // тиков (1 секунда)
+
+    // Параметры перегрузки и анимации
     private static final long MAX_SPEED = 300;
     private static final long MAX_TORQUE = 150;
     private static final float ACCELERATION = 0.1f;
-    private static final float DECELERATION = 0.03f; // Медленное замедление
+    private static final float DECELERATION = 0.03f;
     private static final int STOP_DELAY_TICKS = 5;
-    private static final float MIN_ANIM_SPEED = 0.005f; // Минимальная скорость перед остановкой
+    private static final float MIN_ANIM_SPEED = 0.005f;
 
     private float currentAnimationSpeed = 0f;
     private int ticksWithoutPower = 0;
 
     private static final RawAnimation ROTATION = RawAnimation.begin().thenLoop("rotation");
-    private static final int MAX_SEARCH_DEPTH = 32;
 
     public ShaftIronBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.SHAFT_IRON_BE.get(), pos, state);
@@ -87,87 +92,52 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
     @Override public long getMaxSpeed() { return 0; }
     @Override public long getMaxTorque() { return 0; }
 
-    // ========== SourceInfo (public static) ==========
-    public static class SourceInfo {
-        public final long speed;
-        public final long torque;
-        public SourceInfo(long speed, long torque) {
-            this.speed = speed;
-            this.torque = torque;
-        }
+    // ========== RotationalNode ==========
+    @Override
+    @Nullable
+    public RotationSource getCachedSource() { return cachedSource; }
+
+    @Override
+    public void setCachedSource(@Nullable RotationSource source, long gameTime) {
+        this.cachedSource = source;
+        this.cacheTimestamp = gameTime;
     }
 
-    // ========== Поиск источника ==========
-    @Nullable
-    public SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir) {
-        return findSource(visited, fromDir, 0);
+    @Override
+    public boolean isCacheValid(long currentTime) {
+        return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME;
     }
 
-    @Nullable
-    public SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir, int depth) {
-        if (depth > MAX_SEARCH_DEPTH || visited.contains(worldPosition)) {
-            return null;
-        }
-        visited.add(worldPosition);
+    @Override
+    public void invalidateCache() {
+        this.cachedSource = null;
+    }
 
+    /**
+     * Определяет, в какие стороны можно продолжить поиск источника.
+     */
+    @Override
+    public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
         Direction myFacing = getBlockState().getValue(ShaftIronBlock.FACING);
-
-        Direction[] searchDirs;
         if (fromDir != null) {
-            // Мы пришли с определённого направления – проверяем, что оно совпадает с осью вала
+            // Если пришли с оси, идём в противоположную сторону
             if (fromDir == myFacing || fromDir == myFacing.getOpposite()) {
-                // Идём в противоположную сторону
-                searchDirs = new Direction[]{fromDir.getOpposite()};
+                return new Direction[]{fromDir.getOpposite()};
             } else {
-                // Пришли не по оси – тупик
-                return null;
+                return new Direction[0]; // тупик
             }
         } else {
-            // Начало поиска – проверяем обе стороны вдоль оси
-            searchDirs = new Direction[]{myFacing, myFacing.getOpposite()};
+            // Начало поиска — проверяем обе стороны
+            return new Direction[]{myFacing, myFacing.getOpposite()};
         }
+    }
 
-        for (Direction dir : searchDirs) {
-            BlockPos neighborPos = worldPosition.relative(dir);
-            BlockEntity neighbor = level.getBlockEntity(neighborPos);
-
-            if (neighbor instanceof MotorElectroBlockEntity motor) {
-                Direction motorFacing = motor.getBlockState().getValue(MotorElectroBlock.FACING);
-                if (motorFacing == dir.getOpposite()) {
-                    return new SourceInfo(motor.getSpeed(), motor.getTorque());
-                }
-            }else if (neighbor instanceof RotationMeterBlockEntity meter) {
-                SourceInfo found = meter.findSource(visited, dir.getOpposite(), depth + 1);
-                if (found != null) return found;
-            } else if (neighbor instanceof ShaftIronBlockEntity shaft) {
-                Direction neighborFacing = shaft.getBlockState().getValue(ShaftIronBlock.FACING);
-                if (neighborFacing == dir || neighborFacing == dir.getOpposite()) {
-                    SourceInfo found = shaft.findSource(visited, dir.getOpposite(), depth + 1);
-                    if (found != null) {
-                        return found;
-                    }
-                }
-            } else if (neighbor instanceof GearPortBlockEntity gear) {
-                // Добавляем поддержку GearPort
-                SourceInfo found = gear.findSource(visited, dir.getOpposite()); // предполагаем, что у GearPort есть такой метод
-                if (found != null) {
-                    return found;
-                }
-            } else if (neighbor instanceof StopperBlockEntity stopper) {
-                SourceInfo found = stopper.findSource(visited, dir.getOpposite(), depth + 1);
-                if (found != null) return found;
-            } else if (neighbor instanceof AdderBlockEntity adder) {
-                SourceInfo found = adder.findSource(visited, dir.getOpposite(), depth + 1);
-                if (found != null) return found;
-            } else if (neighbor instanceof TachometerBlockEntity tacho) {
-                ShaftIronBlockEntity.SourceInfo found = tacho.findSource(visited, dir.getOpposite(), depth + 1);
-                if (found != null) return found;
-            } else if (neighbor instanceof WindGenFlugerBlockEntity windGen) {
-                // Генератор сам является источником
-                return new SourceInfo(windGen.getSpeed(), windGen.getTorque());
-            }
-        }
-        return null;
+    /**
+     * Поиск источника с использованием помощника.
+     */
+    @Nullable
+    public RotationSource findSource(Set<BlockPos> visited, @Nullable Direction fromDir, int depth) {
+        return RotationNetworkHelper.findSource(this, fromDir, visited, depth);
     }
 
     // ========== Тик ==========
@@ -177,24 +147,35 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
             return;
         }
 
-        SourceInfo source = be.findSource(new HashSet<>(), null);
+        long currentTime = level.getGameTime();
 
-        long newSpeed = (source != null) ? source.speed : 0;
-        long newTorque = (source != null) ? source.torque : 0;
+        // Если кеш устарел или отсутствует – выполняем поиск
+        if (!be.isCacheValid(currentTime)) {
+            RotationSource source = be.findSource(new HashSet<>(), null, 0);
+            be.setCachedSource(source, currentTime);
+        }
+
+        RotationSource src = be.getCachedSource();
+        long newSpeed = (src != null) ? src.speed() : 0;
+        long newTorque = (src != null) ? src.torque() : 0;
 
         // Проверка на перегрузку
         if (newSpeed > MAX_SPEED || newTorque > MAX_TORQUE) {
-            // Удаляем блок без дропа стандартным методом (чтобы не выпадал блок сам)
             level.removeBlock(pos, false);
-            // Выбрасываем предмет вала
             Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                    new ItemStack(ModBlocks.SHAFT_IRON.get())); // замените на свой предмет
-            return; // прекращаем обработку, блок уже удалён
+                    new ItemStack(ModBlocks.SHAFT_IRON.get()));
+            return;
         }
 
         boolean changed = false;
-        if (be.speed != newSpeed) { be.speed = newSpeed; changed = true; }
-        if (be.torque != newTorque) { be.torque = newTorque; changed = true; }
+        if (be.speed != newSpeed) {
+            be.speed = newSpeed;
+            changed = true;
+        }
+        if (be.torque != newTorque) {
+            be.torque = newTorque;
+            changed = true;
+        }
 
         if (changed) {
             be.setChanged();
@@ -253,6 +234,7 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         super.saveAdditional(tag);
         tag.putLong("Speed", speed);
         tag.putLong("Torque", torque);
+        // Кеш не сохраняем
     }
 
     @Override
@@ -260,5 +242,7 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         super.load(tag);
         speed = tag.getLong("Speed");
         torque = tag.getLong("Torque");
+        // При загрузке сбрасываем кеш
+        cachedSource = null;
     }
 }

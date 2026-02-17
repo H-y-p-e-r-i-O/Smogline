@@ -1,7 +1,10 @@
 package com.smogline.block.entity.custom;
 
+import com.smogline.api.rotation.RotationNetworkHelper;
+import com.smogline.api.rotation.RotationSource;
 import com.smogline.api.rotation.Rotational;
-import com.smogline.block.custom.rotation.*;
+import com.smogline.api.rotation.RotationalNode;
+import com.smogline.block.custom.rotation.AdderBlock;
 import com.smogline.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,17 +20,21 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class AdderBlockEntity extends BlockEntity implements Rotational {
+public class AdderBlockEntity extends BlockEntity implements RotationalNode {
+
     private long speed = 0;
     private long torque = 0;
 
-    private static final int MAX_SEARCH_DEPTH = 32;
+    // Кеш собственного значения
+    private RotationSource cachedSource;
+    private long cacheTimestamp;
+    private static final long CACHE_LIFETIME = 20;
 
     public AdderBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ADDER_BE.get(), pos, state);
     }
 
-    // Rotational
+    // ========== Rotational ==========
     @Override public long getSpeed() { return speed; }
     @Override public long getTorque() { return torque; }
     @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); }
@@ -35,69 +42,52 @@ public class AdderBlockEntity extends BlockEntity implements Rotational {
     @Override public long getMaxSpeed() { return 0; }
     @Override public long getMaxTorque() { return 0; }
 
-    // Внешний поиск источника (вызывается из валов и других блоков, когда они подходят к выходу)
+    // ========== RotationalNode ==========
+    @Override
     @Nullable
-    public ShaftIronBlockEntity.SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir, int depth) {
-        if (depth > MAX_SEARCH_DEPTH || visited.contains(worldPosition)) {
-            return null;
-        }
-        visited.add(worldPosition);
+    public RotationSource getCachedSource() { return cachedSource; }
 
+    @Override
+    public void setCachedSource(@Nullable RotationSource source, long gameTime) {
+        this.cachedSource = source;
+        this.cacheTimestamp = gameTime;
+    }
+
+    @Override
+    public boolean isCacheValid(long currentTime) {
+        return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME;
+    }
+
+    @Override
+    public void invalidateCache() {
+        this.cachedSource = null;
+    }
+
+    /**
+     * Определяет, может ли этот блок предоставить источник вращения при запросе с указанного направления.
+     * Для сумматора это выходная сторона (противоположная лицевой).
+     */
+    @Override
+    public boolean canProvideSource(@Nullable Direction fromDir) {
+        if (fromDir == null) return false;
         Direction facing = getBlockState().getValue(AdderBlock.FACING);
         Direction outputSide = facing.getOpposite();
-
-        // Если запрос пришёл с выходной стороны, возвращаем текущие значения
-        if (fromDir == outputSide) {
-            return new ShaftIronBlockEntity.SourceInfo(speed, torque);
-        }
-
-        // В остальных случаях (запрос с других сторон) не пропускаем
-        return null;
+        return fromDir == outputSide;
     }
 
-    // Перегрузка для внешнего вызова без depth
-    @Nullable
-    public ShaftIronBlockEntity.SourceInfo findSource(Set<BlockPos> visited, @Nullable Direction fromDir) {
-        return findSource(visited, fromDir, 0);
+    /**
+     * Определяет направления для продолжения поиска.
+     * Сумматор сам не участвует в распространении поиска дальше,
+     * поэтому всегда возвращаем пустой массив.
+     */
+    @Override
+    public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
+        return new Direction[0];
     }
 
-    // Внутренний поиск источника на конкретной стороне (для левого/правого порта)
-    @Nullable
-    private ShaftIronBlockEntity.SourceInfo findSourceOnSide(Direction side) {
-        BlockPos neighborPos = worldPosition.relative(side);
-        BlockEntity neighbor = level.getBlockEntity(neighborPos);
 
-        if (neighbor == null) return null;
 
-        Set<BlockPos> visited = new HashSet<>();
-        visited.add(worldPosition);
-
-        if (neighbor instanceof MotorElectroBlockEntity motor) {
-            Direction motorFacing = motor.getBlockState().getValue(MotorElectroBlock.FACING);
-            if (motorFacing == side.getOpposite()) {
-                return new ShaftIronBlockEntity.SourceInfo(motor.getSpeed(), motor.getTorque());
-            }
-        } else if (neighbor instanceof ShaftIronBlockEntity shaft) {
-            Direction shaftFacing = shaft.getBlockState().getValue(ShaftIronBlock.FACING);
-            if (shaftFacing == side || shaftFacing == side.getOpposite()) {
-                return shaft.findSource(visited, side.getOpposite());
-            }
-        } else if (neighbor instanceof RotationMeterBlockEntity meter) {
-            return meter.findSource(visited, side.getOpposite(), 0);
-        } else if (neighbor instanceof GearPortBlockEntity gear) {
-            return gear.findSource(visited, side.getOpposite());
-        } else if (neighbor instanceof StopperBlockEntity stopper) {
-            return stopper.findSource(visited, side.getOpposite(), 0);
-        } else if (neighbor instanceof TachometerBlockEntity tacho) {   // <-- НОВАЯ СТРОКА
-            return tacho.findSource(visited, side.getOpposite(), 0);    // <-- НОВАЯ СТРОКА
-        } else if (neighbor instanceof WindGenFlugerBlockEntity windGen) {
-            // Генератор сам является источником
-            return new ShaftIronBlockEntity.SourceInfo(windGen.getSpeed(), windGen.getTorque());
-        }
-        return null;
-    }
-
-    // Тик
+    // ========== Тик ==========
     public static void tick(Level level, BlockPos pos, BlockState state, AdderBlockEntity be) {
         if (level.isClientSide) return;
 
@@ -124,22 +114,21 @@ public class AdderBlockEntity extends BlockEntity implements Rotational {
                 left = right = null;
         }
 
-        ShaftIronBlockEntity.SourceInfo sourceLeft = (left != null) ? be.findSourceOnSide(left) : null;
-        ShaftIronBlockEntity.SourceInfo sourceRight = (right != null) ? be.findSourceOnSide(right) : null;
+        RotationSource sourceLeft = (left != null) ? findSourceOnSide(be, left) : null;
+        RotationSource sourceRight = (right != null) ? findSourceOnSide(be, right) : null;
 
         long newSpeed = 0;
         long newTorque = 0;
 
         if (sourceLeft != null && sourceRight != null) {
-            // Суммируем
-            newSpeed = sourceLeft.speed + sourceRight.speed;
-            newTorque = sourceLeft.torque + sourceRight.torque;
+            newSpeed = sourceLeft.speed() + sourceRight.speed();
+            newTorque = sourceLeft.torque() + sourceRight.torque();
         } else if (sourceLeft != null) {
-            newSpeed = sourceLeft.speed;
-            newTorque = sourceLeft.torque;
+            newSpeed = sourceLeft.speed();
+            newTorque = sourceLeft.torque();
         } else if (sourceRight != null) {
-            newSpeed = sourceRight.speed;
-            newTorque = sourceRight.torque;
+            newSpeed = sourceRight.speed();
+            newTorque = sourceRight.torque();
         }
 
         boolean changed = false;
@@ -158,7 +147,17 @@ public class AdderBlockEntity extends BlockEntity implements Rotational {
         }
     }
 
-    // NBT и синхронизация
+    @Nullable
+    private static RotationSource findSourceOnSide(AdderBlockEntity be, Direction side) {
+        if (be.level == null) return null;
+        BlockPos neighborPos = be.worldPosition.relative(side);
+        BlockEntity neighbor = be.level.getBlockEntity(neighborPos);
+        if (neighbor == null) return null;
+        // Начинаем поиск с соседа, указывая направление, с которого мы пришли (противоположное side)
+        return RotationNetworkHelper.findSource(neighbor, side.getOpposite(), new HashSet<>(), 0);
+    }
+
+    // ========== NBT и синхронизация ==========
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
@@ -171,6 +170,7 @@ public class AdderBlockEntity extends BlockEntity implements Rotational {
         super.load(tag);
         speed = tag.getLong("Speed");
         torque = tag.getLong("Torque");
+        cachedSource = null;
     }
 
     @Override
