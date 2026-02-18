@@ -6,6 +6,7 @@ package com.smogline.main;
 import com.smogline.api.energy.EnergyNetworkManager;
 import com.smogline.api.fluids.ModFluids;
 import com.smogline.capability.ModCapabilities;
+import com.smogline.config.FogConfig;
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.smogline.event.CrateBreaker;
 import com.smogline.handler.MobGearHandler;
@@ -107,6 +108,7 @@ public class MainRegistry {
         ModEffects.register(modEventBus);
         ModRecipes.register(modEventBus);
         registerCapabilities(modEventBus);
+        FogConfig.register();
 
 
         // ✅ ЭТА СТРОКА ДОЛЖНА БЫТЬ ПОСЛЕДНЕЙ!
