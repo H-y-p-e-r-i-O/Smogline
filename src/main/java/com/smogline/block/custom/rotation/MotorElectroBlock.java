@@ -1,9 +1,11 @@
 package com.smogline.block.custom.rotation;
 
+import com.smogline.api.energy.EnergyNetworkManager;
 import com.smogline.api.rotation.RotationalNode;
 import com.smogline.block.entity.ModBlockEntities;
 import com.smogline.block.entity.custom.MotorElectroBlockEntity;
 import com.smogline.lib.RefStrings;
+import com.smogline.menu.MotorElectroMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
@@ -15,6 +17,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -36,6 +39,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 public class MotorElectroBlock extends BaseEntityBlock {
@@ -105,6 +109,23 @@ public class MotorElectroBlock extends BaseEntityBlock {
         builder.add(FACING);
     }
 
+    @Override
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!level.isClientSide) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof MotorElectroBlockEntity motor) {
+                NetworkHooks.openScreen((ServerPlayer) player,
+                        new SimpleMenuProvider(
+                                (id, inv, p) -> new MotorElectroMenu(id, inv, motor, motor.getDataAccess(), pos),
+                                Component.translatable("container.motor_electro_menu")
+                        ), pos);
+            }
+            return InteractionResult.CONSUME;
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+
 
     @Nullable
     @Override
@@ -122,9 +143,22 @@ public class MotorElectroBlock extends BaseEntityBlock {
         }
     }
     @Override
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
+        super.onPlace(state, level, pos, oldState, isMoving);
+        if (!level.isClientSide) {
+            EnergyNetworkManager.get((ServerLevel) level).addNode(pos);
+        }
+    }
+
+    @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        // 1. Удаляем узел из энергосети, если блок действительно меняется (не просто обновление состояния)
+        if (!level.isClientSide && !state.is(newState.getBlock())) {
+            EnergyNetworkManager.get((ServerLevel) level).removeNode(pos);
+        }
+
+        // 2. Существующая логика инвалидации кеша вращения у соседей
         if (!level.isClientSide && state.getBlock() != newState.getBlock()) {
-            // Инвалидируем кеш у всех соседей
             for (Direction dir : Direction.values()) {
                 BlockPos neighborPos = pos.relative(dir);
                 if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
@@ -132,6 +166,7 @@ public class MotorElectroBlock extends BaseEntityBlock {
                 }
             }
         }
+
         super.onRemove(state, level, pos, newState, isMoving);
     }
 }

@@ -38,8 +38,8 @@ public class ModMenuTypes {
             }));
 
 
-
-
+    public static final RegistryObject<MenuType<MotorElectroMenu>> MOTOR_ELECTRO_MENU = MENUS.register("motor_electro_menu",
+            () -> IForgeMenuType.create(MotorElectroMenu::new)); // ссылка на конструктор
 
     public static final RegistryObject<MenuType<MachinePressMenu>> PRESS_MENU =
             MENUS.register("press_menu", () -> IForgeMenuType.create(MachinePressMenu::new));

@@ -1,6 +1,7 @@
 package com.smogline.network;
 
 import com.smogline.lib.RefStrings;
+import com.smogline.network.packet.PacketToggleMotor;
 import com.smogline.network.packet.PacketToggleTurret;
 import com.smogline.network.sounds.GeigerSoundPacket;
 import com.smogline.network.ToggleWoodBurnerPacket;
@@ -91,6 +92,13 @@ public class ModPacketHandler {
                 com.smogline.network.packet.PacketUpdateTurretSettings::toBytes,
                 com.smogline.network.packet.PacketUpdateTurretSettings::new,
                 com.smogline.network.packet.PacketUpdateTurretSettings::handle
+        );
+
+        INSTANCE.registerMessage(id++,
+                PacketToggleMotor.class,
+                PacketToggleMotor::encode,
+                PacketToggleMotor::new,
+                PacketToggleMotor::handle
         );
 
     }
