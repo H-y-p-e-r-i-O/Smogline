@@ -87,8 +87,8 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
     // ========== Rotational ==========
     @Override public long getSpeed() { return speed; }
     @Override public long getTorque() { return torque; }
-    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); }
-    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); }
+    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); invalidateNeighborCaches(); }
+    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); invalidateNeighborCaches(); }
     @Override public long getMaxSpeed() { return 0; }
     @Override public long getMaxTorque() { return 0; }
 
@@ -120,6 +120,17 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
                         node.invalidateCache();
                     }
                 }
+            }
+        }
+    }
+
+    private void invalidateNeighborCaches() {
+        if (level == null || level.isClientSide) return;
+        Direction facing = getBlockState().getValue(ShaftIronBlock.FACING);
+        for (Direction dir : new Direction[]{facing, facing.getOpposite()}) {
+            BlockPos neighborPos = worldPosition.relative(dir);
+            if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                node.invalidateCache();
             }
         }
     }

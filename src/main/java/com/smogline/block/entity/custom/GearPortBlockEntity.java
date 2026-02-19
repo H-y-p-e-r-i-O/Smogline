@@ -81,8 +81,8 @@ public class GearPortBlockEntity extends BlockEntity implements RotationalNode {
     // ========== Rotational ==========
     @Override public long getSpeed() { return speed; }
     @Override public long getTorque() { return torque; }
-    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); }
-    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); }
+    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); invalidateNeighborCaches(); }
+    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); invalidateNeighborCaches(); }
     @Override public long getMaxSpeed() { return 0; }
     @Override public long getMaxTorque() { return 0; }
 
@@ -100,6 +100,22 @@ public class GearPortBlockEntity extends BlockEntity implements RotationalNode {
     @Override
     public boolean isCacheValid(long currentTime) {
         return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME;
+    }
+
+    private void invalidateNeighborCaches() {
+        if (level == null || level.isClientSide) return;
+        if (firstPort != null) {
+            BlockPos neighborPos = worldPosition.relative(firstPort);
+            if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                node.invalidateCache();
+            }
+        }
+        if (secondPort != null) {
+            BlockPos neighborPos = worldPosition.relative(secondPort);
+            if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                node.invalidateCache();
+            }
+        }
     }
 
     @Override
