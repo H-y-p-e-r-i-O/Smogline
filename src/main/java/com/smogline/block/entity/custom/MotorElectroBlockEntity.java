@@ -56,7 +56,7 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
     private long energyStored = 0;
     private final long MAX_ENERGY = 50000;
     private final long MAX_RECEIVE = 1000;
-    private final long ENERGY_PER_TICK = 250 / 20;
+    private final long ENERGY_PER_TICK = 500 / 20;
 
     private boolean isSwitchedOn = false;
     private int bootTimer = 0;
