@@ -75,15 +75,25 @@ public class AdderBlockEntity extends BlockEntity implements RotationalNode {
         }
     }
 
+    // AdderBlockEntity.java
     @Override
     public boolean canProvideSource(@Nullable Direction fromDir) {
-        Direction facing = getBlockState().getValue(AdderBlock.FACING);
+        if (fromDir == null) return false;
+
+        BlockState state = getBlockState();
+        Direction facing = state.getValue(AdderBlock.FACING);
         Direction outputSide = facing.getOpposite();
+
+        // ВАЖНО: Мы отдаем энергию ТОЛЬКО тому блоку,
+        // который пришел к нам СО СТОРОНЫ нашего выхода.
+        // Если вал стоит сбоку, fromDir будет равен лево/право, и мы вернем false.
         return fromDir == outputSide;
     }
 
     @Override
     public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
+        // Сумматор — это конечная точка для входящих валов и начальная для выходящего.
+        // Энергия не "течет" сквозь него транзитом, она пересчитывается в tick().
         return new Direction[0];
     }
 
@@ -94,27 +104,31 @@ public class AdderBlockEntity extends BlockEntity implements RotationalNode {
     public static void tick(Level level, BlockPos pos, BlockState state, AdderBlockEntity be) {
         if (level.isClientSide) return;
 
-        Direction facing = state.getValue(AdderBlock.FACING);
-        Direction outputSide = facing.getOpposite();
+        Direction facing = state.getValue(AdderBlock.FACING); // Куда смотрит "лицо"
+        Direction outputSide = facing.getOpposite();      // Выход (сзади)
+
+        // Определяем боковые стороны (входы)
+        Direction left = facing.getCounterClockWise();
+        Direction right = facing.getClockWise();
 
         long totalSpeed = 0;
         long totalTorque = 0;
 
-        for (Direction dir : Direction.values()) {
-            if (dir == outputSide) continue;
-
+        // Опрашиваем ТОЛЬКО левую и правую стороны
+        for (Direction dir : new Direction[]{left, right}) {
             BlockPos neighborPos = pos.relative(dir);
             BlockEntity neighbor = level.getBlockEntity(neighborPos);
             if (neighbor == null) continue;
 
             RotationSource src = null;
-
+            // Проверяем, может ли сосед дать нам энергию в этом направлении
             if (neighbor instanceof RotationalNode node && node.canProvideSource(dir.getOpposite())) {
                 if (neighbor instanceof Rotational rot) {
                     src = new RotationSource(rot.getSpeed(), rot.getTorque());
                 }
             }
 
+            // Если сосед не Rotational, пробуем глубокий поиск источника за ним
             if (src == null) {
                 src = RotationNetworkHelper.findSource(neighbor, dir.getOpposite());
             }
@@ -125,15 +139,16 @@ public class AdderBlockEntity extends BlockEntity implements RotationalNode {
             }
         }
 
+        // Логика обновления состояния (остается прежней)
         boolean changed = false;
         if (be.speed != totalSpeed) { be.speed = totalSpeed; changed = true; }
         if (be.torque != totalTorque) { be.torque = totalTorque; changed = true; }
 
         if (changed) {
-            be.updateCache(); // Обновляем наш "источник"
+            be.updateCache();
             be.setChanged();
             be.sync();
-            be.invalidateNeighborCaches(); // Будим выходной вал
+            be.invalidateNeighborCaches(); // Будим только того, кто на выходе
         }
     }
 

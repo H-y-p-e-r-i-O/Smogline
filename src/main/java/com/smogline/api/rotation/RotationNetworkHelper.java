@@ -1,6 +1,8 @@
 package com.smogline.api.rotation;
 
+import com.smogline.block.custom.rotation.AdderBlock;
 import com.smogline.block.custom.rotation.MotorElectroBlock;
+import com.smogline.block.entity.custom.AdderBlockEntity;
 import com.smogline.block.entity.custom.MotorElectroBlockEntity;
 import com.smogline.block.entity.custom.WindGenFlugerBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -45,15 +47,29 @@ public class RotationNetworkHelper {
             BlockEntity neighbor = level.getBlockEntity(neighborPos);
             if (neighbor == null) continue;
 
-            // 1. Сначала проверяем, является ли сосед ИСТОЧНИКОМ (Мотор, Ветряк)
-            // dir - направление ОТ нас К соседу.
-            // Сосед должен смотреть НА нас (то есть его facing == dir.getOpposite())
+            // 1. Проверка стандартных источников (Мотор, Ветряк)
             RotationSource directSource = getDirectSource(neighbor, dir);
             if (directSource != null) {
                 return directSource;
             }
 
-            // 2. Если не источник, проверяем, является ли он узлом сети (Вал)
+            // 2. СПЕЦИАЛЬНАЯ ПРОВЕРКА ДЛЯ СУММАТОРА
+            // Если сосед — сумматор, мы можем брать из него данные, ТОЛЬКО если стоим на его ВЫХОДЕ
+            if (neighbor instanceof AdderBlockEntity adder) {
+                Direction adderFacing = adder.getBlockState().getValue(AdderBlock.FACING);
+                Direction adderOutput = adderFacing.getOpposite();
+
+                // dir.getOpposite() — это сторона сумматора, к которой присоединен наш вал
+                if (dir.getOpposite() == adderOutput) {
+                    // Если вал стоит на выходе — возвращаем суммированную мощность
+                    return new RotationSource(adder.getSpeed(), adder.getTorque());
+                } else {
+                    // Если вал стоит СБОКУ или СПЕРЕДИ — игнорируем сумматор как источник
+                    continue;
+                }
+            }
+
+            // 3. Дальше твоя обычная логика рекурсии для валов
             if (neighbor instanceof RotationalNode neighborNode) {
                 // Оптимизация: верим кешу соседа, если он валиден
                 if (neighborNode.isCacheValid(currentTime)) {
