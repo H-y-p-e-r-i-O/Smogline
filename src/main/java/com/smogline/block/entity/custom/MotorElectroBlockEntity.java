@@ -30,7 +30,9 @@ import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache
 import software.bernie.geckolib.core.animation.*;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
-
+import com.smogline.api.energy.IEnergyReceiver;
+import com.smogline.api.rotation.RotationSource;
+import com.smogline.api.rotation.RotationNetworkHelper;
 public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEntity, Rotational, RotationalNode, IEnergyReceiver, IEnergyConnector {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -57,6 +59,11 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
     private final long MAX_ENERGY = 50000;
     private final long MAX_RECEIVE = 1000;
     private final long ENERGY_PER_TICK = 500 / 20;
+    private boolean isGeneratorMode = false;
+    private long lastReceivedRotation = 0;
+    private static final long MAX_ROT_FOR_BAR = 100000; // Лимит для 100% полоски (Speed * Torque)
+    private static final double GEN_EFFICIENCY = 0.75; // КПД 75%
+
 
     private boolean isSwitchedOn = false;
     private int bootTimer = 0;
@@ -120,58 +127,73 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
 
     // ========== Тик ==========
     public static void tick(Level level, BlockPos pos, BlockState state, MotorElectroBlockEntity be) {
-        if (level.isClientSide) {
-            be.handleClientAnimation();
-            return;
-        }
+        if (level.isClientSide) return;
 
-        // Если мотор выключен
+        // Если кнопка ВЫКЛ — блокируем всё
         if (!be.isSwitchedOn) {
-            if (be.speed != 0 || be.torque != 0) {
-                be.speed = 0;
-                be.torque = 0;
-                be.setChanged();
-                be.sync();
-                be.invalidateNeighborCaches();
-            }
+            be.stopMotor();
+            be.lastReceivedRotation = 0;
             return;
         }
 
-        // Загрузка
-        if (be.bootTimer > 0) {
-            be.bootTimer--;
-            if (be.speed != 0 || be.torque != 0) {
-                be.speed = 0;
-                be.torque = 0;
-                be.setChanged();
-                be.sync();
-                be.invalidateNeighborCaches();
-            }
-            return;
-        }
+        if (be.isGeneratorMode) {
+            // РЕЖИМ ГЕНЕРАТОРА
+            be.speed = 0; // Сами не крутим
+            be.torque = 0;
 
-        // Потребление энергии
-        if (be.energyStored >= be.ENERGY_PER_TICK) {
-            be.energyStored -= be.ENERGY_PER_TICK;
-            long newSpeed = 100;
-            long newTorque = 50;
-            if (be.speed != newSpeed || be.torque != newTorque) {
-                be.speed = newSpeed;
-                be.torque = newTorque;
-                be.setChanged();
-                be.sync();
-                be.invalidateNeighborCaches();
+            // Ищем вращение в сети
+            RotationSource src = RotationNetworkHelper.findSource(be, null);
+            if (src != null && src.speed() > 0) {
+                be.lastReceivedRotation = src.speed() * src.torque();
+                long generated = (long) ((be.lastReceivedRotation / 20.0) * be.GEN_EFFICIENCY);
+                be.energyStored = Math.min(be.MAX_ENERGY, be.energyStored + generated);
+            } else {
+                be.lastReceivedRotation = 0;
             }
+
+            // Отдача накопленного в провода
+            if (be.energyStored > 0) be.pushEnergyToNeighbors();
+
         } else {
-            // Не хватает энергии – выключаем
-            be.isSwitchedOn = false;
-            if (be.speed != 0 || be.torque != 0) {
-                be.speed = 0;
-                be.torque = 0;
-                be.setChanged();
-                be.sync();
-                be.invalidateNeighborCaches();
+            // --- ЛОГИКА МОТОРА ---
+            if (be.bootTimer > 0) {
+                be.bootTimer--;
+                be.stopMotor();
+                return;
             }
+            if (be.energyStored >= be.ENERGY_PER_TICK) {
+                be.energyStored -= be.ENERGY_PER_TICK;
+                if (be.speed != MAX_SPEED || be.torque != MAX_TORQUE) {
+                    be.speed = MAX_SPEED;
+                    be.torque = MAX_TORQUE;
+                    be.setChanged(); be.sync(); be.invalidateNeighborCaches();
+                }
+            } else {
+                be.isSwitchedOn = false;
+                be.stopMotor();
+            }
+        }
+    }
+
+    private void pushEnergyToNeighbors() {
+        for (Direction dir : Direction.values()) {
+            if (this.energyStored <= 0) break;
+            BlockEntity neighbor = level.getBlockEntity(worldPosition.relative(dir));
+            if (neighbor != null) {
+                neighbor.getCapability(ModCapabilities.HBM_ENERGY_RECEIVER, dir.getOpposite()).ifPresent(receiver -> {
+                    long toPush = Math.min(this.energyStored, 1000); // Макс. выход 1000 HE/t
+                    long accepted = receiver.receiveEnergy(toPush, false);
+                    this.energyStored -= accepted;
+                    if (accepted > 0) setChanged();
+                });
+            }
+        }
+    }
+
+    private void stopMotor() {
+        if (this.speed != 0 || this.torque != 0) {
+            this.speed = 0; this.torque = 0;
+            setChanged(); sync(); invalidateNeighborCaches();
         }
     }
 
@@ -233,14 +255,18 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
         // Пусто. Мотор — источник, ему не нужно реагировать на сброс кеша соседей.
     }
     @Override
-    public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
-        return new Direction[0];
-    }
-    @Override
     public boolean canProvideSource(@Nullable Direction fromDir) {
-        if (fromDir == null) return false;
-        Direction facing = getBlockState().getValue(MotorElectroBlock.FACING);
-        return fromDir == facing.getOpposite();
+        // Мы даем вращение ТОЛЬКО если:
+        // 1. Питание ВКЛЮЧЕНО
+        // 2. Мы НЕ в режиме генератора
+        // 3. Запрос пришел с лицевой стороны
+        return isSwitchedOn && !isGeneratorMode && fromDir == getBlockState().getValue(MotorElectroBlock.FACING);
+    }
+
+    @Override
+    public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
+        // Разрешаем сети "проходить" через мотор, чтобы найти источник за ним или в нем
+        return new Direction[]{getBlockState().getValue(MotorElectroBlock.FACING)};
     }
 
     // ========== Capabilities ==========
@@ -267,26 +293,6 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
     }
 
     // ========== NBT и синхронизация ==========
-    @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.putLong("Speed", speed);
-        tag.putLong("Torque", torque);
-        tag.putLong("Energy", energyStored);
-        tag.putBoolean("SwitchedOn", isSwitchedOn);
-        tag.putInt("BootTimer", bootTimer);
-    }
-
-    @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        speed = tag.getLong("Speed");
-        torque = tag.getLong("Torque");
-        energyStored = tag.getLong("Energy");
-        isSwitchedOn = tag.getBoolean("SwitchedOn");
-        bootTimer = tag.getInt("BootTimer");
-        cachedSource = null;
-    }
 
     @Override
     public CompoundTag getUpdateTag() {
@@ -325,8 +331,23 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "rotation_controller", 0, this::rotationPredicate));
-        controllers.add(new AnimationController<>(this, "rumble_controller", 0, this::rumblePredicate));
+        // Вращение: работает и в режиме мотора, и в режиме генератора, если есть движение
+        controllers.add(new AnimationController<>(this, "rotation", 5, state -> {
+            boolean active = isSwitchedOn && (isGeneratorMode ? lastReceivedRotation > 0 : speed > 0);
+            if (active) {
+                return state.setAndContinue(RawAnimation.begin().thenLoop("rotation"));
+            }
+            return PlayState.STOP;
+        }));
+
+        // Тряска: только когда мотор активно ПРЕДАЕТ крутящий момент (режим Мотора)
+        controllers.add(new AnimationController<>(this, "rumble", 5, state -> {
+            boolean isWorkingHard = isSwitchedOn && !isGeneratorMode && speed > 0;
+            if (isWorkingHard) {
+                return state.setAndContinue(RawAnimation.begin().thenLoop("rumble"));
+            }
+            return PlayState.STOP;
+        }));
     }
 
     private <E extends GeoBlockEntity> PlayState rotationPredicate(AnimationState<E> event) {
@@ -358,6 +379,19 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
     }
 
     // ========== ContainerData ==========
+    // Обновляем ContainerData (Индексы 0-3 заняты, добавляем 4 и 5)
+    public void toggleGeneratorMode() {
+        this.isGeneratorMode = !this.isGeneratorMode;
+        // При смене режима сбрасываем вращение, чтобы не было рывков
+        this.speed = 0;
+        this.torque = 0;
+        this.lastReceivedRotation = 0;
+        setChanged();
+        sync();
+        invalidateNeighborCaches();
+    }
+
+    // ОБНОВЛЕННЫЙ DATA (Должен быть 6!)
     protected final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
@@ -366,20 +400,45 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
                 case 1 -> (int) Math.min(MAX_ENERGY, Integer.MAX_VALUE);
                 case 2 -> isSwitchedOn ? 1 : 0;
                 case 3 -> bootTimer;
+                case 4 -> (int) Math.min(lastReceivedRotation, Integer.MAX_VALUE);
+                case 5 -> isGeneratorMode ? 1 : 0;
                 default -> 0;
             };
         }
+
         @Override
         public void set(int index, int value) {
             switch (index) {
                 case 0 -> energyStored = value;
                 case 2 -> isSwitchedOn = value == 1;
                 case 3 -> bootTimer = value;
+                case 5 -> isGeneratorMode = value == 1;
             }
         }
+
         @Override
-        public int getCount() { return 4; }
+        public int getCount() {
+            return 6; // ВАЖНО: ровно 6
+        }
     };
+
+    // Не забудьте сохранить новые поля в NBT!
+    @Override
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.putBoolean("IsGeneratorMode", isGeneratorMode);
+        tag.putLong("Energy", energyStored);
+        tag.putBoolean("IsSwitchedOn", isSwitchedOn);
+    }
+
+    @Override
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        isGeneratorMode = tag.getBoolean("IsGeneratorMode");
+        energyStored = tag.getLong("Energy");
+        isSwitchedOn = tag.getBoolean("IsSwitchedOn");
+    }
+
 
     public ContainerData getDataAccess() { return data; }
 }
