@@ -2,7 +2,6 @@ package com.smogline.block.entity.custom;
 
 import com.smogline.api.rotation.RotationNetworkHelper;
 import com.smogline.api.rotation.RotationSource;
-import com.smogline.api.rotation.Rotational;
 import com.smogline.api.rotation.RotationalNode;
 import com.smogline.block.custom.rotation.TachometerBlock;
 import com.smogline.block.custom.rotation.Mode;
@@ -18,18 +17,15 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-
 public class TachometerBlockEntity extends BlockEntity implements RotationalNode {
 
     private long speed = 0;
     private long torque = 0;
     private int multiplier = 1; // 1,2,3
 
-    // Кеш найденного источника
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 10; // тиков (1 секунда)
+    private static final long CACHE_LIFETIME = 10;
 
     public TachometerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TACHOMETER_BE.get(), pos, state);
@@ -38,58 +34,62 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
     // ========== Rotational ==========
     @Override public long getSpeed() { return speed; }
     @Override public long getTorque() { return torque; }
-    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); }
-    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); }
+
+    @Override
+    public void setSpeed(long speed) {
+        this.speed = speed;
+        setChanged();
+        sync();
+        invalidateNeighborCaches(); // ВАЖНО
+    }
+
+    @Override
+    public void setTorque(long torque) {
+        this.torque = torque;
+        setChanged();
+        sync();
+        invalidateNeighborCaches(); // ВАЖНО
+    }
+
     @Override public long getMaxSpeed() { return 0; }
     @Override public long getMaxTorque() { return 0; }
 
     // ========== RotationalNode ==========
-    @Override
-    @Nullable
-    public RotationSource getCachedSource() { return cachedSource; }
-
-    @Override
-    public void setCachedSource(@Nullable RotationSource source, long gameTime) {
-        this.cachedSource = source;
-        this.cacheTimestamp = gameTime;
-    }
-
-    @Override
-    public boolean isCacheValid(long currentTime) {
-        return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME;
-    }
+    @Override @Nullable public RotationSource getCachedSource() { return cachedSource; }
+    @Override public void setCachedSource(@Nullable RotationSource source, long gameTime) { this.cachedSource = source; this.cacheTimestamp = gameTime; }
+    @Override public boolean isCacheValid(long currentTime) { return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME; }
 
     @Override
     public void invalidateCache() {
+        // Проверка обязательна, чтобы избежать бесконечной рекурсии!
         if (this.cachedSource != null) {
             this.cachedSource = null;
             if (level != null && !level.isClientSide) {
-                Direction facing = getBlockState().getValue(TachometerBlock.FACING);
-                Direction left = TachometerBlock.getLeft(facing);
-                Direction right = TachometerBlock.getRight(facing);
-                for (Direction dir : new Direction[]{left, right}) {
-                    if (dir != null) {
-                        BlockPos neighborPos = worldPosition.relative(dir);
-                        if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
-                            node.invalidateCache();
-                        }
-                    }
+                invalidateNeighborCaches();
+            }
+        }
+    }
+    private void invalidateNeighborCaches() {
+        if (level == null || level.isClientSide) return;
+        Direction facing = getBlockState().getValue(TachometerBlock.FACING);
+        Direction left = TachometerBlock.getLeft(facing);
+        Direction right = TachometerBlock.getRight(facing);
+
+        for (Direction dir : new Direction[]{left, right}) {
+            if (dir != null) {
+                BlockPos neighborPos = worldPosition.relative(dir);
+                if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                    node.invalidateCache();
                 }
             }
         }
     }
 
-    /**
-     * Тахометр сам по себе не является источником вращения.
-     */
     @Override
     public boolean canProvideSource(@Nullable Direction fromDir) {
         return false;
     }
 
-    /**
-     * Определяет направления для продолжения поиска: левая и правая стороны относительно лицевой.
-     */
     @Override
     public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
         Direction facing = getBlockState().getValue(TachometerBlock.FACING);
@@ -97,14 +97,12 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
         Direction right = TachometerBlock.getRight(facing);
 
         if (fromDir != null) {
-            // Если пришли с левой или правой стороны, продолжаем в противоположном направлении
             if (fromDir == left || fromDir == right) {
                 return new Direction[]{fromDir.getOpposite()};
             } else {
                 return new Direction[0];
             }
         } else {
-            // Начало поиска — проверяем обе стороны
             return new Direction[]{left, right};
         }
     }
@@ -124,14 +122,15 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
         return getBlockState().getValue(TachometerBlock.MODE);
     }
 
-    /**
-     * Вычисляет сигнал редстоуна (0-15) на основе текущего источника, multiplier и mode.
-     */
     public int getRedstoneSignal() {
-        if (cachedSource == null) return 0;
-        long value = (getMode() == Mode.SPEED) ? cachedSource.speed() : cachedSource.torque();
-        long raw = value * multiplier / 20;
-        return (int) Math.min(15, raw);
+        // Используем текущие поля speed/torque, так как cachedSource может быть null в промежутках
+        long value = (getMode() == Mode.SPEED) ? this.speed : this.torque;
+        if (value <= 0) return 0;
+
+        // Масштабируем: допустим, при multiplier=1 и скорости 100 сигнал будет 5
+        // Чтобы сигнал не "дергался", добавим небольшое округление вверх
+        double raw = (value * (double)multiplier) / 20.0;
+        return (int) Math.min(15, Math.max(0, raw));
     }
 
     // ========== Тик ==========
@@ -140,12 +139,11 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
 
         long currentTime = level.getGameTime();
 
-        // Если кеш устарел или отсутствует – выполняем поиск
         if (!be.isCacheValid(currentTime)) {
-            RotationSource source = RotationNetworkHelper.findSource(be, null, new HashSet<>(), 0);
+            RotationSource source = RotationNetworkHelper.findSource(be, null);
             be.setCachedSource(source, currentTime);
-            // При изменении источника обновляем редстоун
-            be.updateRedstone();
+            // Здесь be.speed еще старый, но updateRedstone вызовет пересчет.
+            // Однако основной "удар" должен быть ниже.
         }
 
         RotationSource src = be.getCachedSource();
@@ -153,25 +151,33 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
         long newTorque = (src != null) ? src.torque() : 0;
 
         boolean changed = false;
-        if (be.speed != newSpeed) {
-            be.speed = newSpeed;
-            changed = true;
-        }
-        if (be.torque != newTorque) {
-            be.torque = newTorque;
-            changed = true;
-        }
+        if (be.speed != newSpeed) { be.speed = newSpeed; changed = true; } // ПРИСВАИВАЕМ СРАЗУ
+        if (be.torque != newTorque) { be.torque = newTorque; changed = true; }
 
         if (changed) {
             be.setChanged();
             be.sync();
-            be.updateRedstone(); // возможно, изменение значений тоже требует обновления редстоуна
+            be.invalidateNeighborCaches();
+            // Теперь, когда be.speed и be.torque УЖЕ обновлены,
+            // уведомляем соседей. Они вызовут getSignal и получат новые данные.
+            be.updateRedstone();
         }
     }
 
+    // TachometerBlockEntity.java
+
     private void updateRedstone() {
         if (level != null && !level.isClientSide) {
-            level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+            BlockState state = getBlockState();
+            // 1. Уведомляем сам блок
+            level.updateNeighborsAt(worldPosition, state.getBlock());
+
+            // 2. Уведомляем ВСЕХ соседей, что сигнал вокруг изменился
+            for (Direction dir : Direction.values()) {
+                BlockPos neighborPos = worldPosition.relative(dir);
+                level.neighborChanged(neighborPos, state.getBlock(), worldPosition);
+                level.updateNeighborsAt(neighborPos, state.getBlock());
+            }
         }
     }
 
@@ -182,7 +188,6 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
         tag.putLong("Speed", speed);
         tag.putLong("Torque", torque);
         tag.putInt("Multiplier", multiplier);
-        // Кеш не сохраняем
     }
 
     @Override
@@ -192,7 +197,6 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
         torque = tag.getLong("Torque");
         multiplier = tag.getInt("Multiplier");
         if (multiplier < 1 || multiplier > 3) multiplier = 1;
-        // Игнорируем старый тег HasSource, кеш сбрасывается
         cachedSource = null;
     }
 
@@ -226,9 +230,6 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
         }
     }
 
-    /**
-     * Вспомогательный метод для проверки наличия источника (для удобства).
-     */
     public boolean hasSource() {
         return cachedSource != null;
     }

@@ -25,21 +25,16 @@ import software.bernie.geckolib.core.animation.*;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity, RotationalNode {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private long speed = 0;
     private long torque = 0;
 
-    // Кеш источника
     private RotationSource cachedSource;
     private long cacheTimestamp;
-    private static final long CACHE_LIFETIME = 10;// тиков (1 секунда)
+    private static final long CACHE_LIFETIME = 10;
 
-    // Параметры перегрузки и анимации
     private static final long MAX_SPEED = 300;
     private static final long MAX_TORQUE = 150;
     private static final float ACCELERATION = 0.1f;
@@ -56,7 +51,7 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         super(ModBlockEntities.SHAFT_IRON_BE.get(), pos, state);
     }
 
-    // ========== NBT and sync ==========
+    // ========== NBT и Sync ==========
     @Override
     public CompoundTag getUpdateTag() {
         CompoundTag tag = super.getUpdateTag();
@@ -87,71 +82,58 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
     // ========== Rotational ==========
     @Override public long getSpeed() { return speed; }
     @Override public long getTorque() { return torque; }
-    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); }
-    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); }
+    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); invalidateNeighborCaches(); }
+    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); invalidateNeighborCaches(); }
     @Override public long getMaxSpeed() { return 0; }
     @Override public long getMaxTorque() { return 0; }
 
     // ========== RotationalNode ==========
-    @Override
-    @Nullable
-    public RotationSource getCachedSource() { return cachedSource; }
-
-    @Override
-    public void setCachedSource(@Nullable RotationSource source, long gameTime) {
+    @Override @Nullable public RotationSource getCachedSource() { return cachedSource; }
+    @Override public void setCachedSource(@Nullable RotationSource source, long gameTime) {
         this.cachedSource = source;
         this.cacheTimestamp = gameTime;
     }
-
-    @Override
-    public boolean isCacheValid(long currentTime) {
+    @Override public boolean isCacheValid(long currentTime) {
         return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME;
     }
 
     @Override
     public void invalidateCache() {
+        // Проверка обязательна, чтобы избежать бесконечной рекурсии!
         if (this.cachedSource != null) {
             this.cachedSource = null;
             if (level != null && !level.isClientSide) {
-                Direction facing = getBlockState().getValue(ShaftIronBlock.FACING);
-                for (Direction dir : new Direction[]{facing, facing.getOpposite()}) {
-                    BlockPos neighborPos = worldPosition.relative(dir);
-                    if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
-                        node.invalidateCache();
-                    }
-                }
+                invalidateNeighborCaches();
             }
         }
     }
 
-    /**
-     * Определяет, в какие стороны можно продолжить поиск источника.
-     */
+    private void invalidateNeighborCaches() {
+        if (level == null || level.isClientSide) return;
+        Direction facing = getBlockState().getValue(ShaftIronBlock.FACING);
+        for (Direction dir : new Direction[]{facing, facing.getOpposite()}) {
+            BlockPos neighborPos = worldPosition.relative(dir);
+            if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                node.invalidateCache();
+            }
+        }
+    }
+
     @Override
     public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
         Direction myFacing = getBlockState().getValue(ShaftIronBlock.FACING);
         if (fromDir != null) {
-            // Если пришли с оси, идём в противоположную сторону
             if (fromDir == myFacing || fromDir == myFacing.getOpposite()) {
                 return new Direction[]{fromDir.getOpposite()};
             } else {
-                return new Direction[0]; // тупик
+                return new Direction[0];
             }
         } else {
-            // Начало поиска — проверяем обе стороны
             return new Direction[]{myFacing, myFacing.getOpposite()};
         }
     }
 
-    /**
-     * Поиск источника с использованием помощника.
-     */
-    @Nullable
-    public RotationSource findSource(Set<BlockPos> visited, @Nullable Direction fromDir, int depth) {
-        return RotationNetworkHelper.findSource(this, fromDir, visited, depth);
-    }
-
-    // ========== Тик ==========
+    // ========== Logic ==========
     public static void tick(Level level, BlockPos pos, BlockState state, ShaftIronBlockEntity be) {
         if (level.isClientSide) {
             be.handleClientAnimation();
@@ -160,9 +142,9 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
 
         long currentTime = level.getGameTime();
 
-        // Если кеш устарел или отсутствует – выполняем поиск
+        // 1. Обновляем источник, если нужно
         if (!be.isCacheValid(currentTime)) {
-            RotationSource source = be.findSource(new HashSet<>(), null, 0);
+            RotationSource source = RotationNetworkHelper.findSource(be, null);
             be.setCachedSource(source, currentTime);
         }
 
@@ -170,7 +152,7 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         long newSpeed = (src != null) ? src.speed() : 0;
         long newTorque = (src != null) ? src.torque() : 0;
 
-        // Проверка на перегрузку
+        // 2. Проверка перегрузки
         if (newSpeed > MAX_SPEED || newTorque > MAX_TORQUE) {
             level.removeBlock(pos, false);
             Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
@@ -178,6 +160,7 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
             return;
         }
 
+        // 3. Применение изменений
         boolean changed = false;
         if (be.speed != newSpeed) {
             be.speed = newSpeed;
@@ -191,69 +174,41 @@ public class ShaftIronBlockEntity extends BlockEntity implements GeoBlockEntity,
         if (changed) {
             be.setChanged();
             be.sync();
+            // ВАЖНО: Уведомляем соседей, что наша скорость изменилась!
+            // Это заставит их сбросить кеш и перепроверить источник через нас.
+            be.invalidateNeighborCaches();
         }
     }
 
-    // ========== Анимация (клиент) ==========
+    // ... методы анимации и GeckoLib без изменений ...
     private void handleClientAnimation() {
         float targetSpeed = (speed > 0) ? Math.max(0.1f, speed / 100f) : 0f;
-
         if (targetSpeed > 0) {
             ticksWithoutPower = 0;
-            if (currentAnimationSpeed < targetSpeed) {
-                currentAnimationSpeed = Math.min(currentAnimationSpeed + ACCELERATION, targetSpeed);
-            } else if (currentAnimationSpeed > targetSpeed) {
-                currentAnimationSpeed = Math.max(currentAnimationSpeed - ACCELERATION, targetSpeed);
-            }
+            if (currentAnimationSpeed < targetSpeed) currentAnimationSpeed = Math.min(currentAnimationSpeed + ACCELERATION, targetSpeed);
+            else if (currentAnimationSpeed > targetSpeed) currentAnimationSpeed = Math.max(currentAnimationSpeed - ACCELERATION, targetSpeed);
         } else {
             if (currentAnimationSpeed > 0) {
                 ticksWithoutPower++;
-                if (ticksWithoutPower > STOP_DELAY_TICKS) {
-                    currentAnimationSpeed = Math.max(currentAnimationSpeed - DECELERATION, 0f);
-                }
-            } else {
-                ticksWithoutPower = 0;
-            }
+                if (ticksWithoutPower > STOP_DELAY_TICKS) currentAnimationSpeed = Math.max(currentAnimationSpeed - DECELERATION, 0f);
+            } else ticksWithoutPower = 0;
         }
     }
 
-    // ========== GeckoLib ==========
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "shaft_controller", 0, this::animationPredicate));
     }
 
     private <E extends GeoBlockEntity> PlayState animationPredicate(AnimationState<E> event) {
-        if (currentAnimationSpeed < MIN_ANIM_SPEED) {
-            return PlayState.STOP;
-        }
+        if (currentAnimationSpeed < MIN_ANIM_SPEED) return PlayState.STOP;
         event.getController().setAnimation(ROTATION);
         event.getController().setAnimationSpeed(currentAnimationSpeed);
         return PlayState.CONTINUE;
     }
 
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return cache;
-    }
-
-    @Override
-    public double getBoneResetTime() { return 0; }
-
-    @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.putLong("Speed", speed);
-        tag.putLong("Torque", torque);
-        // Кеш не сохраняем
-    }
-
-    @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        speed = tag.getLong("Speed");
-        torque = tag.getLong("Torque");
-        // При загрузке сбрасываем кеш
-        cachedSource = null;
-    }
+    @Override public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
+    @Override public double getBoneResetTime() { return 0; }
+    @Override protected void saveAdditional(CompoundTag tag) { super.saveAdditional(tag); tag.putLong("Speed", speed); tag.putLong("Torque", torque); }
+    @Override public void load(CompoundTag tag) { super.load(tag); speed = tag.getLong("Speed"); torque = tag.getLong("Torque"); cachedSource = null; }
 }

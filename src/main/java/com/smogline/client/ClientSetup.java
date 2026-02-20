@@ -25,6 +25,7 @@ import com.smogline.item.tags_and_tiers.ModTags;
 import com.smogline.lib.RefStrings;
 import com.smogline.main.MainRegistry;
 import com.smogline.menu.ModMenuTypes;
+import com.smogline.menu.MotorElectroMenu;
 import com.smogline.multiblock.DoorPartAABBRegistry;
 import com.smogline.particle.ModParticleTypes;
 import com.smogline.recipe.AssemblerRecipe;
@@ -144,6 +145,7 @@ public class ClientSetup {
         event.enqueueWork(() -> {
             // Здесь мы связываем наш тип меню с классом экрана
             MenuScreens.register(ModMenuTypes.TURRET_AMMO_MENU.get(), GUITurretAmmo::new);
+            MenuScreens.register(ModMenuTypes.MOTOR_ELECTRO_MENU.get(), GUIMotorElectro::new);
             MenuScreens.register(ModMenuTypes.ARMOR_TABLE_MENU.get(), GUIArmorTable::new);
             MenuScreens.register(ModMenuTypes.MACHINE_ASSEMBLER_MENU.get(), GUIMachineAssembler::new);
             MenuScreens.register(ModMenuTypes.ADVANCED_ASSEMBLY_MACHINE_MENU.get(), GUIMachineAdvancedAssembler::new);

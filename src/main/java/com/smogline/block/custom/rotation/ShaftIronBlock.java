@@ -48,6 +48,7 @@ public class ShaftIronBlock extends BaseEntityBlock {
         BlockPos placePos = context.getClickedPos();
         Direction clickedFace = context.getClickedFace();
 
+        // Блок, на который мы кликаем (сосед)
         BlockPos targetPos = placePos.relative(clickedFace.getOpposite());
         BlockState targetState = level.getBlockState(targetPos);
         Block targetBlock = targetState.getBlock();
@@ -55,103 +56,67 @@ public class ShaftIronBlock extends BaseEntityBlock {
         boolean canPlace = false;
         Direction shaftFacing = clickedFace;
 
+        // 1. Мотор (только спереди)
         if (targetBlock instanceof MotorElectroBlock) {
             Direction motorFacing = targetState.getValue(MotorElectroBlock.FACING);
             if (clickedFace == motorFacing) {
                 canPlace = true;
                 shaftFacing = motorFacing;
             }
-        } else if (targetBlock instanceof ShaftIronBlock) {
+        }
+        // 2. Другой вал (продолжаем линию)
+        else if (targetBlock instanceof ShaftIronBlock) {
             Direction existingFacing = targetState.getValue(ShaftIronBlock.FACING);
             if (clickedFace == existingFacing || clickedFace == existingFacing.getOpposite()) {
                 canPlace = true;
                 shaftFacing = existingFacing;
             }
-        } else if (targetBlock instanceof GearPortBlock) {
-            BlockEntity be = level.getBlockEntity(targetPos);
-            if (be instanceof GearPortBlockEntity gear) {
+        }
+        // 3. ПОРТ (GearPort) - Проверяем наличие порта на этой стороне
+        else if (targetBlock instanceof GearPortBlock) {
+            if (level.getBlockEntity(targetPos) instanceof GearPortBlockEntity gear) {
                 if (gear.hasPortOnSide(clickedFace)) {
                     canPlace = true;
                     shaftFacing = clickedFace;
                 }
             }
-        } else if (targetBlock instanceof RotationMeterBlock) {
-            Direction meterFacing = targetState.getValue(RotationMeterBlock.FACING);
-            Direction left, right;
-            switch (meterFacing) {
-                case NORTH:
-                    left = Direction.WEST;
-                    right = Direction.EAST;
-                    break;
-                case SOUTH:
-                    left = Direction.EAST;
-                    right = Direction.WEST;
-                    break;
-                case EAST:
-                    left = Direction.NORTH;
-                    right = Direction.SOUTH;
-                    break;
-                case WEST:
-                    left = Direction.SOUTH;
-                    right = Direction.NORTH;
-                    break;
-                default:
-                    left = right = null;
-            }
-            if (clickedFace == left || clickedFace == right) {
-                canPlace = true;
-                shaftFacing = clickedFace;
-            }
-        } else if (targetBlock instanceof StopperBlock) {
-            Direction stopperFacing = targetState.getValue(StopperBlock.FACING);
-            Direction left, right;
-            switch (stopperFacing) {
-                case NORTH: left = Direction.WEST; right = Direction.EAST; break;
-                case SOUTH: left = Direction.EAST; right = Direction.WEST; break;
-                case EAST:  left = Direction.NORTH; right = Direction.SOUTH; break;
-                case WEST:  left = Direction.SOUTH; right = Direction.NORTH; break;
-                case UP:    left = Direction.NORTH; right = Direction.SOUTH; break;
-                case DOWN:  left = Direction.SOUTH; right = Direction.NORTH; break;
-                default: left = right = null;
-            }
-            if (clickedFace == left || clickedFace == right) {
-                canPlace = true;
-                shaftFacing = clickedFace;
-            }
-        } else if (targetBlock instanceof AdderBlock) {
+        }
+        // 4. Сумматор (AdderBlock) - Входы по бокам, выход сзади
+        else if (targetBlock instanceof AdderBlock) {
             Direction adderFacing = targetState.getValue(AdderBlock.FACING);
-            Direction left, right;
-            switch (adderFacing) {
-                case NORTH: left = Direction.WEST; right = Direction.EAST; break;
-                case SOUTH: left = Direction.EAST; right = Direction.WEST; break;
-                case EAST:  left = Direction.NORTH; right = Direction.SOUTH; break;
-                case WEST:  left = Direction.SOUTH; right = Direction.NORTH; break;
-                default: left = right = null;
-            }
-            // Вал можно ставить на заднюю сторону (выход) и на боковые стороны (входы)
+            Direction[] sides = getPerpendicularSides(adderFacing);
             Direction outputSide = adderFacing.getOpposite();
-            if (clickedFace == outputSide || clickedFace == left || clickedFace == right) {
+
+            if (clickedFace == outputSide || clickedFace == sides[0] || clickedFace == sides[1]) {
                 canPlace = true;
                 shaftFacing = clickedFace;
             }
-        } else if (targetBlock instanceof TachometerBlock) {
-            Direction tachoFacing = targetState.getValue(TachometerBlock.FACING);
-            Direction left, right;
-            switch (tachoFacing) {
-                case NORTH: left = Direction.WEST; right = Direction.EAST; break;
-                case SOUTH: left = Direction.EAST; right = Direction.WEST; break;
-                case EAST:  left = Direction.NORTH; right = Direction.SOUTH; break;
-                case WEST:  left = Direction.SOUTH; right = Direction.NORTH; break;
-                case UP:    left = Direction.NORTH; right = Direction.SOUTH; break;
-                case DOWN:  left = Direction.SOUTH; right = Direction.NORTH; break;
-                default: left = right = null;
+        }
+        // 5. Логические блоки (Meter, Stopper, Tachometer)
+        else if (targetBlock instanceof RotationMeterBlock ||
+                targetBlock instanceof StopperBlock ||
+                targetBlock instanceof TachometerBlock) {
+
+            Direction blockFacing = null;
+
+            // БЕЗОПАСНОЕ ПОЛУЧЕНИЕ НАПРАВЛЕНИЯ
+            if (targetState.hasProperty(BlockStateProperties.FACING)) {
+                blockFacing = targetState.getValue(BlockStateProperties.FACING);
+            } else if (targetState.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) {
+                blockFacing = targetState.getValue(BlockStateProperties.HORIZONTAL_FACING);
             }
-            if (clickedFace == left || clickedFace == right) {
-                canPlace = true;
-                shaftFacing = clickedFace;
+
+            if (blockFacing != null) {
+                Direction[] sides = getPerpendicularSides(blockFacing);
+                // Проверяем, кликнули ли мы по бокам
+                if (clickedFace == sides[0] || clickedFace == sides[1]) {
+                    canPlace = true;
+                    shaftFacing = clickedFace;
+                }
             }
-        } else if (targetBlock instanceof WindGenFlugerBlock) {
-            // Вал можно ставить только снизу
+        }
+        // 6. Флюгер (WindGen) - только снизу
+        else if (targetBlock instanceof WindGenFlugerBlock) {
             if (clickedFace == Direction.DOWN) {
                 canPlace = true;
                 shaftFacing = Direction.DOWN;
@@ -159,10 +124,41 @@ public class ShaftIronBlock extends BaseEntityBlock {
         }
 
         if (!canPlace) {
+            if (level.isClientSide) {
+                spawnErrorParticles(level, placePos, clickedFace);
+            }
             return null;
         }
 
         return this.defaultBlockState().setValue(FACING, shaftFacing);
+    }
+
+
+    // Вспомогательный метод для визуального фидбека
+    private void spawnErrorParticles(Level level, BlockPos pos) {
+        for (int i = 0; i < 5; i++) {
+            double d0 = (double)pos.getX() + level.random.nextDouble();
+            double d1 = (double)pos.getY() + level.random.nextDouble();
+            double d2 = (double)pos.getZ() + level.random.nextDouble();
+            // Красные частицы (Redstone Dust параметризуется цветом)
+            level.addParticle(net.minecraft.core.particles.ParticleTypes.SMOKE, d0, d1, d2, 0.0D, 0.0D, 0.0D);
+        }
+    }
+
+    /**
+     * Вспомогательный метод для поиска перпендикулярных сторон.
+     * Если блок смотрит на СЕВЕР, вернет ЗАПАД и ВОСТОК.
+     * Если смотрит ВВЕРХ, вернет СЕВЕР и ЮГ.
+     */
+    private Direction[] getPerpendicularSides(Direction facing) {
+        Direction.Axis axis = facing.getAxis();
+        if (axis == Direction.Axis.Y) {
+            return new Direction[]{Direction.NORTH, Direction.SOUTH};
+        } else if (axis == Direction.Axis.X) {
+            return new Direction[]{Direction.NORTH, Direction.SOUTH};
+        } else { // Axis.Z
+            return new Direction[]{Direction.WEST, Direction.EAST};
+        }
     }
 
     private static final VoxelShape SHAPE_NORTH_SOUTH = Block.box(6.75, 6.75, 0, 9.25, 9.25, 16); // X/Z:2.5px→6.75-9.25, Y:2.5px
@@ -230,6 +226,23 @@ public class ShaftIronBlock extends BaseEntityBlock {
             }
         }
         super.onRemove(state, level, pos, newState, isMoving);
+    }
+
+    private void spawnErrorParticles(Level level, BlockPos pos, Direction side) {
+        // Спавним частицы на грани блока, куда тыкали
+        double x = pos.getX() + 0.5 + side.getStepX() * 0.4;
+        double y = pos.getY() + 0.5 + side.getStepY() * 0.4;
+        double z = pos.getZ() + 0.5 + side.getStepZ() * 0.4;
+
+        for (int i = 0; i < 8; i++) {
+            level.addParticle(
+                    net.minecraft.core.particles.ParticleTypes.SMOKE,
+                    x + (level.random.nextDouble() - 0.5) * 0.3,
+                    y + (level.random.nextDouble() - 0.5) * 0.3,
+                    z + (level.random.nextDouble() - 0.5) * 0.3,
+                    0, 0.02, 0
+            );
+        }
     }
 
 
