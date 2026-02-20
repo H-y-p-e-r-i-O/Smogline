@@ -9,14 +9,20 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class RotationNetworkHelper {
-    private static final int MAX_SEARCH_DEPTH = 32;
+    private static final int MAX_SEARCH_DEPTH = 64;
 
     @Nullable
-    public static RotationSource findSource(BlockEntity start, @Nullable Direction fromDir,
-                                            Set<BlockPos> visited, int depth) {
+    public static RotationSource findSource(BlockEntity startNode, @Nullable Direction fromDir) {
+        return findSourceInternal(startNode, fromDir, new HashSet<>(), 0);
+    }
+
+    @Nullable
+    private static RotationSource findSourceInternal(BlockEntity start, @Nullable Direction fromDir,
+                                                     Set<BlockPos> visited, int depth) {
         if (depth > MAX_SEARCH_DEPTH || visited.contains(start.getBlockPos())) {
             return null;
         }
@@ -39,24 +45,24 @@ public class RotationNetworkHelper {
             BlockEntity neighbor = level.getBlockEntity(neighborPos);
             if (neighbor == null) continue;
 
-            // 1. Прямые источники (мотор, ветряк)
-            RotationSource direct = checkDirectSource(neighbor, dir);
-            if (direct != null) return direct;
+            // 1. Сначала проверяем, является ли сосед ИСТОЧНИКОМ (Мотор, Ветряк)
+            // dir - направление ОТ нас К соседу.
+            // Сосед должен смотреть НА нас (то есть его facing == dir.getOpposite())
+            RotationSource directSource = getDirectSource(neighbor, dir);
+            if (directSource != null) {
+                return directSource;
+            }
 
-            // 2. Проверка, может ли сосед сам быть источником (например, выход сумматора)
+            // 2. Если не источник, проверяем, является ли он узлом сети (Вал)
             if (neighbor instanceof RotationalNode neighborNode) {
-                if (neighborNode.canProvideSource(dir.getOpposite())) {
-                    return new RotationSource(((Rotational) neighbor).getSpeed(), ((Rotational) neighbor).getTorque());
+                // Оптимизация: верим кешу соседа, если он валиден
+                if (neighborNode.isCacheValid(currentTime)) {
+                    RotationSource cached = neighborNode.getCachedSource();
+                    if (cached != null) return cached;
                 }
 
-                // 3. Кеш соседа
-                RotationSource cached = neighborNode.getCachedSource();
-                if (cached != null && neighborNode.isCacheValid(currentTime)) {
-                    return cached;
-                }
-
-                // 4. Рекурсивный поиск
-                RotationSource found = findSource(neighbor, dir.getOpposite(), visited, depth + 1);
+                // Рекурсивный поиск
+                RotationSource found = findSourceInternal(neighbor, dir.getOpposite(), visited, depth + 1);
                 if (found != null) return found;
             }
         }
@@ -64,8 +70,12 @@ public class RotationNetworkHelper {
     }
 
     @Nullable
-    private static RotationSource checkDirectSource(BlockEntity neighbor, Direction dir) {
+    private static RotationSource getDirectSource(BlockEntity neighbor, Direction dir) {
         if (neighbor instanceof MotorElectroBlockEntity motor) {
+            // Строгая проверка: Мотор должен смотреть в сторону вала.
+            // dir - направление от Вала к Мотору.
+            // dir.getOpposite() - направление от Мотора к Валу.
+            // Мотор отдает энергию только ПЕРЕД собой.
             Direction motorFacing = motor.getBlockState().getValue(MotorElectroBlock.FACING);
             if (motorFacing == dir.getOpposite()) {
                 return new RotationSource(motor.getSpeed(), motor.getTorque());

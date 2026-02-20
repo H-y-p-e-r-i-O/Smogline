@@ -57,6 +57,7 @@ public class ShaftIronBlock extends BaseEntityBlock {
 
         if (targetBlock instanceof MotorElectroBlock) {
             Direction motorFacing = targetState.getValue(MotorElectroBlock.FACING);
+            // СТРОГО: Только если кликнули по лицевой стороне (откуда выходит вал)
             if (clickedFace == motorFacing) {
                 canPlace = true;
                 shaftFacing = motorFacing;

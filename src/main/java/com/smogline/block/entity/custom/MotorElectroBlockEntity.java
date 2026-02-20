@@ -81,6 +81,8 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
         }
         setChanged();
         sync();
+        // ВАЖНО: Будим соседей сразу при нажатии кнопки, даже если скорость еще 0.
+        // Они проверят нас, увидят 0, но будут знать, что связь есть.
         invalidateNeighborCaches();
     }
 
@@ -228,16 +230,7 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
     }
     @Override
     public void invalidateCache() {
-        if (this.cachedSource != null) {
-            this.cachedSource = null;
-            if (level != null && !level.isClientSide) {
-                Direction facing = getBlockState().getValue(MotorElectroBlock.FACING);
-                BlockPos outputPos = worldPosition.relative(facing.getOpposite());
-                if (level.getBlockEntity(outputPos) instanceof RotationalNode node) {
-                    node.invalidateCache();
-                }
-            }
-        }
+        // Пусто. Мотор — источник, ему не нужно реагировать на сброс кеша соседей.
     }
     @Override
     public Direction[] getPropagationDirections(@Nullable Direction fromDir) {

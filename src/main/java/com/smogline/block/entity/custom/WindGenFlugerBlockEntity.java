@@ -87,13 +87,17 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
     // ========== Rotational ==========
     @Override public long getSpeed() { return speed; }
     @Override public long getTorque() { return torque; }
+    // ========== Rotational ==========
     @Override public void setSpeed(long speed) {
+        long oldSpeed = this.speed;
         this.speed = Math.min(speed, MAX_SPEED);
         this.torque = calculateTorque(this.speed);
-        setChanged();
-        sync();
-        // При изменении скорости инвалидируем кеш у соседей (опционально)
-        invalidateNeighborCaches();
+
+        if (this.speed != oldSpeed) {
+            setChanged();
+            sync();
+            invalidateNeighborCaches(); // ВАЖНО: Уведомляем вал снизу
+        }
     }
     @Override public void setTorque(long torque) {
         // torque устанавливается автоматически из speed, поэтому игнорируем
@@ -119,39 +123,24 @@ public class WindGenFlugerBlockEntity extends BlockEntity implements GeoBlockEnt
         return cachedSource != null && (currentTime - cacheTimestamp) <= CACHE_LIFETIME;
     }
 
+
     @Override
     public void invalidateCache() {
-        if (this.cachedSource != null) {
-            this.cachedSource = null;
-            if (level != null && !level.isClientSide) {
-                // выход всегда вниз
-                BlockPos outputPos = worldPosition.relative(Direction.DOWN);
-                if (level.getBlockEntity(outputPos) instanceof RotationalNode node) {
-                    node.invalidateCache();
-                }
-            }
-        }
+        // Ветряк сам источник, ему не нужно сбрасывать свой кеш (он null),
+        // но он может пнуть соседа снизу
+        invalidateNeighborCaches();
     }
 
-    /**
-     * Ветряк не передаёт поиск дальше – он сам источник.
-     */
     @Override
     public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
-        return new Direction[0];
+        return new Direction[0]; // Не передает сигнал сквозь себя
     }
 
-    /**
-     * Ветряк может предоставить источник только при запросе снизу (выходная сторона).
-     */
     @Override
     public boolean canProvideSource(@Nullable Direction fromDir) {
-        return fromDir == OUTPUT_SIDE;
+        return fromDir == OUTPUT_SIDE; // Только снизу
     }
 
-    /**
-     * Инвалидирует кеш у соседних блоков (валов), чтобы они пересчитали источник.
-     */
     private void invalidateNeighborCaches() {
         if (level == null || level.isClientSide) return;
         BlockPos neighborPos = worldPosition.relative(OUTPUT_SIDE);
