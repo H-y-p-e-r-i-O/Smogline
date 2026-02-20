@@ -1,0 +1,8 @@
+{
+  "replace": true,
+  "values": [
+    "smogline:smogline",
+    "smogline:smogline_flat",
+    "smogline:smogline_large_biomes"
+  ]
+}
