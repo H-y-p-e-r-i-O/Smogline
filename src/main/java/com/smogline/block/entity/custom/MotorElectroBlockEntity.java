@@ -400,7 +400,14 @@ public class MotorElectroBlockEntity extends BlockEntity implements GeoBlockEnti
                 case 1 -> (int) Math.min(MAX_ENERGY, Integer.MAX_VALUE);
                 case 2 -> isSwitchedOn ? 1 : 0;
                 case 3 -> bootTimer;
-                case 4 -> (int) Math.min(lastReceivedRotation, Integer.MAX_VALUE);
+                case 4 -> {
+                    // Если мы ГЕНЕРАТОР — берем то, что пришло извне
+                    if (isGeneratorMode) {
+                        yield (int) Math.min(lastReceivedRotation, 100000);
+                    }
+                    // Если мы МОТОР — берем то, что производим сами
+                    yield (int) Math.min(speed * torque, 100000);
+                }
                 case 5 -> isGeneratorMode ? 1 : 0;
                 default -> 0;
             };

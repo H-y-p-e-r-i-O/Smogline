@@ -38,7 +38,11 @@ public class MotorElectroMenu extends AbstractContainerMenu {
     public int getMaxEnergy() { return data.get(1); }
     public boolean isSwitchedOn() { return data.get(2) == 1; }
     public boolean isGeneratorMode() { return data.get(5) == 1; }
-    public int getRotationValue() { return data.get(4); }
+    // В классе MotorElectroMenu (Page 30)
+    public int getRotationValue() {
+        return data.get(4); // Теперь здесь всегда актуальное число 0-100000
+    }
+
     public BlockPos getPos() { return blockEntity.getBlockPos(); }
 
     @Override

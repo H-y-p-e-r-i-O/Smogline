@@ -23,44 +23,60 @@ public class GUIMotorElectro extends AbstractContainerScreen<MotorElectroMenu> {
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
 
-        // 1. Базовый фон (с выключенными кнопками на 0,0)
+        // 1. Базовый фон
         guiGraphics.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
-        // 2. Энергобар (Вертикальный)
+        // 2. Энергобар (Вертикальный) - твой код рабочий
         int energy = menu.getEnergy();
         int maxEnergy = menu.getMaxEnergy();
         if (maxEnergy > 0) {
             int barHeight = 52;
             int filledHeight = (int) ((long) energy * barHeight / maxEnergy);
-            // Рисуем заполнение снизу вверх
             guiGraphics.blit(TEXTURE,
                     x + 123, y + 5 + (barHeight - filledHeight),
                     187, 30 + (barHeight - filledHeight),
                     16, filledHeight);
         }
 
-        // 3. Кнопка питания (Красная) — Рисуем ТОЛЬКО при включении (ON)
+        // 3. Кнопка питания (вкл/выкл)
+        // Место: x47, y35
+        // Текстура выкл (по умолчанию на фоне): предполагаем x187/y101 для вкл, значит выкл это стандартный фон
         if (menu.isSwitchedOn()) {
-            // Позиция: x47, y35 | Текстура ON: x187, y133 | Размер: 10x32
-            guiGraphics.blit(TEXTURE, x + 47, y + 35, 187, 133, 10, 32);
+            // Текстура ON: x187, y101 (из твоего запроса) | Размер: 10x32
+            guiGraphics.blit(TEXTURE, x + 47, y + 35, 187, 101, 10, 32);
         }
+        // Если выключена, используется текстура по умолчанию на базовом фоне (0,0)
 
-        // 4. Кнопка режима (Желтая) — Рисуем ТОЛЬКО при активном генераторе
+        // 4. Кнопка режима (генератор/мотор)
+        // Место: x47, y69
+        // Текстура режима генератора (нажата): x187, y83 | Размер: 10x17
+        // Если режим генератора активен, рендерим "нажатую" текстуру поверх стандартной
         if (menu.isGeneratorMode()) {
-            // Позиция: x47, y69 | Текстура ON: x187, y83 | Размер: 10x17
             guiGraphics.blit(TEXTURE, x + 47, y + 69, 187, 83, 10, 17);
         }
 
         // 5. Прогресс-бар вращения (Горизонтальный, СЛЕВА НАПРАВО)
+// Место: x59, y35 | Текстура: x204, y49 | Размер: 52x16
         int rotVal = menu.getRotationValue();
         if (rotVal > 0) {
             int barWidth = 52;
-            // Лимит 100 000 (Speed * Torque) для полной полоски
-            int filledWidth = (int) Math.min(barWidth, (rotVal * (long) barWidth) / 100000);
+            // Используем float для расчета, чтобы избежать потерь при делении
+            // 100000.0f — это твой максимум. Если в режиме мотора там всего 5000,
+            // полоска будет 2.6 пикселя (почти незаметна).
+            float ratio = (float) rotVal / 2500.0f;
+            int filledWidth = (int) (ratio * barWidth);
 
-            // Место: x59, y35 | Текстура: x204, y49 | Размер: filledWidth x 16
-            // Рисуем кусок текстуры шириной filledWidth
-            guiGraphics.blit(TEXTURE, x + 59, y + 35, 204, 49, filledWidth, 16);
+            // Ограничиваем, чтобы не вылезло за рамки
+            if (filledWidth > barWidth) filledWidth = barWidth;
+            if (filledWidth < 1) filledWidth = 1; // Рисуем хотя бы 1 пиксель, если rotVal > 0
+
+            // Используем blit с указанием размера файла текстуры (256, 256)
+            guiGraphics.blit(TEXTURE,
+                    x + 59, y + 35,      // Позиция на экране
+                    204, 49,             // U, V на текстуре
+                    filledWidth, 16,     // Ширина, Высота куска
+                    256, 256             // Ширина, Высота всего файла текстуры
+            );
         }
     }
 
