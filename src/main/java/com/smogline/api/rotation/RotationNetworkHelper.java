@@ -18,13 +18,14 @@ public class RotationNetworkHelper {
     private static final int MAX_SEARCH_DEPTH = 64;
 
     @Nullable
-    public static RotationSource findSource(BlockEntity startNode, @Nullable Direction fromDir) {
-        return findSourceInternal(startNode, fromDir, new HashSet<>(), 0);
+    public static RotationSource findSource(@Nullable BlockEntity start, @Nullable Direction fromDir) {
+        if (start == null) return null; // Защита 80 уровня
+        return findSourceInternal(start, fromDir, new HashSet<>(), 0);
     }
-
     @Nullable
     private static RotationSource findSourceInternal(BlockEntity start, @Nullable Direction fromDir,
                                                      Set<BlockPos> visited, int depth) {
+        if (start == null) return null;
         if (depth > MAX_SEARCH_DEPTH || visited.contains(start.getBlockPos())) {
             return null;
         }

@@ -61,22 +61,7 @@ public class TachometerBlock extends BaseEntityBlock {
         return createTickerHelper(type, ModBlockEntities.TACHOMETER_BE.get(), TachometerBlockEntity::tick);
     }
 
-    // Redstone output
-    @Override
-    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        // Проверяем, что сигнал идёт не с боковых сторон (где порты)
-        Direction facing = state.getValue(FACING);
-        Direction left = getLeft(facing);
-        Direction right = getRight(facing);
-        if (direction == left || direction == right) {
-            return 0; // боковые стороны не выдают сигнал
-        }
-        // Иначе получаем сигнал из BlockEntity
-        if (level.getBlockEntity(pos) instanceof TachometerBlockEntity be) {
-            return be.getRedstoneSignal();
-        }
-        return 0;
-    }
+
 
     // Вспомогательные методы для определения левой/правой стороны относительно лицевой
     public static Direction getLeft(Direction facing) {
@@ -99,10 +84,6 @@ public class TachometerBlock extends BaseEntityBlock {
         };
     }
 
-    @Override
-    public boolean isSignalSource(BlockState state) {
-        return true;
-    }
 
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
@@ -126,4 +107,39 @@ public class TachometerBlock extends BaseEntityBlock {
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
+
+
+
+
+
+
+
+    @Override
+    public boolean isSignalSource(BlockState state) {
+        return true;
+    }
+
+    @Override
+    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction side) {
+        // ВАЖНО: Minecraft передает 'side' как сторону соседа.
+        // Для теста выдаем сигнал во ВСЕ стороны.
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof TachometerBlockEntity tach) {
+            return tach.getRedstoneSignal();
+        }
+        return 0;
+    }
+
+    @Override
+    public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction side) {
+        // Прямой сигнал обычно нужен для активации механизмов вплотную (как лампа)
+        return getSignal(state, level, pos, side);
+    }
+
+    // Позволяет редстоун-пыли соединяться с блоком (рисовать "усики")
+    @Override
+    public boolean canConnectRedstone(BlockState state, BlockGetter world, BlockPos pos, @Nullable Direction side) {
+        return true;
+    }
+
 }

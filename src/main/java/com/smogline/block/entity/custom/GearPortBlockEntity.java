@@ -3,6 +3,7 @@ package com.smogline.block.entity.custom;
 import com.smogline.api.rotation.RotationNetworkHelper;
 import com.smogline.api.rotation.RotationSource;
 import com.smogline.api.rotation.RotationalNode;
+import com.smogline.api.rotation.Rotational;
 import com.smogline.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -16,7 +17,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 public class GearPortBlockEntity extends BlockEntity implements RotationalNode {
@@ -35,22 +35,46 @@ public class GearPortBlockEntity extends BlockEntity implements RotationalNode {
         super(ModBlockEntities.GEAR_PORT_BE.get(), pos, state);
     }
 
-    // ... handleScrewdriverClick и геттеры портов без изменений ...
+    /**
+     * Логика отвертки:
+     * ПКМ -> Установить/снять ПЕРВЫЙ порт
+     * Shift + ПКМ -> Установить/снять ВТОРОЙ порт
+     */
     public String handleScrewdriverClick(Direction face, boolean shift) {
-        // (Твой код handleScrewdriverClick)
-        // ...
-        // ВАЖНО: После изменения портов нужно инвалидировать кеш!
+        String msg;
+        if (!shift) {
+            // Обычный клик - работаем с первым портом
+            if (firstPort == face) {
+                firstPort = null;
+                msg = "Первый порт убран";
+            } else {
+                if (secondPort == face) secondPort = null; // Нельзя два порта на одну сторону
+                firstPort = face;
+                msg = "Первый порт установлен на " + face.getName();
+            }
+        } else {
+            // Shift клик - работаем со вторым портом
+            if (secondPort == face) {
+                secondPort = null;
+                msg = "Второй порт убран";
+            } else {
+                if (firstPort == face) firstPort = null; // Нельзя два порта на одну сторону
+                secondPort = face;
+                msg = "Второй порт установлен на " + face.getName();
+            }
+        }
+
         invalidateCache();
-        return "Порт изменен"; // Упростил для примера, оставь свою логику
+        setChanged();
+        sync();
+        return msg;
     }
-    public Direction getFirstPort() { return firstPort; }
-    public Direction getSecondPort() { return secondPort; }
 
     // ========== Rotational ==========
     @Override public long getSpeed() { return speed; }
     @Override public long getTorque() { return torque; }
-    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); invalidateNeighborCaches(); }
-    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); invalidateNeighborCaches(); }
+    @Override public void setSpeed(long speed) { this.speed = speed; setChanged(); sync(); }
+    @Override public void setTorque(long torque) { this.torque = torque; setChanged(); sync(); }
     @Override public long getMaxSpeed() { return 0; }
     @Override public long getMaxTorque() { return 0; }
 
@@ -66,132 +90,121 @@ public class GearPortBlockEntity extends BlockEntity implements RotationalNode {
 
     @Override
     public void invalidateCache() {
-        // Проверка обязательна, чтобы избежать бесконечной рекурсии!
-        if (this.cachedSource != null) {
+        if (this.cachedSource != null || speed != 0) {
             this.cachedSource = null;
+            this.speed = 0;
+            this.torque = 0;
             if (level != null && !level.isClientSide) {
                 invalidateNeighborCaches();
+                setChanged();
+                sync();
             }
         }
     }
 
     private void invalidateNeighborCaches() {
-        if (level == null || level.isClientSide) return;
-        if (firstPort != null) invalidateNodeAt(firstPort);
-        if (secondPort != null) invalidateNodeAt(secondPort);
-    }
-
-    private void invalidateNodeAt(Direction dir) {
-        BlockPos neighborPos = worldPosition.relative(dir);
-        if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
-            node.invalidateCache();
+        if (level == null) return;
+        for (Direction dir : Direction.values()) {
+            BlockPos neighborPos = worldPosition.relative(dir);
+            if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
+                node.invalidateCache();
+            }
         }
     }
 
     @Override
     public boolean canProvideSource(@Nullable Direction fromDir) {
-        return false;
+        // Мы отдаем энергию только в порты
+        return fromDir != null && (fromDir == firstPort || fromDir == secondPort);
     }
 
     @Override
     public Direction[] getPropagationDirections(@Nullable Direction fromDir) {
+        List<Direction> dirs = new ArrayList<>();
         if (fromDir == null) {
-            List<Direction> list = new ArrayList<>();
-            if (firstPort != null) list.add(firstPort);
-            if (secondPort != null) list.add(secondPort);
-            return list.toArray(new Direction[0]);
+            if (firstPort != null) dirs.add(firstPort);
+            if (secondPort != null) dirs.add(secondPort);
         } else {
-            if (fromDir.equals(firstPort) && secondPort != null) return new Direction[]{secondPort};
-            else if (fromDir.equals(secondPort) && firstPort != null) return new Direction[]{firstPort};
-            else return new Direction[0];
+            // Если пришли в один порт, выходим из другого
+            if (fromDir == firstPort && secondPort != null) dirs.add(secondPort);
+            else if (fromDir == secondPort && firstPort != null) dirs.add(firstPort);
         }
+        return dirs.toArray(new Direction[0]);
     }
 
-    // ========== Тик ==========
     public static void tick(Level level, BlockPos pos, BlockState state, GearPortBlockEntity be) {
         if (level.isClientSide) return;
 
-        if (be.firstPort == null || be.secondPort == null) {
-            if (be.speed != 0) be.setSpeed(0);
-            if (be.torque != 0) be.setTorque(0);
-            return;
-        }
+        // Если портов нет - ничего не делаем
+        if (be.firstPort == null && be.secondPort == null) return;
 
         long currentTime = level.getGameTime();
         if (!be.isCacheValid(currentTime)) {
-            // Ищем источники с обоих портов
-            RotationSource s1 = RotationNetworkHelper.findSource(be, be.firstPort); // Притворяемся, что пришли с 1 порта
-            RotationSource s2 = RotationNetworkHelper.findSource(be, be.secondPort);
+            RotationSource s1 = null;
+            RotationSource s2 = null;
 
-            // Логика конфликта
-            RotationSource finalSource = null;
-            if (s1 != null && s2 != null) {
-                // Конфликт -> 0
-                finalSource = new RotationSource(0, 0);
-            } else if (s1 != null) {
-                finalSource = s1;
-            } else if (s2 != null) {
-                finalSource = s2;
+            // БЕЗОПАСНЫЙ ПОИСК ДЛЯ ПЕРВОГО ПОРТА
+            if (be.firstPort != null) {
+                BlockEntity neighbor1 = level.getBlockEntity(pos.relative(be.firstPort));
+                if (neighbor1 != null) { // <--- ВОТ ЭТА ПРОВЕРКА СПАСЕТ ОТ КРАША
+                    s1 = RotationNetworkHelper.findSource(neighbor1, be.firstPort.getOpposite());
+                }
             }
 
+            // БЕЗОПАСНЫЙ ПОИСК ДЛЯ ВТОРОГО ПОРТА
+            if (be.secondPort != null) {
+                BlockEntity neighbor2 = level.getBlockEntity(pos.relative(be.secondPort));
+                if (neighbor2 != null) { // <--- И ЗДЕСЬ ТОЖЕ
+                    s2 = RotationNetworkHelper.findSource(neighbor2, be.secondPort.getOpposite());
+                }
+            }
+
+            // Логика выбора источника (та же, что была)
+            RotationSource finalSource = (s1 != null) ? s1 : s2;
+            if (s1 != null && s2 != null) finalSource = new RotationSource(0, 0);
+
             be.setCachedSource(finalSource, currentTime);
-        }
 
-        RotationSource src = be.getCachedSource();
-        long newSpeed = (src != null) ? src.speed() : 0;
-        long newTorque = (src != null) ? src.torque() : 0;
+            long newSpeed = (finalSource != null) ? finalSource.speed() : 0;
+            long newTorque = (finalSource != null) ? finalSource.torque() : 0;
 
-        boolean changed = false;
-        if (be.speed != newSpeed) { be.speed = newSpeed; changed = true; }
-        if (be.torque != newTorque) { be.torque = newTorque; changed = true; }
-
-        if (changed) {
-            be.setChanged();
-            be.sync();
-            be.invalidateNeighborCaches();
+            if (be.speed != newSpeed || be.torque != newTorque) {
+                be.speed = newSpeed;
+                be.torque = newTorque;
+                be.setChanged();
+                be.sync();
+                be.invalidateNeighborCaches();
+            }
         }
     }
 
-    // ========== NBT и синхронизация ==========
+
+    // ========== NBT & Sync ==========
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putLong("Speed", speed);
         tag.putLong("Torque", torque);
-        if (firstPort != null) tag.putInt("FirstPort", firstPort.ordinal());
-        if (secondPort != null) tag.putInt("SecondPort", secondPort.ordinal());
+        if (firstPort != null) tag.putInt("FP", firstPort.ordinal());
+        if (secondPort != null) tag.putInt("SP", secondPort.ordinal());
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        speed = tag.getLong("Speed");
-        torque = tag.getLong("Torque");
-        firstPort = tag.contains("FirstPort") ? Direction.from3DDataValue(tag.getInt("FirstPort")) : null;
-        secondPort = tag.contains("SecondPort") ? Direction.from3DDataValue(tag.getInt("SecondPort")) : null;
-        cachedSource = null; // сброс кеша
+        this.speed = tag.getLong("Speed");
+        this.torque = tag.getLong("Torque");
+        this.firstPort = tag.contains("FP") ? Direction.values()[tag.getInt("FP")] : null;
+        this.secondPort = tag.contains("SP") ? Direction.values()[tag.getInt("SP")] : null;
     }
 
     @Override
     public CompoundTag getUpdateTag() {
-        CompoundTag tag = super.getUpdateTag();
-        tag.putLong("Speed", speed);
-        tag.putLong("Torque", torque);
-        if (firstPort != null) tag.putInt("FirstPort", firstPort.ordinal());
-        if (secondPort != null) tag.putInt("SecondPort", secondPort.ordinal());
+        CompoundTag tag = new CompoundTag();
+        saveAdditional(tag);
         return tag;
     }
 
-    @Override
-    public void handleUpdateTag(CompoundTag tag) {
-        super.handleUpdateTag(tag);
-        speed = tag.getLong("Speed");
-        torque = tag.getLong("Torque");
-        firstPort = tag.contains("FirstPort") ? Direction.from3DDataValue(tag.getInt("FirstPort")) : null;
-        secondPort = tag.contains("SecondPort") ? Direction.from3DDataValue(tag.getInt("SecondPort")) : null;
-    }
-
-    @Nullable
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
@@ -204,6 +217,9 @@ public class GearPortBlockEntity extends BlockEntity implements RotationalNode {
     }
 
     public boolean hasPortOnSide(Direction side) {
-        return side.equals(firstPort) || side.equals(secondPort);
+        // side — это сторона, по которой кликнул игрок
+        return side == firstPort || side == secondPort;
     }
+
+
 }

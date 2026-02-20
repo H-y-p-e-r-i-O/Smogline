@@ -123,10 +123,14 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
     }
 
     public int getRedstoneSignal() {
-        if (cachedSource == null) return 0;
-        long value = (getMode() == Mode.SPEED) ? cachedSource.speed() : cachedSource.torque();
-        long raw = value * multiplier / 20;
-        return (int) Math.min(15, raw);
+        // Используем текущие поля speed/torque, так как cachedSource может быть null в промежутках
+        long value = (getMode() == Mode.SPEED) ? this.speed : this.torque;
+        if (value <= 0) return 0;
+
+        // Масштабируем: допустим, при multiplier=1 и скорости 100 сигнал будет 5
+        // Чтобы сигнал не "дергался", добавим небольшое округление вверх
+        double raw = (value * (double)multiplier) / 20.0;
+        return (int) Math.min(15, Math.max(0, raw));
     }
 
     // ========== Тик ==========
@@ -136,10 +140,10 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
         long currentTime = level.getGameTime();
 
         if (!be.isCacheValid(currentTime)) {
-            // Используем новую сигнатуру
             RotationSource source = RotationNetworkHelper.findSource(be, null);
             be.setCachedSource(source, currentTime);
-            be.updateRedstone();
+            // Здесь be.speed еще старый, но updateRedstone вызовет пересчет.
+            // Однако основной "удар" должен быть ниже.
         }
 
         RotationSource src = be.getCachedSource();
@@ -147,20 +151,33 @@ public class TachometerBlockEntity extends BlockEntity implements RotationalNode
         long newTorque = (src != null) ? src.torque() : 0;
 
         boolean changed = false;
-        if (be.speed != newSpeed) { be.speed = newSpeed; changed = true; }
+        if (be.speed != newSpeed) { be.speed = newSpeed; changed = true; } // ПРИСВАИВАЕМ СРАЗУ
         if (be.torque != newTorque) { be.torque = newTorque; changed = true; }
 
         if (changed) {
             be.setChanged();
             be.sync();
-            be.invalidateNeighborCaches(); // ВАЖНО!
+            be.invalidateNeighborCaches();
+            // Теперь, когда be.speed и be.torque УЖЕ обновлены,
+            // уведомляем соседей. Они вызовут getSignal и получат новые данные.
             be.updateRedstone();
         }
     }
 
+    // TachometerBlockEntity.java
+
     private void updateRedstone() {
         if (level != null && !level.isClientSide) {
-            level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+            BlockState state = getBlockState();
+            // 1. Уведомляем сам блок
+            level.updateNeighborsAt(worldPosition, state.getBlock());
+
+            // 2. Уведомляем ВСЕХ соседей, что сигнал вокруг изменился
+            for (Direction dir : Direction.values()) {
+                BlockPos neighborPos = worldPosition.relative(dir);
+                level.neighborChanged(neighborPos, state.getBlock(), worldPosition);
+                level.updateNeighborsAt(neighborPos, state.getBlock());
+            }
         }
     }
 
