@@ -1,7 +1,10 @@
 package com.smogline.entity.custom;
 
+import com.smogline.block.entity.custom.DepthWormNestBlockEntity;
 import com.smogline.entity.ModEntities;
 import com.smogline.goal.DepthWormJumpGoal;
+import com.smogline.goal.EnterNestGoal;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -29,6 +32,7 @@ public class DepthWormEntity extends Monster implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private static final EntityDataAccessor<Boolean> IS_ATTACKING = SynchedEntityData.defineId(DepthWormEntity.class, EntityDataSerializers.BOOLEAN);
     public int ignoreFallDamageTicks = 0;
+    public int homeSickTimer = 0; // Таймер, запрещающий вход
     public boolean isFlying = false;
     public DepthWormEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -64,10 +68,30 @@ public class DepthWormEntity extends Monster implements GeoEntity {
             }
         }
 
-        // Сброс флага полета при приземлении
-        if (this.onGround()) {
-            this.isFlying = false;
+        if (!level().isClientSide) {
+            // 1. Проверяем валидность текущего гнезда
+            if (this.nestPos != null) {
+                if (!(level().getBlockEntity(this.nestPos) instanceof DepthWormNestBlockEntity nest) || nest.isFull()) {
+                    this.nestPos = null; // Гнездо сломано или переполнено, ищем новое
+                }
+            }
+
+            // 2. Поиск ближайшего гнезда (раз в 5 секунд)
+            if (this.nestPos == null && level().getGameTime() % 100 == 0) {
+                // Используем встроенный поиск по области
+                Iterable<BlockPos> ps = BlockPos.betweenClosed(
+                        blockPosition().offset(-16, -8, -16),
+                        blockPosition().offset(16, 8, 16)
+                );
+                for (BlockPos p : ps) {
+                    if (level().getBlockEntity(p) instanceof DepthWormNestBlockEntity nest && !nest.isFull()) {
+                        this.nestPos = p.immutable();
+                        break;
+                    }
+                }
+            }
         }
+        if (homeSickTimer > 0) homeSickTimer--;
     }
 
     // Защита от урона при падении
@@ -77,17 +101,32 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         return super.causeFallDamage(distance, damageMultiplier, source);
     }
 
+    @Override
+    public boolean hurt(net.minecraft.world.damagesource.DamageSource source, float amount) {
+        // Игнорируем урон от удушья в стене
+        if (source.is(net.minecraft.world.damagesource.DamageTypes.IN_WALL)) {
+            return false;
+        }
+        return super.hurt(source, amount);
+    }
+
     public void setAttacking(boolean attacking) { this.entityData.set(IS_ATTACKING, attacking); }
     public boolean isAttacking() { return this.entityData.get(IS_ATTACKING); }
 
     @Override
     protected void registerGoals() {
+        // Приоритет 0 - самое важное
         this.goalSelector.addGoal(0, new DepthWormJumpGoal(this, 1.5D, 5.0F, 10.0F));
-        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.0D, false));
-        this.goalSelector.addGoal(2, new WaterAvoidingRandomStrollGoal(this, 0.8D));
-        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
 
-        // Цель 1: Игроки (приоритет)
+        // Приоритет 1 - если нет врага, бегом домой!
+        this.goalSelector.addGoal(1, new EnterNestGoal(this));
+
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2D, false));
+        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D));
+
+
+
+    // Цель 1: Игроки (приоритет)
         this.targetSelector.addGoal(0, new NearestAttackableTargetGoal<>(this, Player.class, true));
 
         // Цель 2: Другие мобы, НО НЕ черви
@@ -151,6 +190,8 @@ public class DepthWormEntity extends Monster implements GeoEntity {
             this.setAttacking(false);
         }
     }
+    public BlockPos nestPos;
+
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() { return this.cache; }

@@ -96,6 +96,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.AIRSTRIKE_HEAVY);
         simpleItem(ModItems.DETONATOR);
         simpleItem(ModItems.SEQUESTRUM);
+        simpleItem(ModItems.DEPTH_WORM_SPAWN_EGG);
         simpleItem(ModItems.TURRET_CHIP);
         simpleItem(ModItems.BLADE_STEEL);
         simpleItem(ModItems.BLADE_TITANIUM);

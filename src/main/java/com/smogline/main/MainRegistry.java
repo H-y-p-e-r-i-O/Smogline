@@ -248,8 +248,8 @@ public class MainRegistry {
                 event.accept(ModBlocks.STOPPER);
                 event.accept(ModBlocks.TACHOMETER);
                 event.accept(ModBlocks.ROTATION_METER);
-
-
+                event.accept(ModBlocks.DEPTH_WORM_NEST);
+                event.accept(ModItems.DEPTH_WORM_SPAWN_EGG);
             }
 
 
