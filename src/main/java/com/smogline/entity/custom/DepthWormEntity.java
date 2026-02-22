@@ -145,8 +145,8 @@ public class DepthWormEntity extends Monster implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new DepthWormJumpGoal(this, 1.5D, 5.0F, 10.0F));
-        this.goalSelector.addGoal(1, new EnterHiveSoilGoal(this));
-        this.goalSelector.addGoal(2, new EnterNestGoal(this));
+        this.goalSelector.addGoal(1, new EnterNestGoal(this));          // сначала прямое гнездо
+        this.goalSelector.addGoal(2, new EnterHiveSoilGoal(this));      // потом почва
         this.goalSelector.addGoal(3, new MeleeAttackGoal(this, 1.2D, false));
         this.goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));

@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.*;
 
@@ -30,13 +31,29 @@ public class HiveNetwork {
         return wormCounts.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    public void addWorm(Level level, CompoundTag wormTag, BlockPos sourcePos) {
-        if (wormCounts.isEmpty()) return;
-        BlockPos target = Collections.min(wormCounts.entrySet(), Map.Entry.comparingByValue()).getKey();
+    public boolean addWorm(Level level, CompoundTag wormTag, BlockPos sourcePos) {
+        if (wormCounts.isEmpty()) return false;
+
+        // Найти гнездо с минимальным количеством червей, которое не заполнено
+        BlockPos target = null;
+        int minCount = Integer.MAX_VALUE;
+        for (Map.Entry<BlockPos, Integer> entry : wormCounts.entrySet()) {
+            BlockEntity be = level.getBlockEntity(entry.getKey());
+            if (be instanceof DepthWormNestBlockEntity nest && !nest.isFull()) {
+                if (entry.getValue() < minCount) {
+                    minCount = entry.getValue();
+                    target = entry.getKey();
+                }
+            }
+        }
+        if (target == null) return false; // все гнёзда полны или недоступны
+
         if (level.getBlockEntity(target) instanceof DepthWormNestBlockEntity nest) {
             nest.addWormTag(wormTag);
             wormCounts.merge(target, 1, Integer::sum);
+            return true;
         }
+        return false;
     }
 
     public void updateWormCount(BlockPos nestPos, int delta) {

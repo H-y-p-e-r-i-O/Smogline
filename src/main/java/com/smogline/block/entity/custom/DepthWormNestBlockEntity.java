@@ -43,9 +43,8 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
     }
 
     public boolean isFull() {
-        return storedWorms.size() >= 3 || releaseCooldown > 0;
+        return storedWorms.size() >= 3; // лимит только по количеству червей
     }
-
     public void addWorm(DepthWormEntity worm) {
         if (isFull()) return;
         CompoundTag tag = new CompoundTag();
@@ -72,7 +71,7 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
 
         if (level.getGameTime() % 20 == 0 && !blockEntity.storedWorms.isEmpty()) {
             boolean hasEnemy = !level.getEntitiesOfClass(LivingEntity.class,
-                    new AABB(pos).inflate(20),
+                    new AABB(pos).inflate(10), // было 20
                     e -> e.isAlive() && e.deathTime <= 0 &&
                             !(e instanceof DepthWormEntity) &&
                             !(e instanceof Player p && (p.isCreative() || p.isSpectator()))

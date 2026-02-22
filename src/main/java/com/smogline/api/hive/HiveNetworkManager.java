@@ -16,6 +16,22 @@ import java.util.*;
 public class HiveNetworkManager {
     private final Map<UUID, HiveNetwork> networks = new HashMap<>();
     private final Map<BlockPos, UUID> posToNetwork = new HashMap<>();
+    public boolean hasNests(UUID netId) {
+        HiveNetwork net = networks.get(netId);
+        return net != null && !net.wormCounts.isEmpty();
+
+    }
+    public boolean hasFreeNest(UUID netId, Level level) {
+        HiveNetwork net = networks.get(netId);
+        if (net == null || net.wormCounts.isEmpty()) return false;
+        for (Map.Entry<BlockPos, Integer> entry : net.wormCounts.entrySet()) {
+            BlockEntity be = level.getBlockEntity(entry.getKey());
+            if (be instanceof DepthWormNestBlockEntity nest && !nest.isFull()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public void onBlockAdded(Level level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
@@ -127,9 +143,12 @@ public class HiveNetworkManager {
         }
     }
 
-    public void addWormToNetwork(UUID netId, CompoundTag wormTag, BlockPos sourcePos, Level level) {
+    public boolean addWormToNetwork(UUID netId, CompoundTag wormTag, BlockPos sourcePos, Level level) {
         HiveNetwork net = networks.get(netId);
-        if (net != null) net.addWorm(level, wormTag, sourcePos);
+        if (net != null) {
+            return net.addWorm(level, wormTag, sourcePos);
+        }
+        return false;
     }
 
     public void updateWormCount(UUID netId, BlockPos nestPos, int delta) {
