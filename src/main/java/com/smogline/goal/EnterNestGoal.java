@@ -14,18 +14,20 @@ public class EnterNestGoal extends Goal {
     }
     @Override
     public boolean canUse() {
-        if (this.worm.nestPos == null) return false;
+        // Теперь проверяем только наличие цели и само гнездо
+        if (this.worm.getTarget() != null || this.worm.nestPos == null) return false;
 
         double distSqr = this.worm.distanceToSqr(Vec3.atCenterOf(this.worm.nestPos));
+        if (distSqr > 400.0D) return true; // Принудительный возврат если уполз слишком далеко
 
-        // Если червь слишком далеко (более 20 блоков), он ОБЯЗАН вернуться
-        if (distSqr > 400.0D) return true;
+        if (worm.level().getBlockEntity(worm.nestPos) instanceof DepthWormNestBlockEntity nest) {
+            // Если улей на кулдауне (isFull вернет true), червь просто не пойдет к нему
+            return !nest.isFull() && distSqr > 1.0D;
+        }
 
-        // Обычная логика захода домой (если нет врагов и таймер вышел)
-        if (this.worm.getTarget() != null || this.worm.homeSickTimer > 0) return false;
-
-        return distSqr > 1.0D;
+        return false;
     }
+
 
 
 

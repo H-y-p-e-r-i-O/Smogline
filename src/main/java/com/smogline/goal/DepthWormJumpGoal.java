@@ -35,12 +35,14 @@ public class DepthWormJumpGoal extends Goal {
 
     @Override
     public void start() {
-        this.jumpTimer = PREPARE_TIME;
+        this.jumpTimer = 30; // 1.5 сек
+        this.worm.setAttacking(true); // Открывает рот
         this.worm.getNavigation().stop();
-        this.worm.setAttacking(true);
-        // Принудительный сброс анимации для начала проигрывания "prepare"
-        this.worm.triggerAnim("controller", "prepare");
+        // Принудительно посылаем пакет на клиент, чтобы обновить флаги
+        this.worm.hasImpulse = true;
     }
+
+
 
 
     @Override
@@ -49,28 +51,26 @@ public class DepthWormJumpGoal extends Goal {
         this.worm.setAttacking(false);
     }
 
+    @Override
     public void tick() {
         if (this.target == null || !this.target.isAlive()) {
             this.worm.setAttacking(false);
             return;
         }
-
         double dist = this.worm.distanceTo(this.target);
 
-        // ПРОВЕРКА ДИСТАНЦИИ: Если цель убежала дальше (max + запас 2 блока), отменяем
         if (dist > this.jumpRangeMax + 2.0F) {
             this.worm.setAttacking(false);
             this.jumpTimer = 0;
             return;
         }
 
-        // ФИКСАЦИЯ ВЗГЛЯДА: Заставляем смотреть строго на цель
         this.worm.getLookControl().setLookAt(this.target, 30.0F, 30.0F);
 
         if (--this.jumpTimer <= 0) {
             doJump();
-            this.worm.setAttacking(false);
-            // Запускаем таймер защиты от падения в сущности
+            // ВНИМАНИЕ: setAttacking(false) ТЕПЕРЬ УДАЛЕН ОТСЮДА!
+            // Он сработает либо в stop(), либо при ударе в классе Entity.
             this.worm.ignoreFallDamageTicks = 30;
         }
     }
@@ -91,7 +91,7 @@ public class DepthWormJumpGoal extends Goal {
 
         this.worm.setDeltaMovement(velocity.x, verticalBoost, velocity.z);
         // Помечаем, что прыжок совершен
-        this.worm.isFlying = true;
+        this.worm.setFlying(true);
     }
 
 

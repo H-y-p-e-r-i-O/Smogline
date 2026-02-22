@@ -50,10 +50,12 @@ public class DepthWormNestBlockEntity extends BlockEntity {
             // Ищем только реальные угрозы (игнорируем креатив и наблюдателя)
             boolean hasEnemy = !level.getEntitiesOfClass(LivingEntity.class,
                     new AABB(pos).inflate(20),
-                    e -> e.isAlive() &&
+                    e -> e.isAlive() && // Цель должна быть ЖИВОЙ (не в анимации смерти)
+                            e.deathTime <= 0 && // Дополнительная проверка на смерть
                             !(e instanceof DepthWormEntity) &&
                             !(e instanceof Player p && (p.isCreative() || p.isSpectator()))
             ).isEmpty();
+
 
             if (hasEnemy && blockEntity.releaseCooldown <= 0) {
                 blockEntity.releaseWorms();
@@ -66,25 +68,25 @@ public class DepthWormNestBlockEntity extends BlockEntity {
     public void releaseWorms() {
         for (CompoundTag tag : storedWorms) {
             Entity entity = EntityType.loadEntityRecursive(tag, level, (e) -> {
-                // Ищем свободное место рядом с блоком
                 BlockPos spawnPos = findSpawnPos(worldPosition);
                 e.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, level.random.nextFloat() * 360F, 0);
                 return e;
             });
+
             if (entity != null) {
                 level.addFreshEntity(entity);
-                // Даем червю временную неуязвимость на 1 секунду после выхода
                 entity.invulnerableTime = 20;
-            }
-            if (entity instanceof DepthWormEntity worm) {
-                worm.homeSickTimer = 400; // 20 секунд гулять снаружи перед тем как захотеть домой
-                worm.nestPos = this.worldPosition; // Сразу привязываем к этому же гнезду
-            }
 
+                if (entity instanceof DepthWormEntity worm) {
+                    // homeSickTimer удален, оставляем только привязку к позиции
+                    worm.nestPos = this.worldPosition;
+                }
+            }
         }
         storedWorms.clear();
         setChanged();
     }
+
 
     private BlockPos findSpawnPos(BlockPos nestPos) {
         for (net.minecraft.core.Direction direction : net.minecraft.core.Direction.values()) {
