@@ -83,7 +83,11 @@ public class DepthWormEntity extends Monster implements GeoEntity {
     public void aiStep() {
         super.aiStep();
 
-        if (this.isFlying() && !this.onGround()) {
+        if (this.onGround()) {
+            if (this.isFlying()) {
+                this.setFlying(false);
+                this.setAttacking(false);
+            }
             // Увеличиваем хитбокс сканирования, чтобы "толпа" не мешала попадать
             List<LivingEntity> targets = this.level().getEntitiesOfClass(LivingEntity.class,
                     this.getBoundingBox().inflate(0.5D),
@@ -101,11 +105,6 @@ public class DepthWormEntity extends Monster implements GeoEntity {
             }
         }
 
-        // Сброс состояний при приземлении
-        if (this.onGround() && (this.isFlying() || this.isAttacking())) {
-            this.setFlying(false);
-            this.setAttacking(false);
-        }
 
         if (this.ignoreFallDamageTicks > 0) this.ignoreFallDamageTicks--;
         if (!level().isClientSide) {
@@ -177,26 +176,24 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         controllers.add(new AnimationController<>(this, "controller", 2, this::predicate));
     }
 
-    // DepthWormEntity.java
     private PlayState predicate(software.bernie.geckolib.core.animation.AnimationState<DepthWormEntity> state) {
         // 1. Приоритет смерти
         if (this.isDeadOrDying()) {
             return state.setAndContinue(RawAnimation.begin().thenPlayAndHold("death"));
         }
-        // 2. Если атакует - ПРИНУДИТЕЛЬНО играем prepare
+
+        // 2. ПРИОРИТЕТ АТАКИ (Важно: используем setAndContinue, чтобы не перезапускать анимацию каждый тик)
         if (this.isAttacking()) {
-            return state.setAndContinue(RawAnimation.begin().thenPlay("prepare"));
+            return state.setAndContinue(RawAnimation.begin().thenPlayAndHold("prepare"));
         }
-        // 3. Если просто ползет
+
+        // 3. Движение
         if (state.isMoving()) {
-            state.getController().setAnimation(RawAnimation.begin().thenLoop("slide"));
-            return PlayState.CONTINUE;
+            return state.setAndContinue(RawAnimation.begin().thenLoop("slide"));
         }
-        // Покой (можно оставить slide с низкой скоростью)
-        state.getController().setAnimation(RawAnimation.begin().thenLoop("slide"));
-        return PlayState.CONTINUE;
 
-
+        // 4. Покой
+        return state.setAndContinue(RawAnimation.begin().thenLoop("slide"));
     }
 
 

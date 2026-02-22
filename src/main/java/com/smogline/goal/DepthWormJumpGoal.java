@@ -76,22 +76,15 @@ public class DepthWormJumpGoal extends Goal {
     }
 
     private void doJump() {
-        // Целимся в центр тела (чуть ниже головы), чтобы уменьшить перелет
         Vec3 targetPos = this.target.position().add(0, this.target.getBbHeight() * 0.5, 0);
         Vec3 jumpVector = targetPos.subtract(this.worm.position());
-
         double horizontalDist = Math.sqrt(jumpVector.x * jumpVector.x + jumpVector.z * jumpVector.z);
-
-        // Мощность прыжка зависит от дистанции, но с ограничением
         double speed = 0.8 + (horizontalDist * 0.1);
         Vec3 velocity = jumpVector.normalize().scale(speed);
-
-        // Умеренный подъем вверх: чем дальше цель, тем выше дуга
         double verticalBoost = 0.15 + (horizontalDist * 0.04);
-
         this.worm.setDeltaMovement(velocity.x, verticalBoost, velocity.z);
-        // Помечаем, что прыжок совершен
         this.worm.setFlying(true);
+        this.worm.setAttacking(false);   // <-- добавить
     }
 
 

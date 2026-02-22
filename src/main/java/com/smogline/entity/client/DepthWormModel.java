@@ -17,11 +17,12 @@ public class DepthWormModel extends GeoModel<DepthWormEntity> {
     public ResourceLocation getAnimationResource(DepthWormEntity entity) { return ANIM; }
     @Override
     public ResourceLocation getTextureResource(DepthWormEntity entity) {
-        // Рот открыт если: атакует, летит, замахнулся ИЛИ получил урон (злится)
+        // Условие: открывает рот при атаке, в полете, при замахе ИЛИ когда получил урон (isAngry)
         if (entity.isAttacking() || entity.isFlying() || entity.swingTime > 0 || entity.isAngry()) {
             return TEXTURE_ATTACK;
         }
         return TEXTURE;
     }
+
 
 }
