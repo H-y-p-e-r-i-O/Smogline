@@ -21,8 +21,7 @@ public class DepthWormNestBlock extends BaseEntityBlock {
         if (!state.is(newState.getBlock())) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof DepthWormNestBlockEntity nest) {
-                // Вызываем метод выброса червей перед удалением сущности блока
-                nest.releaseWorms();
+                nest.releaseWormsAndNotify();   // ← изменено
             }
             super.onRemove(state, level, pos, newState, isMoving);
         }
@@ -44,4 +43,6 @@ public class DepthWormNestBlock extends BaseEntityBlock {
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(type, ModBlockEntities.DEPTH_WORM_NEST.get(), DepthWormNestBlockEntity::tick);
     }
+
+
 }

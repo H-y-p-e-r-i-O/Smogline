@@ -41,6 +41,10 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("depth_worm_nest",
                     () -> BlockEntityType.Builder.of(DepthWormNestBlockEntity::new, ModBlocks.DEPTH_WORM_NEST.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<HiveSoilBlockEntity>> HIVE_SOIL =
+            BLOCK_ENTITIES.register("hive_soil",
+                    () -> BlockEntityType.Builder.of(HiveSoilBlockEntity::new, ModBlocks.HIVE_SOIL.get()).build(null));
+
 
     public static final RegistryObject<BlockEntityType<ShaftIronBlockEntity>> SHAFT_IRON_BE =
             BLOCK_ENTITIES.register("shaft_iron_be",
