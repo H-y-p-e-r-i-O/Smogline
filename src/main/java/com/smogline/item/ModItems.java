@@ -178,6 +178,12 @@ public class ModItems {
 
     // БРОНЯ ГОРНЯКА:
 
+    public static final RegistryObject<Item> DEPTH_WORM_SPAWN_EGG = ITEMS.register("depth_worm_spawn_egg",
+            () -> new net.minecraftforge.common.ForgeSpawnEggItem(ModEntities.DEPTH_WORM,
+                    0x222222, // Цвет фона (темно-серый)
+                    0x550000, // Цвет пятен (кроваво-красный)
+                    new Item.Properties()));
+
 
     public static final RegistryObject<Item> SECURITY_HELMET = ITEMS.register("security_helmet",
             () -> new ArmorItem(ModArmorMaterials.SECURITY, ArmorItem.Type.HELMET, new Item.Properties()));

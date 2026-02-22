@@ -15,6 +15,7 @@ import com.smogline.client.render.shader.*;
 import com.smogline.config.*;
 import com.smogline.client.tooltip.*;
 import com.smogline.entity.ModEntities;
+import com.smogline.entity.client.DepthWormRenderer;
 import com.smogline.entity.client.bullets.TurretBulletRenderer;
 import com.smogline.entity.client.turrets.TurretLightLinkedRenderer;
 import com.smogline.entity.client.turrets.TurretLightRenderer;
@@ -258,7 +259,7 @@ public class ClientSetup {
 
 
 
-
+        event.registerEntityRenderer(ModEntities.DEPTH_WORM.get(), DepthWormRenderer::new);
         event.registerEntityRenderer(ModEntities.AIRSTRIKE_NUKE_ENTITY.get(), AirstrikeNukeEntityRenderer::new);
         EntityRenderers.register(ModEntities.TURRET_BULLET.get(), TurretBulletRenderer::new);
 

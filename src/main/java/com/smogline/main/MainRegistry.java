@@ -6,6 +6,7 @@ package com.smogline.main;
 import com.smogline.api.energy.EnergyNetworkManager;
 import com.smogline.api.fluids.ModFluids;
 import com.smogline.capability.ModCapabilities;
+import com.smogline.entity.custom.DepthWormEntity;
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.smogline.event.CrateBreaker;
 import com.smogline.handler.MobGearHandler;
@@ -230,7 +231,6 @@ public class MainRegistry {
 
             event.accept(ModItems.TURRET_CHIP);
             event.accept(ModBlocks.TURRET_LIGHT_PLACER);
-
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                 ClientSetup.addTemplatesClient(event);
             });
@@ -248,6 +248,7 @@ public class MainRegistry {
                 event.accept(ModBlocks.STOPPER);
                 event.accept(ModBlocks.TACHOMETER);
                 event.accept(ModBlocks.ROTATION_METER);
+                
 
             }
 
@@ -620,7 +621,7 @@ public class MainRegistry {
     private void entityAttributeEvent(net.minecraftforge.event.entity.EntityAttributeCreationEvent event) {
         event.put(ModEntities.TURRET_LIGHT.get(), TurretLightEntity.createAttributes().build());
         event.put(ModEntities.TURRET_LIGHT_LINKED.get(), TurretLightEntity.createAttributes().build());
-
+        event.put(ModEntities.DEPTH_WORM.get(), DepthWormEntity.createAttributes().build());
     }
 }
 
