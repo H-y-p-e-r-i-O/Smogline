@@ -38,7 +38,10 @@ public class DepthWormJumpGoal extends Goal {
         this.jumpTimer = PREPARE_TIME;
         this.worm.getNavigation().stop();
         this.worm.setAttacking(true);
+        // Принудительный сброс анимации для начала проигрывания "prepare"
+        this.worm.triggerAnim("controller", "prepare");
     }
+
 
     @Override
     public void stop() {
@@ -46,30 +49,51 @@ public class DepthWormJumpGoal extends Goal {
         this.worm.setAttacking(false);
     }
 
-    @Override
     public void tick() {
-        this.worm.getLookControl().setLookAt(this.target.getX(), this.target.getEyeY(), this.target.getZ());
-        if (--this.jumpTimer == 0) {
+        if (this.target == null || !this.target.isAlive()) {
+            this.worm.setAttacking(false);
+            return;
+        }
+
+        double dist = this.worm.distanceTo(this.target);
+
+        // ПРОВЕРКА ДИСТАНЦИИ: Если цель убежала дальше (max + запас 2 блока), отменяем
+        if (dist > this.jumpRangeMax + 2.0F) {
+            this.worm.setAttacking(false);
+            this.jumpTimer = 0;
+            return;
+        }
+
+        // ФИКСАЦИЯ ВЗГЛЯДА: Заставляем смотреть строго на цель
+        this.worm.getLookControl().setLookAt(this.target, 30.0F, 30.0F);
+
+        if (--this.jumpTimer <= 0) {
             doJump();
             this.worm.setAttacking(false);
+            // Запускаем таймер защиты от падения в сущности
+            this.worm.ignoreFallDamageTicks = 30;
         }
     }
 
     private void doJump() {
-        // Получаем вектор направления к глазам цели
-        Vec3 targetVec = this.target.getEyePosition().subtract(this.worm.position());
+        // Целимся в центр тела (чуть ниже головы), чтобы уменьшить перелет
+        Vec3 targetPos = this.target.position().add(0, this.target.getBbHeight() * 0.5, 0);
+        Vec3 jumpVector = targetPos.subtract(this.worm.position());
 
-        // Вычисляем горизонтальное расстояние
-        double horizontalDist = Math.sqrt(targetVec.x * targetVec.x + targetVec.z * targetVec.z);
+        double horizontalDist = Math.sqrt(jumpVector.x * jumpVector.x + jumpVector.z * jumpVector.z);
 
-        // Нормализуем вектор и задаем силу прыжка
-        // speedModifier (1.5) определит общую скорость полета
-        Vec3 velocity = targetVec.normalize().scale(1.2);
+        // Мощность прыжка зависит от дистанции, но с ограничением
+        double speed = 0.8 + (horizontalDist * 0.1);
+        Vec3 velocity = jumpVector.normalize().scale(speed);
 
-        // Добавляем небольшой подброс вверх в зависимости от дистанции
-        double yInertia = 0.2 + (horizontalDist * 0.05);
+        // Умеренный подъем вверх: чем дальше цель, тем выше дуга
+        double verticalBoost = 0.15 + (horizontalDist * 0.04);
 
-        this.worm.setDeltaMovement(new Vec3(velocity.x, yInertia, velocity.z));
+        this.worm.setDeltaMovement(velocity.x, verticalBoost, velocity.z);
+        // Помечаем, что прыжок совершен
+        this.worm.isFlying = true;
     }
+
+
 
 }

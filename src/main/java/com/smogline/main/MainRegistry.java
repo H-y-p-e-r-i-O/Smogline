@@ -248,7 +248,7 @@ public class MainRegistry {
                 event.accept(ModBlocks.STOPPER);
                 event.accept(ModBlocks.TACHOMETER);
                 event.accept(ModBlocks.ROTATION_METER);
-                
+
 
             }
 
