@@ -150,6 +150,13 @@ public class ModLanguageProvider extends LanguageProvider {
     // ЯВНАЯ ЛОКАЛИЗАЦИЯ ДЛЯ ОСТАЛЬНЫХ КЛЮЧЕЙ
         switch (this.locale) {
             case "ru_ru":
+                // Генераторы мира
+                add("generator.smogline.smogline", "Smogline");
+                add("generator.smogline.smogline_flat", "Плоский мир Smogline");
+                add("generator.smogline.smogline_large_biomes", "Smogline Большие биомы");
+
+
+
                 // КРЕАТИВНЫЕ ВКЛАДКИ
                 add("itemGroup.smogline.ntm_resources_tab", "Слитки и ресурсы NTM");
                 add("itemGroup.smogline.ntm_fuel_tab", "Топливо и элементы механизмов NTM");
@@ -988,6 +995,14 @@ public class ModLanguageProvider extends LanguageProvider {
                 break;
             
             case "en_us":
+
+                //world presets
+
+                add("generator.smogline.smogline", "Smogline");
+                add("generator.smogline.smogline_flat", "Flat Smogline World");
+                add("generator.smogline.smogline_large_biomes", "Smogline Large Biomes");
+
+
 
                 // TABS
                 add("itemGroup.smogline.ntm_resources_tab", "NTM Ingots and Resources");

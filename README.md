@@ -1,245 +1,105 @@
-![HBM M Banner](docs/images/20251013_170609.png)
 
-***
-
-## ENG Version 🇺🇸 | [RU Версия 🇷🇺](/README.ru.md)
-
-**Status:** Pre-Alpha \
-**Minecraft Version:** 1.20.1 \
-**Mod ID:** `smogline`
-
-***
-
-## 📥 Official Platforms
+![Smogline Banner](docs/images/banner_placeholder.png)
 
 <div align="center">
 
-# <img src="https://cdn-icons-png.flaticon.com/128/5968/5968756.png" height=28 /> <a href="https://discord.gg/kYW4JBtUDn">Discord</a> | <img src="https://cdn2.steamgriddb.com/icon/46bbc4a56de136ad319e59e37ef55644/32/256x256.png" height=30 /> <a href="https://modrinth.com/mod/hbms-nuclear-tech-modernized">Modrinth</a> | <img src="https://cdn2.steamgriddb.com/logo/946b656620286beea9d58a29d1587d10.png" height=23 /> <a href="https://www.curseforge.com/minecraft/mc-mods/hbms-nuclear-tech-modernized">CurseForge</a> 
+**[ 🇷🇺 Russian Version / Русская версия ](README.ru.md)**
+
+[![Status](https://img.shields.io/badge/Status-In_Development-yellow.svg)](#)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1-green.svg)](#)
+[![Forge](https://img.shields.io/badge/Loader-Forge-orange.svg)](#)
+[![Discord](https://img.shields.io/badge/Discord-Join_Community-5865F2?logo=discord&logoColor=white)](https://discord.gg/Hn9vSuKWrh)
+
 </div>
 
+> **"The boundaries between the 11 dimensions have crumbled. The Necrosis is not just caves down below. It is a parasitic reality, waiting for the Membrane to crack."**
 
-
-> [!WARNING]
-> **This mod is in pre-alpha stage.**
-> **DO NOT use it in your important worlds!**
-> Bugs, crashes, and mod incompatibilities are possible.
-> Report issues at [GitHub Issues](../../issues)
-
-***
-
-## About the Mod
-
-A modern reimagining of the legendary HBM's Nuclear Tech Mod for Minecraft 1.20.1. Nuclear technologies, radiation, advanced weaponry, and industrial automation with a rewritten codebase and improved architecture.
-
-![Mod Preview](https://cdn.modrinth.com/data/cached_images/64f225c1d254b31c0ae52724a5eaec45fe6a2d7c.png)
-
-***
-
-## ⚡ Key Features
-
-**Radiation System** — realistic irradiation mechanics with chunk-based spread, player accumulation, and dangerous effects
-
-**Industrial Automation** — multiblock machines for resource processing and energy production
-
-**Advanced Equipment** — armor and tools with unique perks and modifiers
-
-**Energy System** — generation, storage, and transmission of electricity between machines
-
-**Hazard System** — includes radioactivity, pyrophoricity, explosiveness, and more
-
-***
-
-## 🏭 Industry and Machines
-
-### Multiblock Structures
-
-Craft complex industrial machines consisting of multiple blocks for efficient resource processing.
-
-**Assembly Machines** — two varieties for crafting automation and component production, with an advanced recipe and template system
-
-![Workshop](docs/images/2025-10-14_17.09.12-min.png)
-
-**Press** — creating materials under pressure
-
-![Press](docs/images/2025-10-14_17.18.23-min.png)
-
-**Wood-Burning Generator** — primary energy source in the early game
-
-![Wood-Burning Generator](docs/images/2025-10-14_17.38.08-min.png)
-
-### Energy System
-
-A complete system for generating, storing, and transmitting electricity to power industrial machines.
-
-**Generators** — various methods of obtaining energy from wood to radioactive fuel
-
-**Energy Storage** — accumulators for electricity backup
-
-**Cables** — energy transmission between devices
-
-![Energy System](https://cdn.modrinth.com/data/cached_images/e4928ba19a50edf84fb1e4a78db955827048108a.png)
-
-***
-
-## 🛠️ Materials and Resources
-
-### Metallurgy
-
-Dozens of new ingots and metal blocks for crafting advanced equipment.
-
-**Radioactive Materials** — uranium, plutonium, polonium, and many others for nuclear technologies
-
-**Advanced Alloys** — special materials for powerful equipment
-
-**Ores** — new ore types with world generation
-
-![Resources](docs/images/2025-07-21_04.46.43.png)
-
-**Creative Tabs:** Blocks | Consumables | Fuel | Tools | Machines | Ores | Resources | Parts | Templates | Weapons
-
-![Creative Tabs](docs/images/2025-10-14_08.23.08.png)
-
-![Creative Tabs](docs/images/2025-10-14_08.23.24.png)
-
-![Creative Tabs](docs/images/2025-10-14_08.23.36.png)
-
------
-
-***
-
-## ⚔️ Equipment and Gear
-
-### Armor with Perks
-
-Advanced armor sets with unique modifiers and abilities.
-
-**Perk System** — upgrade armor through the modification table to gain special effects
-
-**Radiation Protection** — special sets for working with hazardous materials
-
-![Armor Modification Table](docs/images/2025-10-14_08.31.49.png)
-
-![Armor](docs/images/Screenshot_2025_10_05_05_38_55_75_572064f74bd5f9fa804b05334aa4f912.jpg)
-
-### Tools
-
-Powerful tools with unique resource mining mechanics.
-
-**Vein Miner** — mines entire ore veins at once
-
-**Advanced Tools** — increased efficiency and durability
-
-**Weapons** — swords and axes from various materials, as well as several types of grenades
-
-![Instruments](docs/images/2025-10-14_08.34.19.png)
-
-***
-
-## ☢️ Radiation System
-
-Realistic irradiation mechanics affecting gameplay and the surrounding world.
-
-### Irradiation Mechanics
-
-**Radiation Accumulation** — from the environment and radioactive items in inventory
-
-**Chunk-based Spread** — radiation spreads and slowly dissipates over time
-
-**Irradiation Effects** — blindness, confusion, weakness, hunger, poisoning, and death at critical doses
-
-![Radiation System](docs/images/2025-10-14_18.01.44-min.png)
-
-### World Impact
-
-**Block Mutations** — grass and foliage transform into dead variants at high radiation levels
-
-**Radioactive Blocks** — emit radiation into surrounding chunks
-
-![Block Mutations](docs/images/GIF_20250721_062913_819.gif)
-
-### Measuring Devices
-
-**Geiger Counter** — precise radiation measurement with sound accompaniment and HUD indication
-
-**Dosimeter** — simple device for quick radiation level assessment
-
-### Hazard System
-
-**Explosiveness** — don't throw gunpowder and dynamite into fire, or there might be a boom
-![Explosiveness](docs/images/2025-10-14_18.51.27-min.png)
-
-**Radioactivity** — corresponding items and blocks emit radiation
-
-**Pyrophoricity** — don't handle this without fire protection
-
-***
-
-## 🎮 Game Systems
-
-### Commands
-
-`/smogline rad` — manage player radiation level (add/remove/clear)
-
-
-### Settings
-
-Deep integration with Cloth Config API for fine-tuning mod parameters.
-
-![Mod Tweaks](docs/images/2025-07-21_06.38.23.png)
-***
-
-## 📦 Installation
-
-**Requirements:**
-
-- Minecraft 1.20.1
-- Forge 1.20.1
-- [Cloth Config API v1.11.136+](https://www.curseforge.com/minecraft/mc-mods/cloth-config/files?version=1.20)
-
-**Steps:**
-
-1. Download the latest version from [Releases](../../releases)
-2. Install Cloth Config API for version 1.20.1
-3. Place both `.jar` files in the `mods` folder
-4. Launch Minecraft with Forge 1.20.1
-
-***
-
-## ⚠️ Known Issues
-
-**Pre-alpha version** — expect bugs, incomplete features, and possible world corruption
-
-**Compatibility** — not tested with most mods, conflicts are possible
-
-**Crafting** — some recipes are missing, survival is temporarily unavailable
-
-Report issues at [Issues](../../issues) with detailed descriptions.
-
-***
-
-## 🤝 Contributing
-
-Pull requests, suggestions, and bug reports are welcome!
-
-Fork the repository and propose improvements.
-
-***
-
-## 💝 Acknowledgments
-
-**The Bobcat** — author of the original HBM's Nuclear Tech Mod
-
-**Raptor324, Hyperio \& Razchexlitiel** — modernization and rework
-
-The Forge team and Mojang for development tools
-
-***
-
-## 📝 Note
-
-We are learning as we develop, please be patient!
-Thank you for your interest in the mod and constructive feedback.
+**Smogline** is a hardcore technical mod for Minecraft 1.20.1 set in a "Scientific Post-Apocalypse". We combine real physics (String Theory) with organic horror.
 
 ---
 
+## 🚧 Release Status: Upcoming
 
+> [!NOTE]
+> **The mod is currently in private Pre-Alpha.**
+> We prioritize code quality and optimization. The public release on **CurseForge** and **Modrinth** will only occur upon reaching the **Beta** stage.
+
+Want to follow the news, see exclusive spoilers, or apply for closed testing?
+👉 **[Join our Discord Server](https://discord.gg/Hn9vSuKWrh)**
+
+---
+
+## 🌌 The Lore & Setting
+
+You are a bio-modified subject, awakened from cryostasis after the catastrophe.
+* **The Catastrophe:** An attempt to unfold curled dimensions led to the "String Collapse".
+* **The Surface:** Radioactive wastelands, ruins, and mutated fauna.
+* **The Membrane:** A layer of super-dense matter that replaced Bedrock. A barrier separating our world from the abyss.
+* **The Necrosis (Dimension):** A living, chaotic dimension "on the other side". To get there, the player must **breach the bottom of the world**.
+
+---
+
+## ⚙️ Development Log (Implemented Features)
+
+Work on the mod's core is in full swing:
+
+### 1. 🌍 Tectonic-like World Generation
+A complete overhaul of the vanilla terrain generator using *Tectonic* algorithms.
+* **Exclusive Biomes:** Unique zones with varying degrees of pollution, each containing unique resources.
+* **Atmosphere:** Custom fog, sky color, surface blocks, and wasteland post-effects.
+
+### 2. 🌀 Breach to Necrosis (New Dimension)
+* **The Membrane:** As a result of the string collapse, tunnels lined with a membrane appeared in the bedrock, leading deep into the bowels of the Earth. Technology allows you to create a breach in reality.
+* **The Transition:** Destroying the Membrane opens a path to fall directly into the Necrosis dimension (Work in Progress).
+
+### 3. 🎯 New Arsenal
+Next-generation base defense:
+* **Turrets:** Added the first firearm turret, which shoots various projectile types with ballistic trajectory, features advanced AI, and smart target locking.
+* **Grenades:** Several types are already present, including nuclear grenades.
+* **Mines:** From anti-personnel to micro-nuclear charges.
+* **Firearms (WIP):** Implemented a starter rifle that fires 20mm turret shells. Serves as a prototype for future firearms implementation.
+
+### 4. 🔩 Kinetic Energy
+* **Shafts & Gearboxes:** Visually accurate torque transmission.
+* **Clutch:** Allows interrupting torque transmission to subsequent elements.
+* **Gears & Belts (WIP):** Increase, decrease, and change torque direction using gears of different diameters. Transfer torque to parallel shafts via chain or belt drives.
+
+### 5. ⚡ Energy Grid
+* **System limits are not the limit!:** A fully custom energy system written from scratch that supports massive energy values, up to 9.2 quintillion!
+* **Forge Energy Compatibility:** Our energy is fully compatible with native Forge Energy (FE), which is the basis for most tech mods like Mekanism. Use energy converters to link two different systems.
+* **Advanced Energy Control:** Storage modes, priority systems, breakers, diodes (WIP) — everything for the most complex and branching energy grids.
+
+---
+
+## 🔮 Roadmap to Beta
+
+* [ ] Complete game progression up to the early mid-game stage.
+* [ ] Stable versions of "Necrosis" dimension biomes and Membrane breaching mechanics.
+* [ ] Refinement of electric and kinetic systems, perfecting their interaction.
+* [ ] Addition of the initial arsenal: (firearms, melee weapons, mines, bombs, grenades, and charges).
+* [ ] Increasing the number of turrets and ammunition types.
+* [ ] Increasing the variety of Overworld biomes and their refinement. Mechanics for generating abandoned cities are also planned.
+* [ ] Adding anomalous entities escaping from beneath the Membrane.
+* [ ] Introduction of the radiation system and player contamination.
+* [ ] Adding armor and armor modifications.
+* [ ] Addition of a reference book and technology tree.
+
+---
+
+## 💝 Credits & Acknowledgements
+
+* **Apollo (Tectonic)** — Special thanks for the open-source terrain generation algorithms that served as the foundation for our world overhaul.
+* **The Forge Team** — For the modding platform and documentation.
+
+---
+
+## 🤝 The Team
+
+Our development team structure:
+1. **HyperiO** - Java Developer
+2. **Razchexlitiel** - Java Developer and Asset Designer
+
+We are looking for **Java Developers**, **Texture Artists** (Pixel Art), **3D Modelers** (OBJ/Geckolib), and **Composers** (Ambient/Dark Ambient) to speed up the Beta release.
+If you want to help the project, contact us on Discord.
+
+**Developed by TONG Industries Team.**
