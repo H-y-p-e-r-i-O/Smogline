@@ -1,6 +1,7 @@
 package com.smogline.api.hive;
 
 import com.smogline.block.entity.custom.DepthWormNestBlockEntity;
+import com.smogline.main.MainRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -21,7 +22,6 @@ public class HiveNetwork {
         members.add(pos);
         if (isNest) wormCounts.put(pos, 0);
     }
-
     public void removeMember(BlockPos pos) {
         members.remove(pos);
         wormCounts.remove(pos);
@@ -32,29 +32,40 @@ public class HiveNetwork {
     }
 
     public boolean addWorm(Level level, CompoundTag wormTag, BlockPos sourcePos) {
-        if (wormCounts.isEmpty()) return false;
+        // 1. Проверяем, есть ли вообще гнезда в этой сети
+        if (wormCounts.isEmpty()) {
+            System.out.println("[HiveNetwork] ОШИБКА: В сети " + id + " нет зарегистрированных гнезд!");
+            return false;
+        }
 
-        // Найти гнездо с минимальным количеством червей, которое не заполнено
-        BlockPos target = null;
+        BlockPos bestNest = null;
         int minCount = Integer.MAX_VALUE;
-        for (Map.Entry<BlockPos, Integer> entry : wormCounts.entrySet()) {
-            BlockEntity be = level.getBlockEntity(entry.getKey());
-            if (be instanceof DepthWormNestBlockEntity nest && !nest.isFull()) {
-                if (entry.getValue() < minCount) {
-                    minCount = entry.getValue();
-                    target = entry.getKey();
+
+        // 2. Ищем самое свободное гнездо (лимит 3 червя)
+        for (BlockPos nestPos : wormCounts.keySet()) {
+            BlockEntity be = level.getBlockEntity(nestPos);
+            if (be instanceof DepthWormNestBlockEntity nest) {
+                int currentCount = wormCounts.getOrDefault(nestPos, 0);
+                if (currentCount < 3 && currentCount < minCount) {
+                    minCount = currentCount;
+                    bestNest = nestPos;
                 }
             }
         }
-        if (target == null) return false; // все гнёзда полны или недоступны
 
-        if (level.getBlockEntity(target) instanceof DepthWormNestBlockEntity nest) {
-            nest.addWormTag(wormTag);
-            wormCounts.merge(target, 1, Integer::sum);
+        // 3. Если нашли место — закидываем червя
+        if (bestNest != null) {
+            DepthWormNestBlockEntity nestBE = (DepthWormNestBlockEntity) level.getBlockEntity(bestNest);
+            nestBE.addWormTag(wormTag); // Метод в твоем NestBE для хранения NBT
+            wormCounts.put(bestNest, wormCounts.get(bestNest) + 1);
+            System.out.println("[HiveNetwork] УСПЕХ: Червь направлен в гнездо " + bestNest);
             return true;
         }
+
+        System.out.println("[HiveNetwork] ВАРНИНГ: Все гнезда в сети " + id + " переполнены!");
         return false;
     }
+
 
     public void updateWormCount(BlockPos nestPos, int delta) {
         wormCounts.merge(nestPos, delta, Integer::sum);

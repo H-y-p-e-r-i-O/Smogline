@@ -24,14 +24,16 @@ public class HiveNetworkManager {
     public boolean hasFreeNest(UUID netId, Level level) {
         HiveNetwork net = networks.get(netId);
         if (net == null || net.wormCounts.isEmpty()) return false;
+
         for (Map.Entry<BlockPos, Integer> entry : net.wormCounts.entrySet()) {
             BlockEntity be = level.getBlockEntity(entry.getKey());
-            if (be instanceof DepthWormNestBlockEntity nest && !nest.isFull()) {
-                return true;
+            if (be instanceof DepthWormNestBlockEntity nest) {
+                if (!nest.isFull()) return true; // Найдено свободное место!
             }
         }
         return false;
     }
+
 
     public void onBlockAdded(Level level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
@@ -70,17 +72,25 @@ public class HiveNetworkManager {
             while (it.hasNext()) {
                 UUID otherId = it.next();
                 HiveNetwork otherNet = networks.remove(otherId);
-                for (BlockPos m : otherNet.members) {
-                    posToNetwork.put(m, primary);
-                    if (level.getBlockEntity(m) instanceof HiveNetworkMember mMember) {
-                        mMember.setNetworkId(primary);
-                    }
-                    primaryNet.members.add(m);
-                    if (otherNet.wormCounts.containsKey(m)) {
-                        primaryNet.wormCounts.put(m, otherNet.wormCounts.get(m));
+                if (otherNet != null) {
+                    for (BlockPos m : otherNet.members) {
+                        posToNetwork.put(m, primary);
+                        BlockEntity mBe = level.getBlockEntity(m);
+                        if (mBe instanceof HiveNetworkMember mMember) {
+                            mMember.setNetworkId(primary);
+                        }
+
+                        // 1. Добавляем в общий список участников
+                        primaryNet.members.add(m);
+
+                        // 2. КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Переносим данные о гнездах!
+                        if (otherNet.wormCounts.containsKey(m)) {
+                            primaryNet.wormCounts.put(m, otherNet.wormCounts.get(m));
+                        }
                     }
                 }
             }
+
         }
     }
 

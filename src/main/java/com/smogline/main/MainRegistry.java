@@ -627,10 +627,14 @@ public class MainRegistry {
         event.put(ModEntities.TURRET_LIGHT_LINKED.get(), TurretLightEntity.createAttributes().build());
         event.put(ModEntities.DEPTH_WORM.get(), DepthWormEntity.createAttributes().build());
     }
+
     @SubscribeEvent
     public void onAttachCapabilitiesLevel(AttachCapabilitiesEvent<Level> event) {
-        event.addCapability(new ResourceLocation(RefStrings.MODID, "hive_network_manager"),
-                new HiveNetworkManagerProvider());
+        // Проверка, чтобы не прикрепить дважды
+        if (!event.getObject().isClientSide) {
+            event.addCapability(new ResourceLocation("smogline", "hive_network_manager"),
+                    new HiveNetworkManagerProvider());
+        }
     }
 
 }

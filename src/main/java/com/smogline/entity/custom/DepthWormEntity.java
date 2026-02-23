@@ -1,9 +1,13 @@
 package com.smogline.entity.custom;
 
+import com.smogline.api.hive.HiveNetworkManager;
+import com.smogline.api.hive.HiveNetworkMember;
+import com.smogline.block.custom.nature.HiveSoilBlock;
 import com.smogline.block.entity.custom.DepthWormNestBlockEntity;
 import com.smogline.goal.DepthWormJumpGoal;
 import com.smogline.goal.EnterNestGoal;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -20,6 +24,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import com.smogline.goal.EnterHiveSoilGoal;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -31,6 +36,7 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.List;
+import java.util.UUID;
 
 public class DepthWormEntity extends Monster implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -142,11 +148,20 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         }
     }
 
+
+    @Override
+    public boolean isPushable() {
+        // Если червь пытается войти в почву или гнездо, его нельзя толкать
+        return super.isPushable() && targetSelector.getAvailableGoals().stream()
+                .noneMatch(g -> (g.getGoal() instanceof EnterHiveSoilGoal || g.getGoal() instanceof EnterNestGoal) && g.isRunning());
+    }
+
+
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new DepthWormJumpGoal(this, 1.5D, 5.0F, 10.0F));
-        this.goalSelector.addGoal(1, new EnterNestGoal(this));          // сначала прямое гнездо
-        this.goalSelector.addGoal(2, new EnterHiveSoilGoal(this));      // потом почва
+        this.goalSelector.addGoal(1, new EnterHiveSoilGoal(this));
+        this.goalSelector.addGoal(2, new EnterNestGoal(this));
         this.goalSelector.addGoal(3, new MeleeAttackGoal(this, 1.2D, false));
         this.goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
