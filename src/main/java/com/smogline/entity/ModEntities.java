@@ -1,5 +1,6 @@
 package com.smogline.entity;
 
+import com.smogline.entity.custom.DepthWormEntity;
 import com.smogline.entity.weapons.bullets.TurretBulletEntity;
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.smogline.entity.weapons.turrets.TurretLightLinkedEntity;
@@ -17,6 +18,13 @@ public class ModEntities {
 
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
         DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MainRegistry.MOD_ID);
+
+    public static final RegistryObject<EntityType<DepthWormEntity>> DEPTH_WORM =
+            ENTITY_TYPES.register("depth_worm",
+                    () -> EntityType.Builder.of(DepthWormEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 0.6f) // Размер хитбокса (сделаем его поменьше для лучшего пути)
+                            .build(new ResourceLocation(MainRegistry.MOD_ID, "depth_worm").toString()));
+
 
     public static final RegistryObject<EntityType<TurretLightEntity>> TURRET_LIGHT = ENTITY_TYPES.register("turret_light",
             () -> EntityType.Builder.of(TurretLightEntity::new, MobCategory.MONSTER)

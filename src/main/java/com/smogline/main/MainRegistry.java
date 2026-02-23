@@ -5,7 +5,10 @@ package com.smogline.main;
 // Также здесь настраиваются обработчики событий и системы радиации.
 import com.smogline.api.energy.EnergyNetworkManager;
 import com.smogline.api.fluids.ModFluids;
+import com.smogline.api.hive.HiveNetworkManager;
+import com.smogline.api.hive.HiveNetworkManagerProvider;
 import com.smogline.capability.ModCapabilities;
+import com.smogline.entity.custom.DepthWormEntity;
 import com.smogline.config.FogConfig;
 import com.smogline.entity.weapons.turrets.TurretLightEntity;
 import com.smogline.event.CrateBreaker;
@@ -14,6 +17,7 @@ import com.smogline.item.custom.fekal_electric.ModBatteryItem;
 import com.smogline.particle.ModExplosionParticles;
 import com.smogline.world.biome.ModBiomes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.level.LevelEvent;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.event.TickEvent;
@@ -110,7 +114,6 @@ public class MainRegistry {
         registerCapabilities(modEventBus);
         FogConfig.register();
 
-
         // ✅ ЭТА СТРОКА ДОЛЖНА БЫТЬ ПОСЛЕДНЕЙ!
         ModWorldGen.PROCESSORS.register(modEventBus);  // ✅ ОСТАВИ!
 
@@ -139,6 +142,7 @@ public class MainRegistry {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
+
             ModPacketHandler.register();
             ModHazards.registerHazards(); // Регистрация опасностей (радиация, биологическая опасность в будущем и тд)
             // MinecraftForge.EVENT_BUS.addListener(this::onRenderLevelStage);
@@ -232,7 +236,6 @@ public class MainRegistry {
 
             event.accept(ModItems.TURRET_CHIP);
             event.accept(ModBlocks.TURRET_LIGHT_PLACER);
-
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                 ClientSetup.addTemplatesClient(event);
             });
@@ -250,7 +253,9 @@ public class MainRegistry {
                 event.accept(ModBlocks.STOPPER);
                 event.accept(ModBlocks.TACHOMETER);
                 event.accept(ModBlocks.ROTATION_METER);
-
+                event.accept(ModBlocks.DEPTH_WORM_NEST);
+                event.accept(ModBlocks.HIVE_SOIL);
+                event.accept(ModItems.DEPTH_WORM_SPAWN_EGG);
             }
 
 
@@ -622,7 +627,17 @@ public class MainRegistry {
     private void entityAttributeEvent(net.minecraftforge.event.entity.EntityAttributeCreationEvent event) {
         event.put(ModEntities.TURRET_LIGHT.get(), TurretLightEntity.createAttributes().build());
         event.put(ModEntities.TURRET_LIGHT_LINKED.get(), TurretLightEntity.createAttributes().build());
-
+        event.put(ModEntities.DEPTH_WORM.get(), DepthWormEntity.createAttributes().build());
     }
+
+    @SubscribeEvent
+    public void onAttachCapabilitiesLevel(AttachCapabilitiesEvent<Level> event) {
+        // Проверка, чтобы не прикрепить дважды
+        if (!event.getObject().isClientSide) {
+            event.addCapability(new ResourceLocation("smogline", "hive_network_manager"),
+                    new HiveNetworkManagerProvider());
+        }
+    }
+
 }
 

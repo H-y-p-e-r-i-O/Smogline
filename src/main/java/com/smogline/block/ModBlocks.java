@@ -1,5 +1,7 @@
 package com.smogline.block;
 
+import com.smogline.block.custom.nature.DepthWormNestBlock;
+import com.smogline.block.custom.nature.HiveSoilBlock;
 import com.smogline.block.custom.rotation.*;
 import com.smogline.block.custom.weapons.TurretLightPlacerBlock;
 import com.smogline.api.energy.ConverterBlock;
@@ -149,6 +151,12 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> WASTE_GRASS = registerBlock("waste_grass",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.DIRT).sound(SoundType.GRAVEL)));
+
+    public static final RegistryObject<Block> DEPTH_WORM_NEST = registerBlock("depth_worm_nest",
+            () -> new DepthWormNestBlock(BlockBehaviour.Properties.copy(Blocks.MUD).sound(SoundType.MUD)));
+
+    public static final RegistryObject<Block> HIVE_SOIL = registerBlock("hive_soil",
+            () -> new HiveSoilBlock(BlockBehaviour.Properties.copy(Blocks.MUD).sound(SoundType.MUD)));
 
     public static final RegistryObject<Block> WASTE_LEAVES = registerBlock("waste_leaves",
             () -> new LeavesBlock(BlockBehaviour.Properties.copy(Blocks.OAK_LEAVES).noOcclusion()));

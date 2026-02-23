@@ -1,6 +1,7 @@
 package com.smogline.capability;
 
 import com.smogline.api.energy.*;
+import com.smogline.api.hive.HiveNetworkManager;
 import net.minecraftforge.common.capabilities.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -14,5 +15,6 @@ public class ModCapabilities {
         event.register(IEnergyProvider.class);
         event.register(IEnergyReceiver.class);
         event.register(IEnergyConnector.class);
+        event.register(HiveNetworkManager.class);
     }
 }

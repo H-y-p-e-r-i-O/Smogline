@@ -4,24 +4,16 @@ import com.smogline.api.energy.EnergyNetworkManager;
 import com.smogline.api.rotation.RotationalNode;
 import com.smogline.block.entity.ModBlockEntities;
 import com.smogline.block.entity.custom.MotorElectroBlockEntity;
-import com.smogline.lib.RefStrings;
 import com.smogline.menu.MotorElectroMenu;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -37,8 +29,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,31 +40,8 @@ public class MotorElectroBlock extends BaseEntityBlock {
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
-
-    @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return Shapes.block();
-    }
-
-    @Override
-    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return Shapes.block();
-    }
-
-    @Override
-    public VoxelShape getInteractionShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return Shapes.block();
-    }
-
-    @Override
-    public VoxelShape getBlockSupportShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return Shapes.block();
-    }
-
-    @Override
-    public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return Shapes.block();
-    }
+    // Стандартные формы блока (оставляем Shapes.block() как в оригинале)
+    @Override public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) { return Shapes.block(); }
 
     @Nullable
     @Override
@@ -84,24 +51,12 @@ public class MotorElectroBlock extends BaseEntityBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.ENTITYBLOCK_ANIMATED; // GeckoLib модель
+        return RenderShape.ENTITYBLOCK_ANIMATED;
     }
 
-    // Поворот при установке
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
-    }
-
-    // Сохраняем направление при повороте/отражении
-    @Override
-    public BlockState rotate(BlockState state, Rotation rot) {
-        return state.setValue(FACING, rot.rotate(state.getValue(FACING)));
-    }
-
-    @Override
-    public BlockState mirror(BlockState state, Mirror mirror) {
-        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override
@@ -114,9 +69,10 @@ public class MotorElectroBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof MotorElectroBlockEntity motor) {
+                // ВАЖНО: Используем NetworkHooks для открытия экрана и передаем данные из BE
                 NetworkHooks.openScreen((ServerPlayer) player,
                         new SimpleMenuProvider(
-                                (id, inv, p) -> new MotorElectroMenu(id, inv, motor, motor.getDataAccess(), pos),
+                                (id, inv, p) -> new MotorElectroMenu(id, inv, motor, motor.getDataAccess()),
                                 Component.translatable("container.motor_electro_menu")
                         ), pos);
             }
@@ -124,8 +80,6 @@ public class MotorElectroBlock extends BaseEntityBlock {
         }
         return InteractionResult.SUCCESS;
     }
-
-
 
     @Nullable
     @Override
@@ -136,12 +90,11 @@ public class MotorElectroBlock extends BaseEntityBlock {
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
-        if (!level.isClientSide) {
-            if (level.getBlockEntity(pos) instanceof MotorElectroBlockEntity be) {
-                be.invalidateCache();
-            }
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof MotorElectroBlockEntity be) {
+            be.invalidateCache();
         }
     }
+
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
         super.onPlace(state, level, pos, oldState, isMoving);
@@ -152,13 +105,11 @@ public class MotorElectroBlock extends BaseEntityBlock {
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        // 1. Удаляем узел из энергосети, если блок действительно меняется (не просто обновление состояния)
         if (!level.isClientSide && !state.is(newState.getBlock())) {
+            // Удаление из энергосети
             EnergyNetworkManager.get((ServerLevel) level).removeNode(pos);
-        }
 
-        // 2. Существующая логика инвалидации кеша вращения у соседей
-        if (!level.isClientSide && state.getBlock() != newState.getBlock()) {
+            // Инвалидация кеша вращения у соседей
             for (Direction dir : Direction.values()) {
                 BlockPos neighborPos = pos.relative(dir);
                 if (level.getBlockEntity(neighborPos) instanceof RotationalNode node) {
@@ -166,7 +117,6 @@ public class MotorElectroBlock extends BaseEntityBlock {
                 }
             }
         }
-
         super.onRemove(state, level, pos, newState, isMoving);
     }
 }

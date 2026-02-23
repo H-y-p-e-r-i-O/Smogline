@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.smogline.api.fluids.ModFluids;
 
+import com.smogline.item.custom.mobs.DepthWormSpawnEggItem;
 import com.smogline.item.custom.rotation.MotorElectroBlockItem;
 import com.smogline.item.custom.rotation.ShaftIronBlockItem;
 import com.smogline.item.custom.rotation.WindGenFlugerBlockItem;
@@ -177,6 +178,11 @@ public class ModItems {
             () -> new AirNukeBombItem(new Item.Properties(), ModEntities.AIRNUKEBOMB_PROJECTILE));
 
     // БРОНЯ ГОРНЯКА:
+
+
+    public static final RegistryObject<Item> DEPTH_WORM_SPAWN_EGG = ITEMS.register("depth_worm_spawn_egg",
+            () -> new DepthWormSpawnEggItem(new Item.Properties()));
+
 
 
     public static final RegistryObject<Item> SECURITY_HELMET = ITEMS.register("security_helmet",
