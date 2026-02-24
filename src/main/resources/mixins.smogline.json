@@ -8,7 +8,9 @@
     "SlotMixin"
   ],
   "client": [
-    "ShadowIntegrationMixin"
+    "ShadowIntegrationMixin",
+    "WorldPresetsMixin"
+
   ],
   "injectors": {
     "defaultRequire": 1
